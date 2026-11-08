@@ -7,6 +7,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <memory>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -153,6 +154,57 @@ int main(int argc, char** argv) {
     for (int i = 0; i < count && cached; i++) { char p[600]; snprintf(p, sizeof p, "%s/blk%02d.bin", cdir.c_str(), first + i); struct stat st; cached = !stat(p, &st) && (size_t)st.st_size == WQ_TOTAL; }
     if (cached) { g_q8 = true; wtot = WQ_TOTAL; wmodw = WQ_MODW; }
   }
+  // low-memory mode with LoRAs and no cache yet: build the cache one block at a time (read from flash, fold, q8, write), so only one block is in RAM
+  // (~220 MB instead of the whole model); the streaming loader then reads the cache, whose q8 blocks are about half the size of the fp16 ones
+  if (stream && !cached && !cdir.empty()) {
+    double tb = now();
+    const std::string root = cdir.substr(0, cdir.rfind('/')), mine = cdir.substr(cdir.rfind('/') + 1);
+    mkdir(root.c_str(), 0700);
+    if (DIR* d = opendir(root.c_str())) {   // keep only this LoRA set
+      for (struct dirent* e; (e = readdir(d));) {
+        std::string n = e->d_name; if (n == "." || n == ".." || n == mine) continue;
+        std::string sub = root + "/" + n;
+        if (DIR* sd = opendir(sub.c_str())) { for (struct dirent* f; (f = readdir(sd));) if (f->d_name[0] != '.') unlink((sub + "/" + f->d_name).c_str()); closedir(sd); }
+        rmdir(sub.c_str());
+      }
+      closedir(d);
+    }
+    mkdir(cdir.c_str(), 0700);
+    struct statvfs vs; bool ok = !statvfs(cdir.c_str(), &vs) && (double)vs.f_bavail * vs.f_frsize >= (double)WQ_TOTAL * count + 2e9;
+    if (!ok) fprintf(stderr, "megarun: LoRA cache skipped (storage)\n");
+    std::vector<std::pair<std::unique_ptr<LoraFile>, float>> ls;
+    if (ok) {
+      const float s0 = getenv("MEGA_LORA_S") ? (float)atof(getenv("MEGA_LORA_S")) : 1.f;
+      std::string all = lv0;
+      for (size_t p = 0; p < all.size();) {
+        size_t q = all.find('|', p); if (q == std::string::npos) q = all.size();
+        std::string item = all.substr(p, q - p); p = q + 1; if (item.empty()) continue;
+        float sv = s0; size_t st = item.rfind('*'); if (st != std::string::npos) { sv = (float)atof(item.c_str() + st + 1); item.resize(st); }
+        std::unique_ptr<LoraFile> L(new LoraFile);
+        if (L->open(item.c_str())) ls.push_back({std::move(L), sv}); else fprintf(stderr, "megarun: LoRA skipped: cannot read %s\n", item.c_str());
+      }
+    }
+    struct stat st40; char p40[512]; snprintf(p40, sizeof p40, "%s/blk39.bin", dir.c_str());
+    const int model_blocks = stat(p40, &st40) == 0 ? 40 : 28;
+    std::vector<uint8_t> buf(ok ? wtot : 0), qb(ok && !g_q8 ? WQ_TOTAL : 0);
+    int nm = 0;
+    for (int i = 0; i < count && ok; i++) {
+      char p[600], c[600], t[620];
+      snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first + i); snprintf(c, sizeof c, "%s/blk%02d.bin", cdir.c_str(), first + i); snprintf(t, sizeof t, "%s.tmp", c);
+      if (read_into(p, buf.data(), wtot) != wtot) { fprintf(stderr, "cannot read %s\n", p); ok = false; break; }
+      for (auto& [L, sv] : ls) { int src = lora_source(first + i, model_blocks, lora_blocks(*L)); if (src < 0) continue; int k = lora_fold_block(*L, sv, src, buf.data(), g_q8); if (k > 0) nm += k; }
+      const uint8_t* out = buf.data(); if (!g_q8) { to_q8(buf.data(), qb.data()); out = qb.data(); }
+      int fd = open(t, O_WRONLY | O_CREAT | O_TRUNC, 0600); if (fd < 0) { ok = false; break; }
+      size_t put = 0; while (put < WQ_TOTAL) { ssize_t r = write(fd, out + put, WQ_TOTAL - put); if (r <= 0) break; put += r; }
+      posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd);
+      if (put != WQ_TOTAL) { unlink(t); ok = false; break; }
+      rename(t, c);
+    }
+    if (ok && nm > 0) {
+      cached = true; g_q8 = true; wtot = WQ_TOTAL; wmodw = WQ_MODW;
+      fprintf(stderr, "megarun: LoRA cache built for the low-memory mode: %d matrices, blocks %d..%d, %.1fs\n", nm, first, first + count - 1, now() - tb);
+    } else if (ok) fprintf(stderr, "megarun: LoRA: no matching layers in the blocks\n");
+  }
   double t0 = now();
   for (int i = 0; i < nbuf; i++) {
     char p[600]; snprintf(p, sizeof p, "%s/blk%02d.bin", cached ? cdir.c_str() : dir.c_str(), first + i);
@@ -167,7 +219,7 @@ int main(int argc, char** argv) {
   if (cached) fprintf(stderr, "megarun: LoRA from cache %s, blocks %d..%d\n", cdir.c_str(), first, first + count - 1);
   bool folded = false;
   // user LoRAs (Anima 2B), folded into the fp16 weights in RAM (lora_fold.h): MEGA_LORA = "file*strength|file*strength|..." (a bare file takes MEGA_LORA_S, default 1)
-  if (stream && !cached && lv0 && *lv0) fprintf(stderr, "megarun: LoRA skipped in low-memory mode (no folded copy in the LoRA cache yet: load once with the mode off)\n");
+  if (stream && !cached && lv0 && *lv0) fprintf(stderr, "megarun: LoRA skipped in low-memory mode (the LoRA cache could not be built)\n");
   const std::string sdir = cached ? cdir : dir;   // where the streaming loader reads the blocks
   if (const char* lv = cached || stream ? nullptr : getenv("MEGA_LORA")) {
     const float s0 = getenv("MEGA_LORA_S") ? (float)atof(getenv("MEGA_LORA_S")) : 1.f;

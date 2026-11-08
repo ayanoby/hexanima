@@ -79,6 +79,8 @@ static void par(int n, const std::function<void(int, int)>& fn) {
     for (int t = 0; t < nt; t++) th.emplace_back([=, &fn] { fn(n * t / nt, n * (t + 1) / nt); });
     for (auto& t : th) t.join();
 }
+#include "lora_fold.h"   // safetensors reader + LoRA formats (hexagon/mega)
+#include "lora_side.h"   // LoRA for the LLM adapter and the text encoder
 
 // C[M,N] = A[M,K] * W[N,K]^T (+ bias[N]); W fp16
 static void linear(const f32* A, int M, int K, const Tn& Wt, const Tn* bias, f32* C) {
@@ -325,6 +327,7 @@ int main(int argc, char** argv) {
     std::string dir = argv[2];
     double t0 = now();
     load_small(argv[1]);
+    fold_adapter_loras();
     if (!getenv("ANIMAD_NOMLOCK")) {   // 2.9B: RAM is oversubscribed (7 GB of dmabuf), keep the CPU-side weights/code resident instead of swap-thrashing every step
         struct rlimit rl = {RLIM_INFINITY, RLIM_INFINITY}; setrlimit(RLIMIT_MEMLOCK, &rl);
         if (mlockall(MCL_CURRENT)) perror("mlockall");
@@ -354,7 +357,10 @@ int main(int argc, char** argv) {
         else { int rg[3][2] = {{0, 10}, {10, 10}, {20, 8}}; for (auto& r : rg) ch.push_back(spawn(ph, r[0], r[1], ".")); }
         for (auto& c : ch) waitline(c, "ready", nullptr);
         if (serve || getenv("SD_VAE_DIR")) { vae.push_back(spawn_vae(ph)); waitline(vae[0], "ready", nullptr); }
-        if (serve && !access((ph + "/te3.bin").c_str(), F_OK) && !access((ph + "/te_embed.f16").c_str(), F_OK)) {
+        // a LoRA with text-encoder weights: sd.cpp encodes the prompts on the CPU with the merged copy (anima.sh passes $A/te_llm as --llm), no NPU text encoder
+        const std::string te_llm = serve ? te_merge() : "";
+        if (serve) { if (te_llm.empty()) unlink((ph + "/te_llm").c_str()); else writefile(ph + "/te_llm", te_llm.data(), te_llm.size()); }
+        if (serve && te_llm.empty() && !access((ph + "/te3.bin").c_str(), F_OK) && !access((ph + "/te_embed.f16").c_str(), F_OK)) {
             int fd = open((ph + "/te_embed.f16").c_str(), O_RDONLY);
             embed = (const __fp16*)mmap(nullptr, (size_t)151936 * 1024 * 2, PROT_READ, MAP_SHARED, fd, 0);
             if (embed == MAP_FAILED) embed = nullptr;

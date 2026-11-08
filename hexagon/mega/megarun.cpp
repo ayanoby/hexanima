@@ -1,4 +1,6 @@
 #include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <dirent.h>
 // HMX block runner (replaces chainrun): holds the 28 fp16 crouton block weights in rpcmem and runs them on the DSP with the mega kernels.
 // stdin: "run X_IN EMB LORA CTX X_OUT [GH GW]" -> "done <ms>"; "quit".   X_IN/X_OUT fp32 [D][T], EMB fp32[2048], LORA fp32[6144], CTX fp32 [1024][512]
 // usage: megarun HMXDIR [FIRST COUNT]
@@ -26,6 +28,7 @@ extern "C" {
 }
 #include "blk_meta.h"
 #include "blk_wlayout.h"
+#include "lora_fold.h"
 
 struct dma_buf_sync_ { unsigned long long flags; };
 #define DMA_BUF_IOCTL_SYNC_ _IOW('b', 0, dma_buf_sync_)
@@ -49,6 +52,27 @@ static size_t read_into(const std::string& path, uint8_t* dst, size_t maxb) {   
   posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd); return got.load();
 }
 static size_t up(size_t x) { return (x + 4095) & ~(size_t)4095; }
+// fp16 block (W_TOTAL) -> q8 block (WQ_TOTAL), the format export_all.py --q8 writes for the 2.9B models: every 32x32 fp16 tile (2048 B) becomes a 1152 B
+// record = 64 fp16 column scales (halfword l -> column l/2, max|w|/127) + 1024 offset-binary int8 in the same order; gains and modulation weights are copied.
+// LoRA-folded blocks are kept this way: half the RAM and half the LoRA cache on flash, the same kernels the 2.9B models use.
+static void to_q8(const uint8_t* src, uint8_t* dst) {
+  const size_t nt = W_GAIN / 2048;
+  auto job = [&](size_t t0, size_t t1) {
+    for (size_t t = t0; t < t1; t++) {
+      const __fp16* a = (const __fp16*)(src + t * 2048); uint8_t* rec = dst + t * 1152; __fp16* sv = (__fp16*)rec; uint8_t* q = rec + 128;
+      for (int c = 0; c < 32; c++) {
+        float mx = 0; for (int r16 = 0; r16 < 16; r16++) for (int p = 0; p < 2; p++) mx = std::max(mx, std::fabs((float)a[(r16 * 32 + c) * 2 + p]));
+        float v = mx / 127.0f; __fp16 sc = (__fp16)(v == 0 ? 1.0f : v); float sf = (float)sc;
+        sv[2 * c] = sv[2 * c + 1] = sc;
+        for (int r16 = 0; r16 < 16; r16++) for (int p = 0; p < 2; p++) {
+          int i = (r16 * 32 + c) * 2 + p; float qv = std::nearbyint((float)a[i] / sf); qv = std::min(127.f, std::max(-127.f, qv)); q[i] = (uint8_t)((int)qv + 128);
+        }
+      }
+    }
+  };
+  std::vector<std::thread> th; for (int i = 0; i < 4; i++) th.emplace_back(job, nt * i / 4, nt * (i + 1) / 4); for (auto& x : th) x.join();
+  memcpy(dst + WQ_GAIN, src + W_GAIN, W_TOTAL - W_GAIN);
+}
 
 struct Layout { int meta[M_NMETA]; size_t total; };
 static bool g_q8 = false;
@@ -109,10 +133,29 @@ int main(int argc, char** argv) {
   const bool stream = getenv("MEGA_STREAM") != nullptr; const int nbuf = stream ? std::min(2, count) : count;
   std::vector<uint8_t*> wts(nbuf);
   { char p[512]; snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first); struct stat st; if (!stat(p, &st) && (size_t)st.st_size == WQ_TOTAL) g_q8 = true; }   // q8 weight files are recognised by size
-  const size_t wtot = g_q8 ? WQ_TOTAL : W_TOTAL, wmodw = g_q8 ? WQ_MODW : W_MODW;
+  size_t wtot = g_q8 ? WQ_TOTAL : W_TOTAL, wmodw = g_q8 ? WQ_MODW : W_MODW;
+  // LoRA cache (MEGA_LORA_CACHE=<dir>): blocks already folded with this exact LoRA set (files, sizes, dates, strengths) are read from <dir>/<key>/
+  // instead of folding again; after a fold the blocks are written there in the background (only the last set is kept). Cached blocks are always q8.
+  std::string cdir; bool cached = false;
+  const char* lv0 = getenv("MEGA_LORA");
+  if (lv0 && *lv0 && getenv("MEGA_LORA_CACHE")) {
+    std::string k = dir + "|" + lv0 + "|" + (getenv("MEGA_LORA_S") ? getenv("MEGA_LORA_S") : "");
+    std::string all = lv0;
+    for (size_t p = 0; p < all.size();) {
+      size_t q = all.find('|', p); if (q == std::string::npos) q = all.size();
+      std::string item = all.substr(p, q - p); p = q + 1; size_t s = item.rfind('*'); if (s != std::string::npos) item.resize(s);
+      struct stat st; if (!stat(item.c_str(), &st)) k += "|" + std::to_string((long long)st.st_size) + ":" + std::to_string((long long)st.st_mtime);
+    }
+    uint64_t h = 1469598103934665603ull; for (unsigned char c : k) { h ^= c; h *= 1099511628211ull; }
+    char hx[24]; snprintf(hx, sizeof hx, "%016llx", (unsigned long long)h);
+    cdir = std::string(getenv("MEGA_LORA_CACHE")) + "/" + hx;
+    cached = true;
+    for (int i = 0; i < count && cached; i++) { char p[600]; snprintf(p, sizeof p, "%s/blk%02d.bin", cdir.c_str(), first + i); struct stat st; cached = !stat(p, &st) && (size_t)st.st_size == WQ_TOTAL; }
+    if (cached) { g_q8 = true; wtot = WQ_TOTAL; wmodw = WQ_MODW; }
+  }
   double t0 = now();
   for (int i = 0; i < nbuf; i++) {
-    char p[512]; snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first + i);
+    char p[600]; snprintf(p, sizeof p, "%s/blk%02d.bin", cached ? cdir.c_str() : dir.c_str(), first + i);
     wts[i] = (uint8_t*)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, RPCMEM_DEFAULT_FLAGS, wtot);
     if (stream) { if (!wts[i]) { fprintf(stderr, "rpcmem_alloc failed\n"); return 1; } continue; }   // streaming: the buffers are filled for every run
     int fd = open(p, O_RDONLY); if (fd < 0 || !wts[i]) { fprintf(stderr, "cannot load %s\n", p); return 1; }
@@ -120,7 +163,40 @@ int main(int argc, char** argv) {
     posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd);
     if (got != wtot) { fprintf(stderr, "short read %s\n", p); return 1; }
   }
-  fprintf(stderr, "megarun: weights loaded %.1fs\n", now() - t0);
+  fprintf(stderr, "megarun: weights loaded %.1fs%s\n", now() - t0, cached ? " (LoRA cache)" : "");
+  if (cached) fprintf(stderr, "megarun: LoRA from cache %s, blocks %d..%d\n", cdir.c_str(), first, first + count - 1);
+  bool folded = false;
+  // user LoRAs (Anima 2B), folded into the fp16 weights in RAM (lora_fold.h): MEGA_LORA = "file*strength|file*strength|..." (a bare file takes MEGA_LORA_S, default 1)
+  if (stream && !cached && lv0 && *lv0) fprintf(stderr, "megarun: LoRA skipped in low-memory mode (no folded copy in the LoRA cache yet: load once with the mode off)\n");
+  const std::string sdir = cached ? cdir : dir;   // where the streaming loader reads the blocks
+  if (const char* lv = cached || stream ? nullptr : getenv("MEGA_LORA")) {
+    const float s0 = getenv("MEGA_LORA_S") ? (float)atof(getenv("MEGA_LORA_S")) : 1.f;
+    std::string all = lv;
+    for (size_t p = 0; p < all.size();) {
+      size_t q = all.find('|', p); if (q == std::string::npos) q = all.size();
+      std::string item = all.substr(p, q - p); p = q + 1; if (item.empty()) continue;
+      float s = s0; size_t st = item.rfind('*'); if (st != std::string::npos) { s = (float)atof(item.c_str() + st + 1); item.resize(st); }
+      LoraFile L; double tl = now();
+      if (!L.open(item.c_str())) { fprintf(stderr, "megarun: LoRA skipped: cannot read %s\n", item.c_str()); continue; }
+      struct stat st40; char p40[512]; snprintf(p40, sizeof p40, "%s/blk39.bin", dir.c_str());
+      const int model_blocks = stat(p40, &st40) == 0 ? 40 : 28, lora_n = lora_blocks(L);   // 2B LoRAs on 2.9B models (and back) through FROM2B
+      int nm = 0; bool fit = true;
+      for (int i = 0; i < count && fit; i++) { int src = lora_source(first + i, model_blocks, lora_n); if (src < 0) continue; int k = lora_fold_block(L, s, src, wts[i], g_q8); if (k < 0) fit = false; else nm += k; }
+      if (nm > 0) folded = true;
+      if (!fit) fprintf(stderr, "megarun: LoRA %s does not fit this model (shapes), partly applied\n", item.c_str());
+      fprintf(stderr, "megarun: LoRA %s: %d matrices of blocks %d..%d, strength %.2f, %.1fs\n", item.c_str(), nm, first, first + count - 1, s, now() - tl);
+    }
+  }
+  if (folded && !g_q8) {   // fp16 model with LoRAs: keep the folded blocks as q8 (see to_q8)
+    double tq = now();
+    for (int i = 0; i < count; i++) {
+      uint8_t* q = (uint8_t*)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, RPCMEM_DEFAULT_FLAGS, WQ_TOTAL);
+      if (!q) { fprintf(stderr, "rpcmem_alloc failed (q8)\n"); return 1; }
+      to_q8(wts[i], q); rpcmem_free(wts[i]); wts[i] = q;
+    }
+    g_q8 = true; wtot = WQ_TOTAL; wmodw = WQ_MODW;
+    fprintf(stderr, "megarun: LoRA blocks kept as q8, %.1fs\n", now() - tq);
+  }
   struct remote_rpc_control_unsigned_module ud = {CDSP_DOMAIN_ID, 1};
   remote_session_control(DSPRPC_CONTROL_UNSIGNED_MODULE, &ud, sizeof ud);
   remote_handle64 h = 0; int r = mega_open(mega_URI CDSP_DOMAIN, &h);
@@ -139,6 +215,33 @@ int main(int argc, char** argv) {
     int fd = rpcmem_to_fd(wts[i]);
     dma_buf_sync_ sy = {(1ull << 2) | 3};   // DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW
     ioctl(fd, DMA_BUF_IOCTL_SYNC_, &sy);
+  }
+  if (folded && !cdir.empty()) {   // save the folded blocks for the next load (the DSP only reads them, so a CPU thread can copy them out meanwhile)
+    std::thread([cdir, wts, wtot, first, count]() {
+      const std::string root = cdir.substr(0, cdir.rfind('/')), mine = cdir.substr(cdir.rfind('/') + 1);
+      mkdir(root.c_str(), 0700);
+      if (DIR* d = opendir(root.c_str())) {   // keep only this LoRA set: other keys are removed
+        for (struct dirent* e; (e = readdir(d));) {
+          std::string n = e->d_name; if (n == "." || n == ".." || n == mine) continue;
+          std::string sub = root + "/" + n;
+          if (DIR* s = opendir(sub.c_str())) { for (struct dirent* f; (f = readdir(s));) if (f->d_name[0] != '.') unlink((sub + "/" + f->d_name).c_str()); closedir(s); }
+          rmdir(sub.c_str());
+        }
+        closedir(d);
+      }
+      mkdir(cdir.c_str(), 0700);
+      struct statvfs vs; if (statvfs(cdir.c_str(), &vs) || (double)vs.f_bavail * vs.f_frsize < (double)wtot * count + 2e9) { fprintf(stderr, "megarun: LoRA cache skipped (storage)\n"); return; }
+      double tw = now();
+      for (int i = 0; i < count; i++) {
+        char p[600], t[620]; snprintf(p, sizeof p, "%s/blk%02d.bin", cdir.c_str(), first + i); snprintf(t, sizeof t, "%s.tmp", p);
+        int fd = open(t, O_WRONLY | O_CREAT | O_TRUNC, 0600); if (fd < 0) return;
+        size_t put = 0; while (put < wtot) { ssize_t r = write(fd, wts[i] + put, wtot - put); if (r <= 0) break; put += r; }
+        posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd);
+        if (put != wtot) { unlink(t); return; }
+        rename(t, p);
+      }
+      fprintf(stderr, "megarun: LoRA cache written, blocks %d..%d, %.1fs\n", first, first + count - 1, now() - tw);
+    }).detach();
   }
   printf("ready\n"); fflush(stdout);
   int cur_gh = -1, cur_gw = -1;
@@ -191,7 +294,7 @@ int main(int argc, char** argv) {
     else mt = std::thread([&] {   // loader: block i+1 is read (and its modulation computed) while the DSP runs block i
       for (size_t oi = 0; oi < order.size(); oi++) {
         { std::unique_lock<std::mutex> lk(smu); scv.wait(lk, [&] { return sfreed >= (int)oi - 2; }); }
-        int k = order[oi]; uint8_t* b = wts[oi % nbuf]; char p[512]; snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first + k);
+        int k = order[oi]; uint8_t* b = wts[oi % nbuf]; char p[600]; snprintf(p, sizeof p, "%s/blk%02d.bin", sdir.c_str(), first + k);
         if (read_into(p, b, wtot) != wtot) { fprintf(stderr, "cannot read %s\n", p); sfail = true; }
         else { dma_buf_sync_ sy = {(1ull << 2) | 3}; ioctl(rpcmem_to_fd(b), DMA_BUF_IOCTL_SYNC_, &sy); compute_mod(k, b); }
         { std::lock_guard<std::mutex> lk(smu); sready = (int)oi; } scv.notify_all();

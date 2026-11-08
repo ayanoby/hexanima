@@ -26,20 +26,28 @@ if [ "$1" = stop ]; then touch $ROOT/quit; if pidof $NS >/dev/null; then printf 
   # animad stuck in an aborted request never polls "quit": kill it and its children so the next load does not wait forever
   if pidof $NA >/dev/null; then kill -9 $(pidof $NA); fi; for p in $NH; do pidof $p >/dev/null && kill -9 $(pidof $p); done; rm -f $ROOT/quit; exit 0; fi
 if [ "$1" = status ]; then if pidof $NA >/dev/null && grep -q serving $A/animad.log; then echo loaded; else echo unloaded; fi; exit 0; fi
-KEY=${MODEL:-2}${MEGA_STREAM:+s}   # the low-memory (streaming) mode is part of the key: switching it restarts the server
+# LORA=<file*strength|...>: Anima LoRAs (kohya, diffusers/PEFT, LyCORIS LoKr/LoHa) folded into the block weights when megarun loads them (hexagon/mega/lora_fold.h);
+# their LLM-adapter and text-encoder parts are applied by animad (phone/lora_side.h)
+KEY="${MODEL:-2}${MEGA_STREAM:+s}${LORA:+|$LORA|${LORA_S:-1}}"   # the low-memory (streaming) mode and the LoRAs are part of the key: changing them restarts the server
 if pidof $NA >/dev/null && [ "$(cat $A/model 2>/dev/null)" != "$KEY" ]; then   # loaded server holds another model (or runs in the other memory mode): restart it
   sh $0 stop; while pidof $NA >/dev/null; do sleep 0.3; done
 fi
 if ! pidof $NA >/dev/null; then
   echo $KEY > $A/model
   rm -rf $ROOT; mkdir -p $ROOT
+  # lcache: the folded blocks of the last LoRA set (q8); the next load with the same set reads them instead of folding again
+  # tecache: the text encoder with the LoRAs' text-encoder weights merged in (F16; animad writes it and names it in $A/te_llm, sd.cpp then encodes on the CPU)
+  rm -f $A/te_llm
+  if [ -n "$LORA" ]; then export MEGA_LORA="$LORA" MEGA_LORA_S="${LORA_S:-1}" MEGA_LORA_CACHE=$A/lcache ANIMA_TE=$S/miaomiao3DHarem_animaLH3D10_txt.safetensors ANIMA_TE_CACHE=$A/tecache
+  else unset MEGA_LORA MEGA_LORA_S MEGA_LORA_CACHE ANIMA_TE ANIMA_TE_CACHE; fi
   cd $A && LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $ANIMAD $SM --serve $ROOT < /dev/null > $A/animad.log 2>&1 &
   while ! grep -q serving $A/animad.log 2>/dev/null && [ ! -f $A/cancel ]; do sleep 0.3; done
 fi
 # persistent sd-cli (text tokenizer/sampler/PNG writer stay loaded: saves ~0.7 s per image); ANIMA_NOSERVE=1 starts one per image as before
 if [ -z "$ANIMA_NOSERVE" ] && ! pidof $NS >/dev/null; then
   rm -rf $SQ; mkdir -p $SQ; chmod 777 $SQ
-  cd $S && SD_SERVE=$SQ LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $SDCLI --diffusion-model $DM --llm miaomiao3DHarem_animaLH3D10_txt.safetensors \
+  LLM=miaomiao3DHarem_animaLH3D10_txt.safetensors; [ -s $A/te_llm ] && LLM=$(cat $A/te_llm)
+  cd $S && SD_SERVE=$SQ LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $SDCLI --diffusion-model $DM --llm "$LLM" \
     -p x --sampling-method euler --cfg-scale 1 --steps 4 -W 512 -H 768 ${VAEARG:---taesd taew2_1.safetensors} --mmap -t ${T:-4} -o /sdcard/Download/anima_srv.png < /dev/null > $A/sdcli.log 2>&1 &
   while [ ! -f $SQ/ready ] && [ ! -f $A/cancel ]; do sleep 0.1; done
 fi

@@ -251,3 +251,12 @@ For editing the size is at most 1024×768	编辑时尺寸最大为 1024×768
 The prompt is too long for this size: shorten it or pick a smaller size	描述对于这个尺寸来说太长：请缩短描述或选择更小的尺寸
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft，4B，MIT 许可证）可按描述在 4 步内生成图片并编辑照片，每张约 12 秒。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；下载约 8.7 GB。要编辑照片，请在“编辑照片”区块中选择照片并描述要修改的内容。
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	两边都必须是 16 的倍数，且 patch 数（宽/16 × 高/16）能被 32 整除。生成图片：最多 6144 个 patch，例如 1536×1024。编辑：最多 3200 个 patch，例如 1024×768，因为照片也参与计算。
+Loading the LoRA…	正在加载 LoRA…
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	请选择为 Anima 制作的 .safetensors 文件（kohya、diffusers/PEFT、LoKr 和 LoHa 格式；28 或 40 个区块）。选择后会立即检查。强度 1.00 是作者的设置。模型加载时会把 LoRA 合并进权重，所以使用新 LoRA（或新强度）的第一张图要多花 10–15 秒；合并后的权重以 8 位块保存（最后一个 LoRA 约占 2 GB 存储）。LoRA 中针对文本编码器的部分不会应用。
+Compatible: rank %d, %d of %d blocks	兼容：秩 %d，%d 个块中的 %d 个
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	这个 LoRA 适用于其他模型（FLUX、SDXL 等），不适用于 Anima。
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	这个文件不像 Anima 的 LoRA：缺少预期的层 (blocks.N.*)。
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	层的尺寸与 Anima 不符 (%s)。可能是适用于该模型其他版本的 LoRA。
+The LoRA has blocks that Anima does not have (%s).	这个 LoRA 含有 Anima 没有的块 (%s)。
+A .safetensors file for Anima: it is checked as soon as you pick it	Anima 的 .safetensors 文件：选择后立即检查
+LoRA for Anima	Anima 的 LoRA

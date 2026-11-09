@@ -70,7 +70,10 @@ public class Main extends Base {
     File lastFile;
     boolean customOpen;
 
-    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + (Settings.lowRam(this) ? "MEGA_STREAM=1 " : ""); }
+    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + (Settings.lowRam(this) ? "MEGA_STREAM=1 " : "") + (loraOn() ? "LORA=" + q(AnimaLora.src(getFilesDir()).getPath() + "*" + String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f)) + " " : ""); }
+    /** the LoRA the Anima server has loaded (changing it restarts the server, anima.sh keeps the LoRA in the server key) */
+    String servedSig = "";
+    String loraSig() { return loraOn() && isAnima() ? loraId() + "*" + strBar.getProgress() : ""; }
 
     GradientDrawable gradient(boolean enabled) {
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{enabled ? ACC : 0xFF3A4158, enabled ? ACC2 : 0xFF3A4158});
@@ -287,7 +290,7 @@ public class Main extends Base {
         sr2.addView(strBar, new LinearLayout.LayoutParams(0, -2, 1));
         strText = text("", 14, TXT, true); strText.setMinWidth(dp(44)); strText.setGravity(Gravity.END); sr2.addView(strText);
         strBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public void onProgressChanged(SeekBar b, int p, boolean u) { strText.setText(String.format(java.util.Locale.US, "%.2f", p * 0.05f)); if (u) prefs().edit().putFloat("moss_lora_str", p * 0.05f).apply(); }
+            public void onProgressChanged(SeekBar b, int p, boolean u) { strText.setText(String.format(java.util.Locale.US, "%.2f", p * 0.05f)); if (u) prefs().edit().putFloat(lp() + "str", p * 0.05f).apply(); }
             public void onStartTrackingTouch(SeekBar b) { }
             public void onStopTrackingTouch(SeekBar b) { }
         });
@@ -464,12 +467,17 @@ public class Main extends Base {
     }
 
     // ---- MOSS-Image user LoRA ---------------------------------------------------------------------
-    String loraId() { return prefs().getString("moss_lora_id", ""); }
-    boolean loraOn() { return isMoss() && !loraId().isEmpty() && MossLora.src(getFilesDir()).exists() && strBar.getProgress() > 0; }
+    /** the LoRA box serves MOSS-Image and the Anima models; each keeps its own file, name, info and strength under its own prefix */
+    String lp() { return isMoss() ? "moss_lora_" : "anima_lora_"; }
+    File loraSrc() { return isMoss() ? MossLora.src(getFilesDir()) : AnimaLora.src(getFilesDir()); }
+    String loraId() { return prefs().getString(lp() + "id", ""); }
+    boolean loraOn() { return (isMoss() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
     void refreshLora() {
-        boolean has = !loraId().isEmpty() && MossLora.src(getFilesDir()).exists();
-        loraName.setText(has ? prefs().getString("moss_lora_name", "LoRA") : L.s("не выбрана", "none"));
-        loraInfo.setText(has ? prefs().getString("moss_lora_info", "") : L.s("Файл .safetensors для MOSS-Image: проверяется сразу после выбора", "A .safetensors file for MOSS-Image: it is checked as soon as you pick it"));
+        if (loraName == null) return;
+        boolean has = !loraId().isEmpty() && loraSrc().exists();
+        strBar.setProgress(Math.round(prefs().getFloat(lp() + "str", 1f) * 20));
+        loraName.setText(has ? prefs().getString(lp() + "name", "LoRA") : L.s("не выбрана", "none"));
+        loraInfo.setText(has ? prefs().getString(lp() + "info", "") : isMoss() ? L.s("Файл .safetensors для MOSS-Image: проверяется сразу после выбора", "A .safetensors file for MOSS-Image: it is checked as soon as you pick it") : L.s("Файл .safetensors для Anima: проверяется сразу после выбора", "A .safetensors file for Anima: it is checked as soon as you pick it"));
         loraInfo.setTextColor(has ? OK : DIM);
         loraDrop.setVisibility(has ? View.VISIBLE : View.GONE); strBar.setEnabled(has); strBar.setAlpha(has ? 1f : .4f);
     }
@@ -479,8 +487,9 @@ public class Main extends Base {
     }
     void dropLora() {
         if (busy) return;
-        prefs().edit().remove("moss_lora_id").remove("moss_lora_name").remove("moss_lora_info").apply();
-        ex2.submit(() -> { MossLora.deleteTree(MossLora.dir(getFilesDir())); ui.post(this::refreshLora); });
+        final String pf = lp(); final boolean moss = isMoss();
+        prefs().edit().remove(pf + "id").remove(pf + "name").remove(pf + "info").apply();
+        ex2.submit(() -> { MossLora.deleteTree(moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir())); ui.post(this::refreshLora); });
     }
     void importLora(Uri uri) {
         String nm = "LoRA";
@@ -488,16 +497,18 @@ public class Main extends Base {
         final String name = nm;
         loraInfo.setTextColor(WARN); loraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
         ex2.submit(() -> {
-            final File dir = MossLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "new.safetensors");
+            final boolean moss = isMoss(); final String pf = lp(); final File src = loraSrc();
+            final File dir = moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "new.safetensors");
             try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
                 byte[] b = new byte[1 << 16]; long total = 0;
                 for (int n; (n = in.read(b)) > 0; ) { o.write(b, 0, n); total += n; if (total > (1L << 30)) throw new IOException(L.s("файл больше 1 ГБ", "the file is larger than 1 GB")); }
             } catch (Exception e) { tmp.delete(); ui.post(() -> { refreshLora(); loraFail(name, L.f("Не удалось прочитать файл: %s", "Cannot read the file: %s", e.getMessage())); }); return; }
-            MossLora.Check c = MossLora.check(BIN, tmp);
-            if (!c.ok) { tmp.delete(); ui.post(() -> { refreshLora(); loraFail(name, c.message()); }); return; }
+            final boolean ok; final String msg;
+            if (moss) { MossLora.Check c = MossLora.check(BIN, tmp); ok = c.ok; msg = c.message(); } else { AnimaLora.Check c = AnimaLora.check(tmp); ok = c.ok; msg = c.message(); }
+            if (!ok) { tmp.delete(); ui.post(() -> { refreshLora(); loraFail(name, msg); }); return; }
             File[] old = dir.listFiles(); if (old != null) for (File f : old) if (!f.equals(tmp)) MossLora.deleteTree(f);   // the old LoRA and its folded patches go
-            tmp.renameTo(MossLora.src(getFilesDir()));
-            prefs().edit().putString("moss_lora_id", Long.toHexString(System.currentTimeMillis())).putString("moss_lora_name", name).putString("moss_lora_info", "✓ " + c.message()).apply();
+            tmp.renameTo(src);
+            prefs().edit().putString(pf + "id", Long.toHexString(System.currentTimeMillis())).putString(pf + "name", name).putString(pf + "info", "✓ " + msg).apply();
             ui.post(this::refreshLora);
         });
     }
@@ -619,6 +630,7 @@ public class Main extends Base {
 
     boolean isMoss() { return Moss.is(model); }
     boolean isMage() { return Mage.is(model); }
+    boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage(); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
     java.util.List<int[]> sizeList() { return isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
@@ -674,7 +686,7 @@ public class Main extends Base {
         ui.post(() -> {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
-            if (loraBox != null) loraBox.setVisibility(isMoss() ? View.VISIBLE : View.GONE);
+            if (loraBox != null) { loraBox.setVisibility(isMoss() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
             if (editBox != null) editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE);
             state.setText(working ? msg : isMage() ? L.s("Mage-Flow-Edit: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isQwen() ? L.s("Qwen-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Qwen-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isMoss() ? L.s("MOSS-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "MOSS-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isLoaded ? L.s("Модель загружена в NPU, генерация стартует сразу", "Model is loaded on the NPU, generation starts at once")
                 : L.s("Модель выгружена: при генерации загрузится сама (~5 с)", "Model is unloaded: it loads itself when you generate (~5 s)"));
@@ -854,11 +866,12 @@ public class Main extends Base {
         if (isMage()) return runOneMage(pr, seedS, w, h, t0);
         if (isQwen()) return runOneQwen(pr, seedS, w, h, t0);
         if (isMoss()) return runOneMoss(pr, seedS, w, h, t0);
-        if (!loaded) {
-            setProgressUi(0, L.s("Загружаю модель…", "Loading the model…"), t0);
+        final String sig = loraSig();
+        if (!loaded || !sig.equals(servedSig)) {   // a new LoRA (or none) restarts the server: megarun folds it into the blocks while loading
+            setProgressUi(0, loaded ? L.s("Загружаю LoRA…", "Loading the LoRA…") : L.s("Загружаю модель…", "Loading the model…"), t0);
             su("rm -f " + D + "/cancel; " + mp() + "sh " + D + "/anima.sh load < /dev/null >/dev/null 2>&1", false);
             if (cancelled) return null;
-            loaded = true;
+            loaded = true; servedSig = sig;
         }
         final String f = D + "/last.png";
         final boolean[] done = {false};
@@ -884,6 +897,7 @@ public class Main extends Base {
         if (png.length == 0 || BitmapFactory.decodeByteArray(png, 0, png.length) == null) return null;
         try {
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            if (!sig.isEmpty()) meta.put("lora", prefs().getString(lp() + "name", "LoRA")).put("lora_strength", strBar.getProgress() * 0.05f);
             return Gallery.save(this, PngMeta.embed(png, meta), meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()); return null; }
     }

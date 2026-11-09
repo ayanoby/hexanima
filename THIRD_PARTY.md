@@ -33,6 +33,11 @@ Qwen-Image-2.1-Turbo, the Lightning v2-RL adapter and the Qwen-Image-2.1 VAE are
 The pack is converted and quantised (8-bit and lossless 4-bit tiles for the Hexagon matrix unit, the Lightning LoRA kept unmerged, the vision tower's heads zero-padded, the VAE re-written as fp16 Hexagon contexts); the changes are listed in the pack's `NOTICE.md` and in `app/assets/licenses/qwen_notice.txt`.
 The license text is bundled in the app (`qwen_research_license.txt`) and shown under Info -> Licenses. Sources of the conversion are in `qwen/`.
 
+## Anima LoRA folding
+
+The native part of the Anima LoRA support (`hexagon/mega/lora_fold.h`, the LoRA parts of `hexagon/mega/megarun.cpp`, `phone/lora_side.h`) comes from pull request #2 by GrimmDev-Glitch (MIT, authorship kept in the git history); the file check, the size checks and the app side were added here.
+A user-supplied LoRA is a separate work under its author's license; HexAnima only folds it into the weights on the phone (nothing is uploaded or redistributed).
+
 ## Mage-Flow notice
 
 Mage-Flow-Edit-Turbo and its VAE are Copyright (c) Microsoft Corporation, licensed under the MIT License; the Qwen3-VL-4B text encoder and vision tower that ship with it are under the Apache License 2.0.

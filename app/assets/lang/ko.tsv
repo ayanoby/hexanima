@@ -251,3 +251,12 @@ For editing the size is at most 1024×768	편집할 때 크기는 최대 1024×7
 The prompt is too long for this size: shorten it or pick a smaller size	이 크기에는 프롬프트가 너무 깁니다. 줄이거나 더 작은 크기를 선택하세요
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo(Microsoft, 4B, MIT 라이선스)는 프롬프트로 4단계 만에 이미지를 그리고 사진을 편집하며, 한 장에 약 12초가 걸립니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행되며 다운로드 용량은 약 8.7GB입니다. 사진을 편집하려면 "사진 편집" 블록에서 사진을 고르고 바꿀 내용을 적으세요.
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	양쪽 변은 16의 배수이고 패치 수(너비/16 × 높이/16)는 32로 나누어떨어져야 합니다. 이미지는 최대 6144패치(예: 1536×1024), 편집은 최대 3200패치(예: 1024×768)입니다. 사진도 계산에 포함되기 때문입니다.
+Loading the LoRA…	LoRA 불러오는 중…
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Anima용으로 만든 자신의 .safetensors 파일을 선택하세요(kohya, diffusers/PEFT, LoKr, LoHa 형식, 28 또는 40블록). 선택하자마자 검사합니다. 강도 1.00은 제작자의 설정입니다. LoRA는 모델을 불러올 때 가중치에 합쳐지므로 새 LoRA(또는 새 강도)로 만드는 첫 그림은 10~15초 더 걸립니다. 합쳐진 가중치는 8비트 블록으로 저장됩니다(마지막 LoRA 기준 약 2GB). LoRA의 텍스트 인코더 부분은 적용되지 않습니다.
+Compatible: rank %d, %d of %d blocks	호환: 랭크 %d, %d개 블록 중 %d개
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	이 LoRA는 다른 모델(FLUX, SDXL 등)용입니다. Anima에는 맞지 않습니다.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	이 파일은 Anima LoRA처럼 보이지 않습니다: 필요한 레이어(blocks.N.*)가 없습니다.
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	레이어 크기가 Anima와 맞지 않습니다 (%s). 모델의 다른 버전용 LoRA일 가능성이 큽니다.
+The LoRA has blocks that Anima does not have (%s).	이 LoRA에는 Anima에 없는 블록이 있습니다 (%s).
+A .safetensors file for Anima: it is checked as soon as you pick it	Anima용 .safetensors 파일: 고르는 즉시 검사됩니다
+LoRA for Anima	Anima용 LoRA

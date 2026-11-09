@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	Un fichier .
 LoRA for Anima	LoRA pour Anima
 Temperature  battery %.1f °C	Température  batterie %.1f °C
   ·  margin before throttling %d%%	  ·  marge avant bridage %d%%
+Picture %d  ·  %d×%d	Image %d  ·  %d×%d
++ Another picture (%d of %d)	+ Autre image (%d sur %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Images : %d. Mentionnez-les dans le prompt : « image 1 », « image 2 », p. ex. « le personnage de l'image 1 se tient dans la scène de l'image 2 ».
+All models	Tous les modèles
+Out of memory	Mémoire insuffisante
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Le téléphone a manqué de mémoire ; la génération a été arrêtée pour éviter que l'app soit fermée. Fermez d'autres apps ou choisissez une taille plus petite (et une photo plus petite pour l'édition), puis réessayez.
+Stopped: out of memory	Arrêté : mémoire insuffisante
+Little free memory (%d MB): close other apps, or the generation may stop	Peu de mémoire libre (%d Mo) : fermez d'autres apps, sinon la génération peut s'arrêter

@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	Anima için 
 LoRA for Anima	Anima için LoRA
 Temperature  battery %.1f °C	Sıcaklık  pil %.1f °C
   ·  margin before throttling %d%%	  ·  yavaşlamaya kalan pay %d%%
+Picture %d  ·  %d×%d	Görsel %d  ·  %d×%d
++ Another picture (%d of %d)	+ Başka bir görsel (%d / %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Görseller: %d. İstemde onlara atıf yapın: "görsel 1", "görsel 2", ör. "görsel 1'deki karakter görsel 2'nin sahnesinde duruyor".
+All models	Tüm modeller
+Out of memory	Bellek yetersiz
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Telefonun belleği tükendi; uygulama kapanmasın diye üretim durduruldu. Diğer uygulamaları kapatın veya daha küçük bir boyut (ve düzenleme için daha küçük bir fotoğraf) seçip tekrar deneyin.
+Stopped: out of memory	Durduruldu: bellek yetersiz
+Little free memory (%d MB): close other apps, or the generation may stop	Boş bellek az (%d MB): diğer uygulamaları kapatın, yoksa üretim durabilir

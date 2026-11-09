@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	Tệp .safet
 LoRA for Anima	LoRA cho Anima
 Temperature  battery %.1f °C	Nhiệt độ  pin %.1f °C
   ·  margin before throttling %d%%	  ·  còn trước khi bị giảm tốc %d%%
+Picture %d  ·  %d×%d	Ảnh %d  ·  %d×%d
++ Another picture (%d of %d)	+ Thêm ảnh (%d/%d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Ảnh: %d. Hãy nhắc đến chúng trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật ở ảnh 1 đứng trong cảnh của ảnh 2".
+All models	Tất cả mô hình
+Out of memory	Không đủ bộ nhớ
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Điện thoại hết bộ nhớ nên việc tạo ảnh đã dừng để ứng dụng không bị đóng. Hãy đóng các ứng dụng khác, hoặc chọn kích thước nhỏ hơn (và ảnh nhỏ hơn khi chỉnh sửa) rồi thử lại.
+Stopped: out of memory	Đã dừng: hết bộ nhớ
+Little free memory (%d MB): close other apps, or the generation may stop	Bộ nhớ trống ít (%d MB): hãy đóng các ứng dụng khác, nếu không việc tạo ảnh có thể dừng

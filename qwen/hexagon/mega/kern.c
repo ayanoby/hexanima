@@ -292,14 +292,14 @@ void k_softmax2p(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *et, HV
     }
   }
 }
-/* like k_softmax2p, but np partially visible key tiles pk[i] get their own per-row-pair masks pm[i*16+p] (0xFFFF lanes = masked) */
-void k_softmax2pm(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *et, HVX_Vector *scratch, int p0, int p1, const int *pk, const HVX_Vector *pm, int np) {
+/* like k_softmax2p, but np partially visible key tiles pk[i] get the per-row-pair mask set pm[pmi[i]*16+p] (0xFFFF lanes = masked) */
+void k_softmax2pm(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *et, HVX_Vector *scratch, int p0, int p1, const int *pk, const int *pmi, const HVX_Vector *pm, int np) {
   /* scratch: 8 gather destination vectors per caller; gathers are issued 8 deep before the results are read back */
   const HVX_Vector *sv = (const HVX_Vector *)S; HVX_Vector *pv = (HVX_Vector *)P;
   const HVX_Vector mask = Q6_Vh_vsplat_R(0x7FFF);
   const HVX_Vector neginf = Q6_Vh_vsplat_R(0xFBFF);
   for (int p = p0; p < p1; p++) {
-    for (int pi = 0; pi < np; pi++) { HVX_Vector *lv = (HVX_Vector *)&sv[(size_t)pk[pi] * 16 + p]; const HVX_Vector km_ = pm[pi * 16 + p]; *lv = Q6_V_vor_VV(Q6_V_vand_VV(*lv, Q6_V_vnot_V(km_)), Q6_V_vand_VV(neginf, km_)); }
+    for (int pi = 0; pi < np; pi++) { HVX_Vector *lv = (HVX_Vector *)&sv[(size_t)pk[pi] * 16 + p]; const HVX_Vector km_ = pm[pmi[pi] * 16 + p]; *lv = Q6_V_vor_VV(Q6_V_vand_VV(*lv, Q6_V_vnot_V(km_)), Q6_V_vand_VV(neginf, km_)); }
     HVX_Vector m = sv[p];
     for (int cb = 1; cb < nkb; cb++) m = Q6_Vhf_vmax_VhfVhf(m, sv[cb * 16 + p]);
     for (int r = 64; r >= 4; r >>= 1) m = Q6_Vhf_vmax_VhfVhf(m, Q6_V_vror_VR(m, r));

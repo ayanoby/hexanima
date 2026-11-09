@@ -50,7 +50,7 @@ public class Main extends Base {
     final Handler ui = new Handler(Looper.getMainLooper());
     final ExecutorService ex = Executors.newSingleThreadExecutor();
     final ExecutorService ex2 = Executors.newSingleThreadExecutor();   // the Stop button
-    volatile boolean loaded, busy, cancelled;
+    volatile boolean loaded, busy, cancelled, oomAbort;
     String model = "";   // id of the selected installed model; anima.sh gets MID/MDIR
     int count = 1;       // pictures per press of Generate
     volatile int curIdx, curN = 1;
@@ -64,7 +64,7 @@ public class Main extends Base {
     MultiAutoCompleteTextView prompt;
     EditText seed, wEdit, hEdit;
     LinearLayout loraBox; TextView loraName, loraInfo, strText; SeekBar strBar; Button loraPick, loraDrop;
-    LinearLayout editBox; ImageView editThumb; TextView editInfo; Button editPick, editDrop; volatile Bitmap editBm;   // Qwen-Image: the photo to edit
+    LinearLayout editBox; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
     ProgressBar bar, ramBar;
     ImageView img;
     File lastFile;
@@ -175,7 +175,7 @@ public class Main extends Base {
         img.setAdjustViewBounds(true);
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
         img.setVisibility(View.GONE);
-        img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, false); } });
+        img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
         imgBox.addView(img, new LinearLayout.LayoutParams(-1, -2));
         root.addView(imgBox, new LinearLayout.LayoutParams(-1, -2));
         LinearLayout resRow = new LinearLayout(this);
@@ -314,6 +314,9 @@ public class Main extends Base {
         editDrop = button("✕", CARD, TXT); editDrop.setOnClickListener(v -> dropEdit());
         LinearLayout.LayoutParams ed2 = new LinearLayout.LayoutParams(dp(48), dp(44)); ed2.leftMargin = dp(8); er.addView(editDrop, ed2);
         editBox.addView(er);
+        extraBox = new LinearLayout(this); extraBox.setOrientation(LinearLayout.VERTICAL); editBox.addView(extraBox);   // Qwen: up to two more reference pictures
+        editAdd = button("", CARD, TXT); editAdd.setOnClickListener(v -> pickExtra());
+        LinearLayout.LayoutParams eap = new LinearLayout.LayoutParams(-1, dp(44)); eap.topMargin = dp(8); editBox.addView(editAdd, eap);
         root.addView(editBox);
         refreshEdit();
 
@@ -423,7 +426,8 @@ public class Main extends Base {
     @Override protected void onActivityResult(int req, int res, Intent d) {
         if (req == 9 && res == RESULT_OK && d != null && d.getData() != null) { importLora(d.getData()); return; }
         if (req == 10 && res == RESULT_OK && d != null && d.getData() != null) { importEdit(d.getData()); return; }
-        if (req == 7 && res == RESULT_OK && d != null) {
+        if (req == 12 && res == RESULT_OK && d != null && d.getData() != null) { importExtra(d.getData()); return; }
+        if ((req == 7 || req == Viewer.REQ) && res == RESULT_OK && d != null && d.hasExtra("prompt")) {
             prompt.setText(d.getStringExtra("prompt")); seed.setText(d.getStringExtra("seed"));
             customOpen = false;
             setRes(d.getIntExtra("w", 512), d.getIntExtra("h", 768));
@@ -445,9 +449,22 @@ public class Main extends Base {
     boolean isQwen() { return Qwen.is(model); }
     void refreshEdit() {
         if (editBm == null && prefs().getBoolean("qwen_edit_on", false) && Qwen.editSrc(getFilesDir()).exists()) editBm = BitmapFactory.decodeFile(Qwen.editSrc(getFilesDir()).getPath());
-        final Bitmap b = editBm;
+        if (extraBm.isEmpty() && editBm != null) for (int i = 1; i < Qwen.MAX_IMAGES; i++) { File f = Qwen.editSrc(getFilesDir(), i); Bitmap x = f.exists() ? BitmapFactory.decodeFile(f.getPath()) : null; if (x == null) break; extraBm.add(x); }
+        final Bitmap b = editBm; final boolean multi = isQwen();
+        if (!multi && !extraBm.isEmpty()) { /* Mage takes a single photo: the extras stay stored but unused */ }
         editThumb.setImageBitmap(b); editThumb.setVisibility(b != null ? View.VISIBLE : View.GONE);
-        editInfo.setText(b != null ? L.f("Фото %d×%d. Описание — что в нём изменить, например «сделай небо закатным».", "Photo %d×%d. The prompt says what to change, e.g. \"make the sky a sunset\".", b.getWidth(), b.getHeight())
+        extraBox.removeAllViews();
+        if (multi && b != null) for (int i = 0; i < extraBm.size(); i++) {
+            final int idx = i; LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
+            ImageView th = new ImageView(this); th.setScaleType(ImageView.ScaleType.CENTER_CROP); th.setBackground(bg(CARD, 16)); th.setClipToOutline(true); th.setImageBitmap(extraBm.get(i));
+            row.addView(th, new LinearLayout.LayoutParams(dp(48), dp(48)));
+            TextView tt = text(L.f("Картинка %d  ·  %d×%d", "Picture %d  ·  %d×%d", i + 2, extraBm.get(i).getWidth(), extraBm.get(i).getHeight()), 13, DIM, false); tt.setPadding(dp(12), 0, dp(8), 0); row.addView(tt, new LinearLayout.LayoutParams(0, -2, 1));
+            Button x = button("✕", CARD, TXT); x.setOnClickListener(v -> dropExtra(idx)); LinearLayout.LayoutParams xp = new LinearLayout.LayoutParams(dp(48), dp(40)); row.addView(x, xp);
+            LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.topMargin = dp(8); extraBox.addView(row, rp);
+        }
+        editAdd.setVisibility(multi && b != null && extraBm.size() < Qwen.MAX_IMAGES - 1 ? View.VISIBLE : View.GONE);
+        editAdd.setText(L.f("+ Ещё картинка (%d из %d)", "+ Another picture (%d of %d)", extraBm.size() + 1, Qwen.MAX_IMAGES));
+        editInfo.setText(b != null && multi && !extraBm.isEmpty() ? L.f("Картинок: %d. В описании ссылайтесь на них: «картинка 1», «картинка 2», например «персонаж с картинки 1 стоит на фоне картинки 2».", "Pictures: %d. Refer to them in the prompt: \"picture 1\", \"picture 2\", e.g. \"the character from picture 1 stands in the scene of picture 2\".", extraBm.size() + 1) : b != null ? L.f("Фото %d×%d. Описание — что в нём изменить, например «сделай небо закатным».", "Photo %d×%d. The prompt says what to change, e.g. \"make the sky a sunset\".", b.getWidth(), b.getHeight())
             : L.s("Выберите фото, чтобы изменить его по описанию. Без фото модель просто рисует картинку.", "Pick a photo to change it by the prompt. Without one the model just draws a picture."));
         editDrop.setVisibility(b != null ? View.VISIBLE : View.GONE);
     }
@@ -457,14 +474,39 @@ public class Main extends Base {
     }
     void dropEdit() {
         if (busy) return;
-        editBm = null; prefs().edit().putBoolean("qwen_edit_on", false).apply();
-        ex2.submit(() -> { Qwen.editSrc(getFilesDir()).delete(); Models.deleteTree(Qwen.editDir(getFilesDir())); ui.post(this::refreshEdit); });
+        editBm = null; extraBm.clear(); prefs().edit().putBoolean("qwen_edit_on", false).apply();
+        ex2.submit(() -> { for (int i = 0; i < Qwen.MAX_IMAGES; i++) Qwen.editSrc(getFilesDir(), i).delete(); Models.deleteTree(Qwen.editDir(getFilesDir())); ui.post(this::refreshEdit); });
         setRes(resW, resH);
+    }
+    void pickExtra() {
+        if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
+        startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE), 12);
+    }
+    void importExtra(Uri uri) {
+        ex2.submit(() -> {
+            try {
+                final int idx = extraBm.size() + 1; if (idx >= Qwen.MAX_IMAGES) return;
+                final Bitmap bm = Qwen.importPhoto(getContentResolver(), uri, getFilesDir(), idx);
+                ui.post(() -> { extraBm.add(bm); refreshEdit(); });
+            } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Не удалось открыть фото: %s", "Cannot open the photo: %s", e.getMessage()), Toast.LENGTH_LONG).show()); }
+        });
+    }
+    /** removes extra picture idx (0 = "picture 2"); the later ones move up, their cached condition files are rebuilt */
+    void dropExtra(int idx) {
+        if (busy || idx >= extraBm.size()) return;
+        extraBm.remove(idx);
+        ex2.submit(() -> {
+            final File home = getFilesDir(); int n = extraBm.size();
+            for (int i = idx + 1; i <= n + 1; i++) { File from = Qwen.editSrc(home, i + 1), to = Qwen.editSrc(home, i); to.delete(); if (from.exists()) from.renameTo(to); }
+            Qwen.editSrc(home, n + 1).delete();
+            for (int i = 1; i < Qwen.MAX_IMAGES; i++) Models.deleteTree(Qwen.editDir(home, i));
+            ui.post(this::refreshEdit);
+        });
     }
     void importEdit(Uri uri) {
         ex2.submit(() -> {
             try {
-                final Bitmap bm = Qwen.importPhoto(getContentResolver(), uri, getFilesDir());
+                final Bitmap bm = Qwen.importPhoto(getContentResolver(), uri, getFilesDir(), 0);
                 prefs().edit().putBoolean("qwen_edit_on", true).apply();
                 ui.post(() -> {
                     editBm = bm; refreshEdit();
@@ -681,7 +723,7 @@ public class Main extends Base {
     /** rough time to a picture: the catalog speed at 512x768 scaled by the patch count, times the number of pictures */
     String genLabel() {
         if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
-        long est = Math.max(3, Math.round(store.speed(model) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 : 1))) * count;
+        long est = Math.max(3, Math.round(store.speed(model) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
         return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, est) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", est);
     }
 
@@ -698,7 +740,7 @@ public class Main extends Base {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
             if (loraBox != null) { loraBox.setVisibility(isMoss() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
-            if (editBox != null) editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE);
+            if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
             state.setText(working ? msg : isMage() ? L.s("Mage-Flow-Edit: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isQwen() ? L.s("Qwen-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Qwen-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isMoss() ? L.s("MOSS-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "MOSS-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isLoaded ? L.s("Модель загружена в NPU, генерация стартует сразу", "Model is loaded on the NPU, generation starts at once")
                 : L.s("Модель выгружена: при генерации загрузится сама (~5 с)", "Model is unloaded: it loads itself when you generate (~5 s)"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
@@ -809,6 +851,31 @@ public class Main extends Base {
         else ex2.submit(() -> ctlSh.run("touch " + D + "/cancel; sh " + D + "/anima.sh stop < /dev/null >/dev/null 2>&1"));
     }
 
+    /** {MemAvailable in MB, memory pressure "some avg10" in %}; pressure is -1 when the kernel does not let the app read it */
+    static double[] memState() {
+        double avail = -1, psi = -1;
+        try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader("/proc/meminfo"))) { for (String l; (l = r.readLine()) != null; ) if (l.startsWith("MemAvailable:")) { avail = Long.parseLong(l.replaceAll("\\D+", "")) / 1024.0; break; } } catch (Exception ignored) { }
+        try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader("/proc/pressure/memory"))) { String l = r.readLine(); if (l != null && l.startsWith("some")) psi = Double.parseDouble(l.replaceAll(".*avg10=([0-9.]+).*", "$1")); } catch (Exception ignored) { }
+        return new double[]{avail, psi};
+    }
+    /** while a picture is made: when the phone starts to thrash (the low-memory killer would close the app next) stop the generation and warn instead */
+    void startMemWatch() {
+        Thread t = new Thread(() -> {
+            int low = 0;
+            while (busy && !cancelled) {
+                try { Thread.sleep(1000); } catch (InterruptedException e) { return; }
+                double[] m = memState(); if (m[0] < 0) continue;
+                boolean thrash = m[1] >= 0 ? m[1] >= 35 && m[0] < 900 : m[0] < 350;   // pressure readable: heavy stalls with little free memory; otherwise just very little free memory
+                low = thrash ? low + 1 : 0;
+                if (low >= (m[1] >= 0 ? 2 : 4)) { oomAbort = true; cancel(); return; }
+            }
+        });
+        t.setDaemon(true); t.start();
+    }
+    void memWarning() {
+        builder().setTitle(L.s("Не хватило оперативной памяти", "Out of memory")).setMessage(L.s("Телефону не хватило оперативной памяти, поэтому генерация остановлена, чтобы приложение не закрылось. Закройте другие приложения или выберите размер (и фото для правки) поменьше и повторите.", "The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.")).setPositiveButton("OK", null).show();
+    }
+
     void generate(boolean newSeed) {
         if (model.isEmpty()) { openModels(); return; }
         int cw = 0, ch = 0;
@@ -823,7 +890,9 @@ public class Main extends Base {
         long base0 = 0; try { base0 = Long.parseLong(sd); } catch (NumberFormatException ignored) { }
         final long baseSeed = base0;
         final int n = count, w = resW, h = resH;
-        busy = true; cancelled = false; curIdx = 0; curN = n;
+        busy = true; cancelled = false; oomAbort = false; curIdx = 0; curN = n;
+        { double[] m0 = memState(); if (m0[0] >= 0 && m0[0] < 1200) Toast.makeText(this, L.f("Мало свободной памяти (%d МБ): закройте другие приложения, иначе генерация может остановиться", "Little free memory (%d MB): close other apps, or the generation may stop", (int) m0[0]), Toast.LENGTH_LONG).show(); }
+        startMemWatch();
         setModelUi(loaded, false, "");
         View f0 = getCurrentFocus(); if (f0 != null) ((android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(f0.getWindowToken(), 0);
         bar.setProgress(0);
@@ -840,7 +909,9 @@ public class Main extends Base {
             for (int i = 0; i < n && !cancelled; i++) {
                 curIdx = i;
                 final String seedS = String.valueOf(randomSeed ? new Random().nextInt(1 << 30) : baseSeed + i);
-                final File f = runOne(pr, seedS, w, h, t0);
+                File fr = null;
+                try { fr = runOne(pr, seedS, w, h, t0); } catch (OutOfMemoryError e) { oomAbort = true; }
+                final File f = fr;
                 if (f == null) break;
                 made++;
                 final Bitmap bm = BitmapFactory.decodeFile(f.getPath());
@@ -854,7 +925,7 @@ public class Main extends Base {
                 });
             }
             final double sec = (System.currentTimeMillis() - t0) / 1000.0;
-            final boolean wasCancelled = cancelled, okAny = made > 0;
+            final boolean wasCancelled = cancelled, okAny = made > 0, oom = oomAbort; oomAbort = false;
             final int total = made;
             if (wasCancelled) loaded = false;   // Stop shut the server down
             busy = false; cancelled = false;
@@ -863,7 +934,12 @@ public class Main extends Base {
             ui.post(() -> {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 bar.setVisibility(View.GONE);
-                if (wasCancelled) status.setText(L.s("Остановлено", "Stopped"));
+                if (!okAny) {   // a preview may still be on screen: back to the last real picture (or the placeholder)
+                    Bitmap prev = lastFile != null ? BitmapFactory.decodeFile(lastFile.getPath()) : null;
+                    if (prev != null) img.setImageBitmap(prev); else { img.setVisibility(View.GONE); placeholder.setVisibility(View.VISIBLE); }
+                }
+                if (oom) { status.setText(L.s("Остановлено: не хватило памяти", "Stopped: out of memory")); memWarning(); }
+                else if (wasCancelled) status.setText(L.s("Остановлено", "Stopped"));
                 else if (!okAny) status.setText(L.s("Ошибка генерации (лог: files/anima/animad.log)", "Generation failed (log: files/anima/animad.log)"));
                 else status.setText(L.f("Готово за %.1f с", "Done in %.1f s", sec));
                 setModelUi(loaded, false, "");
@@ -887,9 +963,11 @@ public class Main extends Base {
         final String f = D + "/last.png";
         final boolean[] done = {false};
         final int[] base = count();
+        final Preview pv = Preview.load(this, "anima"); final File pvf = new File(D, "prev.bin"); pvf.delete();
         Thread poll = new Thread(() -> {
             while (!done[0]) {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                if (pv != null) showPreview(pv.poll(pvf));
                 int[] c = count();
                 int st = c[0] - base[0];
                 if (c[1] > base[1]) setProgressUi(97, L.s("Сохраняю…", "Saving…"), t0);
@@ -926,9 +1004,11 @@ public class Main extends Base {
             loraEnv = "MOSS_LORA=" + q(ovl.getPath()) + " ";
         }
         final boolean[] done = {false};
+        final Preview pv = Preview.load(this, "moss"); final File pvf = new File(M, "prev.bin"); pvf.delete();
         Thread poll = new Thread(() -> {
             while (!done[0]) {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                if (pv != null) showPreview(pv.poll(pvf));
                 String s = su("echo $(grep -c '^te:' " + M + "/moss.log) $(grep -c '^refiner:' " + M + "/moss.log) $(grep -c '^step' " + M + "/moss.log) $(grep -c '^done' " + M + "/moss.log)", true);
                 try {
                     String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), rf = Integer.parseInt(a[1]), st = Integer.parseInt(a[2]), dn = Integer.parseInt(a[3]);
@@ -967,9 +1047,11 @@ public class Main extends Base {
             if (keys > Mage.MAX_KEYS) { ui.post(() -> Toast.makeText(this, L.s("Описание слишком длинное для этого размера: сократите его или выберите размер поменьше", "The prompt is too long for this size: shorten it or pick a smaller size"), Toast.LENGTH_LONG).show()); return null; }
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, "mage: " + e, Toast.LENGTH_LONG).show()); return null; }
         final boolean[] done = {false};
+        final Preview pv = Preview.load(this, "mage"); final File pvf = new File(M, "prev.bin"); pvf.delete();
         Thread poll = new Thread(() -> {
             while (!done[0]) {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                if (pv != null) showPreview(pv.poll(pvf));
                 String s = su("echo $(grep -c '^vit:' " + M + "/mage.log) $(grep -c '^te:' " + M + "/mage.log) $(grep -c '^txt_in:' " + M + "/mage.log) $(grep -c '^step' " + M + "/mage.log) $(grep -c '^vae dec total' " + M + "/mage.log)", true);
                 try {
                     String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
@@ -996,6 +1078,12 @@ public class Main extends Base {
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
+    /** shows the preview of the picture being made in place of the last result (the final picture replaces it) */
+    void showPreview(Bitmap pb) {
+        if (pb == null) return;
+        ui.post(() -> { if (!busy) return; img.setImageBitmap(pb); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); });
+    }
+
     /** one Qwen-Image picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through qwen.sh */
     File runOneQwen(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), Q = Qwen.dir(home), ids = new File(Q, "ids.i32"), raw = new File(Q, "img.f32");
@@ -1004,15 +1092,18 @@ public class Main extends Base {
         int drop; String edArg = "";
         try {
             if (edit) {
-                Qwen.Edit e = Qwen.prepareEdit(home, src, pr, w, h, ids); drop = e.drop; edArg = " " + q(Qwen.editDir(home).getPath());
+                java.util.List<Bitmap> srcs = new java.util.ArrayList<>(); srcs.add(src); srcs.addAll(extraBm);
+                Qwen.Edit e = Qwen.prepareEdit(home, srcs, pr, w, h, ids); drop = e.drop; edArg = " " + q(Qwen.editDir(home).getPath());
                 int keys = (w / 16) * (h / 16) + e.nc + (e.tokens - e.drop - e.nm);
                 if (keys > Qwen.MAX_KEYS) { ui.post(() -> Toast.makeText(this, L.s("Фото и результат вместе слишком большие: выберите размер поменьше", "The photo and the result together are too large: pick a smaller size"), Toast.LENGTH_LONG).show()); return null; }
             } else drop = Qwen.writeIds(home, pr, ids);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, "qwen: " + e, Toast.LENGTH_LONG).show()); return null; }
         final boolean[] done = {false};
+        final Preview pv = Preview.load(this, "qwen"); final File pvf = new File(Q, "prev.bin"); pvf.delete();
         Thread poll = new Thread(() -> {
             while (!done[0]) {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                if (pv != null) showPreview(pv.poll(pvf));
                 String s = su("echo $(grep -c '^vit:' " + Q + "/qwen.log) $(grep -c '^te:' " + Q + "/qwen.log) $(grep -c '^txt_in:' " + Q + "/qwen.log) $(grep -c '^step' " + Q + "/qwen.log) $(grep -c '^done' " + Q + "/qwen.log)", true);
                 try {
                     String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
@@ -1033,7 +1124,7 @@ public class Main extends Base {
         try {
             byte[] png = Qwen.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
-            if (edit) meta.put("edit", true);
+            if (edit) meta.put("edit", true).put("pictures", 1 + extraBm.size());
             return Gallery.save(this, PngMeta.embed(png, meta), meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/qwen/qwen.log)", "Generation failed: %s (log files/qwen/qwen.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }

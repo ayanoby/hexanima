@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	File .safete
 LoRA for Anima	LoRA untuk Anima
 Temperature  battery %.1f °C	Suhu  baterai %.1f °C
   ·  margin before throttling %d%%	  ·  sisa sebelum diperlambat %d%%
+Picture %d  ·  %d×%d	Gambar %d  ·  %d×%d
++ Another picture (%d of %d)	+ Gambar lain (%d dari %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Gambar: %d. Rujuk di prompt: "gambar 1", "gambar 2", mis. "karakter dari gambar 1 berdiri di adegan gambar 2".
+All models	Semua model
+Out of memory	Memori tidak cukup
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Memori ponsel habis, jadi pembuatan gambar dihentikan agar aplikasi tidak tertutup. Tutup aplikasi lain, atau pilih ukuran yang lebih kecil (dan foto yang lebih kecil untuk pengeditan), lalu coba lagi.
+Stopped: out of memory	Dihentikan: memori habis
+Little free memory (%d MB): close other apps, or the generation may stop	Memori kosong sedikit (%d MB): tutup aplikasi lain, atau pembuatan gambar bisa berhenti

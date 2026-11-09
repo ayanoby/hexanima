@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	Anima के
 LoRA for Anima	Anima के लिए LoRA
 Temperature  battery %.1f °C	तापमान  बैटरी %.1f °C
   ·  margin before throttling %d%%	  ·  धीमा होने से पहले गुंजाइश %d%%
+Picture %d  ·  %d×%d	चित्र %d  ·  %d×%d
++ Another picture (%d of %d)	+ एक और चित्र (%d में से %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	चित्र: %d. प्रॉम्प्ट में उनका उल्लेख करें: "चित्र 1", "चित्र 2", जैसे "चित्र 1 का पात्र चित्र 2 के दृश्य में खड़ा है".
+All models	सभी मॉडल
+Out of memory	मेमोरी कम पड़ गई
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	फ़ोन की मेमोरी खत्म हो गई, इसलिए ऐप बंद होने से बचाने के लिए जनरेशन रोक दिया गया। दूसरे ऐप बंद करें, या छोटा साइज़ (और एडिटिंग के लिए छोटी फ़ोटो) चुनकर फिर कोशिश करें।
+Stopped: out of memory	रुका: मेमोरी कम
+Little free memory (%d MB): close other apps, or the generation may stop	खाली मेमोरी कम है (%d MB): दूसरे ऐप बंद करें, वरना जनरेशन रुक सकता है

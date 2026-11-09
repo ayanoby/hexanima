@@ -80,12 +80,15 @@ public class QwenTok {
     }
     public int dropQwenImage() { return encode("<|im_start|>system\nComprehend and analyze the provided prompt.<|im_end|>\n").length; }
 
-    /** Qwen-Image-2.1 editing prompt: the image placeholder (expanded to nPads image slots) in the user turn, then the prompt */
-    public int[] encodeQwenEdit(String prompt, int nPads) {
-        int[] a = encode("<|im_start|>system\nComprehend and analyze the provided prompt.<|im_end|>\n<|im_start|>user\n<image1><|vision_start|><|image_pad|><|vision_end|>" + (prompt == null || prompt.isEmpty() ? " " : prompt) + "<|im_end|>\n<|im_start|>assistant\n");
-        int pad = special.get("<|image_pad|>"), k = -1; for (int i = 0; i < a.length; i++) if (a[i] == pad) { k = i; break; }
-        if (k < 0) return a;
-        int[] r = new int[a.length - 1 + nPads]; System.arraycopy(a, 0, r, 0, k); for (int i = 0; i < nPads; i++) r[k + i] = pad; System.arraycopy(a, k + 1, r, k + nPads, a.length - k - 1);
+    /** Qwen-Image-2.1 editing prompt: one image placeholder per condition image ("<image1>…<image2>…", as the pipeline builds it), each expanded to nPads[i] image slots, in the user turn, then the prompt */
+    public int[] encodeQwenEdit(String prompt, int... nPads) {
+        StringBuilder sb = new StringBuilder("<|im_start|>system\nComprehend and analyze the provided prompt.<|im_end|>\n<|im_start|>user\n<image1><|vision_start|><|image_pad|><|vision_end|>");
+        for (int i = 2; i <= nPads.length; i++) sb.append(" <image").append(i).append("><|vision_start|><|image_pad|><|vision_end|>");
+        sb.append(prompt == null || prompt.isEmpty() ? " " : prompt).append("<|im_end|>\n<|im_start|>assistant\n");
+        int[] a = encode(sb.toString());
+        int pad = special.get("<|image_pad|>"), total = a.length, n = 0; for (int p : nPads) total += p - 1;
+        int[] r = new int[total]; int o = 0;
+        for (int v : a) { if (v == pad && n < nPads.length) { for (int i = 0; i < nPads[n]; i++) r[o++] = pad; n++; } else r[o++] = v; }
         return r;
     }
 

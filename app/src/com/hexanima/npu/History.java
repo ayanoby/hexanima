@@ -25,7 +25,9 @@ public class History extends Base {
     boolean selecting;
     final Set<File> sel = new LinkedHashSet<>();
     File[] cur = new File[0];
-    LinearLayout grid, tabs, bar, trashNote;
+    LinearLayout grid, tabs, bar, trashNote, chips;
+    HorizontalScrollView chipsScroll;
+    String modelF;   // model filter (the name stored with the picture), null = all
     TextView count;
     Button selBtn;
     LinearLayout barBtns;
@@ -43,6 +45,8 @@ public class History extends Base {
         LinearLayout col = screen(L.s("История", "History"), selBtn);
         tabs = new LinearLayout(this); tabs.setPadding(0, 0, 0, dp(6));
         col.addView(tabs);
+        chips = new LinearLayout(this); chips.setPadding(0, 0, 0, dp(8));
+        chipsScroll = new HorizontalScrollView(this); chipsScroll.setHorizontalScrollBarEnabled(false); chipsScroll.addView(chips); col.addView(chipsScroll);
         trashNote = new LinearLayout(this); trashNote.setGravity(Gravity.CENTER_VERTICAL); trashNote.setPadding(dp(2), 0, 0, dp(8));
         col.addView(trashNote);
         grid = new LinearLayout(this); grid.setOrientation(LinearLayout.VERTICAL);
@@ -120,7 +124,18 @@ public class History extends Base {
             clr.setOnClickListener(v -> confirm(L.s("Очистить корзину насовсем?", "Empty the trash for good?"), () -> { for (File f : Gallery.list(this, Gallery.TRASH)) Gallery.delete(f); fill(); }));
             trashNote.addView(clr, new LinearLayout.LayoutParams(-2, dp(34)));
         }
-        cur = Gallery.list(this, mode);
+        File[] all = Gallery.list(this, mode);
+        // model chips: the models that appear in this tab, with counts (shown when there is more than one)
+        LinkedHashMap<String, Integer> byModel = new LinkedHashMap<>(); final String[] mn = new String[all.length];
+        for (int i = 0; i < all.length; i++) { mn[i] = Gallery.meta(all[i]).optString("model", ""); if (mn[i].isEmpty()) mn[i] = "?"; byModel.merge(mn[i], 1, Integer::sum); }
+        if (modelF != null && !byModel.containsKey(modelF)) modelF = null;
+        chips.removeAllViews(); chipsScroll.setVisibility(byModel.size() > 1 ? View.VISIBLE : View.GONE);
+        if (byModel.size() > 1) {
+            addChip(L.s("Все модели", "All models") + "  " + all.length, null);
+            for (Map.Entry<String, Integer> e : byModel.entrySet()) addChip(e.getKey() + "  " + e.getValue(), e.getKey());
+        }
+        if (modelF == null) cur = all;
+        else { ArrayList<File> l = new ArrayList<>(); for (int i = 0; i < all.length; i++) if (mn[i].equals(modelF)) l.add(all[i]); cur = l.toArray(new File[0]); }
         grid.removeAllViews();
         if (cur.length == 0) {
             String[] em = {L.s("Пока пусто.\nКартинки появятся здесь, а в галерею телефона попадают только после «Скачать».", "Nothing here yet.\nPictures appear here; they reach the phone gallery only after Download."),
@@ -135,6 +150,15 @@ public class History extends Base {
         }
         sel.retainAll(Arrays.asList(cur));
         if (selecting) updateBar();
+    }
+
+    void addChip(String label, final String model) {
+        boolean on = (model == null && modelF == null) || (model != null && model.equals(modelF));
+        TextView t = text(label, 12, on ? ON_ACC : TXT, true);
+        t.setPadding(dp(12), dp(8), dp(12), dp(8)); t.setBackground(bg(on ? ACC : CARD, 18));
+        t.setOnClickListener(v -> { modelF = model; setSelecting(false); });
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2); lp.rightMargin = dp(6);
+        chips.addView(t, lp);
     }
 
     FrameLayout makeCell(final File f) {

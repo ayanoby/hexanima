@@ -516,6 +516,11 @@ int main(int argc, char** argv) {
             }
             out.swap(vf);
         }
+        if (const char* hm = getenv("ANIMAD_HOME")) if ((n < steps - 1 || getenv("ANIMA_PREVIEW_ALL")) && !getenv("ANIMA_NOPREVIEW")) {   // preview: the x0 estimate x - t*v (DiT-space latent [16][H][W]) for the app, written atomically
+            std::vector<f32> xo((size_t)16 * Hf * Wf); for (size_t i = 0; i < xo.size(); i++) xo[i] = xfull[i] - t * out[i];
+            const std::string pf = std::string(hm) + "/prev.bin", tmp = pf + ".tmp"; FILE* f = fopen(tmp.c_str(), "wb");
+            if (f) { int hdr[4] = {Hf, Wf, 16, n}; fwrite(hdr, 4, 4, f); fwrite(xo.data(), 4, xo.size(), f); fclose(f); rename(tmp.c_str(), pf.c_str()); }
+        }
         writefile(dir + "/out_" + sn + ".bin", out.data(), out.size() * 4);
         writefile(dir + "/out_" + sn + ".bin.done", "", 0);
         fprintf(stderr, "animad: step %d t=%.4f total %.2fs (prelude %.2f, npu %.2f, final+io %.2f)\n", n, t, now() - ts, tb - ts, npu / 1000, now() - tb - npu / 1000);

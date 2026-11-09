@@ -262,3 +262,11 @@ A .safetensors file for Anima: it is checked as soon as you pick it	Anima 的 .s
 LoRA for Anima	Anima 的 LoRA
 Temperature  battery %.1f °C	温度  电池 %.1f °C
   ·  margin before throttling %d%%	  ·  距离降频还有 %d%%
+Picture %d  ·  %d×%d	图片 %d  ·  %d×%d
++ Another picture (%d of %d)	+ 再添加一张图片（%d / %d）
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	图片：%d 张。在提示词中这样引用：“图片1”“图片2”，例如“图片1中的角色站在图片2的场景里”。
+All models	所有模型
+Out of memory	内存不足
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	手机内存不足，为避免应用被系统关闭，已停止生成。请关闭其他应用，或选择更小的尺寸（编辑时用更小的照片）后重试。
+Stopped: out of memory	已停止：内存不足
+Little free memory (%d MB): close other apps, or the generation may stop	可用内存较少（%d MB）：请关闭其他应用，否则生成可能会停止

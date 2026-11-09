@@ -51,5 +51,5 @@ void te_attn_prep(float *q, float *k, const float *wq, const float *wk, const fl
 void te_attn(const float *q, const float *kv, float *out, int T, int idx, int n);
 void te_attn_prep3(float *q, float *k, const float *wq, const float *wk, const float *cs, int T, int idx, int n);   /* Qwen3-VL: cs rows [T][128] = cos64|sin64 */
 void te_attn3(const float *q, const float *kv, float *out, float *ktbase, int T, int idx, int n);
-void k_softmax2pm(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *exp_tab, HVX_Vector *scratch, int p0, int p1, const int *pk, const HVX_Vector *pm, int np);
+void k_softmax2pm(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *exp_tab, HVX_Vector *scratch, int p0, int p1, const int *pk, const int *pmi, const HVX_Vector *pm, int np);
 void tab_init_gelut(uint16_t *t2);   /* tanh-GELU variant of the t2 table */

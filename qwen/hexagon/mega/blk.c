@@ -48,36 +48,43 @@ static void p_attn_setup(void *a, int idx, int n) {   /* build K^T and V(+ones) 
   for (int s = idx; s < p->nq; s += n) vcp(p->Qh + (size_t)s * 4 * T16, p->q + ((size_t)s * g_qcb + p->h * 4) * T16, 8192);
 }
 static void p_attn_flush(void *a, int idx, int n) { ah_t *p = (ah_t *)a; for (int s = idx; s < p->nq; s += n) vcp(p->o + ((size_t)s * g_qcb + p->h * 4) * T16, p->Qh + (size_t)s * 4 * T16, 8192); }
-typedef struct { const u16 *S; u16 *P; int nkb; const HVX_Vector *km; int kst; int np; const int *pk; const HVX_Vector *pm; } sm_t;
+typedef struct { const u16 *S; u16 *P; int nkb; const HVX_Vector *km; int kst; int np; const int *pk; const int *pmi; const HVX_Vector *pm; } sm_t;
 static void p_softmax(void *a, int i, int n) { sm_t *p = (sm_t *)a;
-  if (p->pm) k_softmax2pm(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, p->pk, p->pm, p->np);
+  if (p->pm) k_softmax2pm(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, p->pk, p->pmi, p->pm, p->np);
   else k_softmax2p(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, p->km, p->kst); }
 
 static uint64_t g_acc[8];
 #define PC() HAP_perf_get_time_us()
 static u16 g_km[64] __attribute__((aligned(128)));
 static u16 g_cm[16 * 64] __attribute__((aligned(128)));   /* causal diagonal-tile masks, one vector per row pair: lane l = key c*2 + (row&1); masked when c > row */
-#define MAXPART 8
-static u16 g_pm[MAXPART * 16 * 64] __attribute__((aligned(128))); static int g_pk[MAXPART];
-/* causal == 2: block-causal rows [ba,bb) are one bidirectional block (condition image): key j visible to row i iff j <= i or both inside [ba,bb) */
-static int nks_of(int s, int nkb, int causal, int ba, int bb) {
+#define MAXPART 16
+#define MAXPT 512
+static u16 g_pm[MAXPART * 16 * 64] __attribute__((aligned(128))); static int g_pk[MAXPT], g_pmi[MAXPT];
+/* causal == 2: block-causal; each bidirectional block (condition image) [ba,bb) of bl[0..5] = {ba,bb,...} (three at most; ba == bb: unused).
+   Row i sees the keys j < lim(i), lim(i) = i + 1, or the end of its block when it lies inside one. */
+static int row_lim(int i, const int *bl) { int l = i + 1; for (int b = 0; b < 3; b++) if (i >= bl[2 * b] && i < bl[2 * b + 1] && bl[2 * b + 1] > l) l = bl[2 * b + 1]; return l; }
+static int nks_of(int s, int nkb, int causal, const int *bl) {
   if (!causal) return nkb;
-  int n = s + 1; if (causal == 2 && 32 * s + 31 >= ba && 32 * s < bb) { const int e = (bb + 31) / 32; if (e > n) n = e; }
+  int n = s + 1;
+  if (causal == 2) for (int b = 0; b < 3; b++) if (32 * s + 31 >= bl[2 * b] && 32 * s < bl[2 * b + 1]) { const int e = (bl[2 * b + 1] + 31) / 32; if (e > n) n = e; }
   return n < nkb ? n : nkb;
 }
-static int build_partial(int s, int nks, int ba, int bb) {   /* partially visible key tiles of slab s -> g_pk / g_pm; returns count */
-  const int r0 = 32 * s, r1 = r0 + 31, inb = r0 >= ba && r1 < bb; int np = 0;
+static int build_partial(int s, int nks, const int *bl) {   /* partially visible key tiles of slab s -> g_pk / g_pmi / g_pm; returns the tile count (-1: out of table space) */
+  const int r0 = 32 * s; int lim[32], mn = 1 << 30, np = 0, nm = 0; unsigned char cl[MAXPART][32];
+  for (int r = 0; r < 32; r++) { lim[r] = row_lim(r0 + r, bl); if (lim[r] < mn) mn = lim[r]; }
   for (int kt = 0; kt < nks; kt++) {
-    const int k0 = 32 * kt, k1 = k0 + 31;
-    if (k1 <= r0 || (inb && k0 >= ba && k1 < bb)) continue;   /* fully visible */
-    if (np == MAXPART) return -1;
-    g_pk[np] = kt;
-    for (int p = 0; p < 16; p++) for (int l = 0; l < 64; l++) { const int i = r0 + 2 * p + (l & 1), j = k0 + (l >> 1); const int vis = j <= i || (i >= ba && i < bb && j >= ba && j < bb); g_pm[(np * 16 + p) * 64 + l] = vis ? 0 : 0xFFFF; }
-    np++;
+    const int k0 = 32 * kt; if (k0 + 32 <= mn) continue;   /* fully visible */
+    unsigned char c[32]; for (int r = 0; r < 32; r++) { int v = lim[r] - k0; c[r] = v < 0 ? 0 : v > 32 ? 32 : v; }
+    int m = 0; for (; m < nm; m++) if (!memcmp(cl[m], c, 32)) break;
+    if (m == nm) { if (nm == MAXPART) return -1; memcpy(cl[nm], c, 32);
+      for (int p = 0; p < 16; p++) for (int l = 0; l < 64; l++) g_pm[(nm * 16 + p) * 64 + l] = (l >> 1) < c[2 * p + (l & 1)] ? 0 : 0xFFFF;
+      nm++; }
+    if (np == MAXPT) return -1;
+    g_pk[np] = kt; g_pmi[np] = m; np++;
   }
   return np;
 }
-static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, int nvalid, int causal, int ba, int bb, int qcb, int kcb, int grp, uint8_t *vt) {
+static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, int nvalid, int causal, const int *bl, int qcb, int kcb, int grp, uint8_t *vt) {
   const int nkb = nkv / 32; g_qcb = qcb; g_kcb = kcb; g_grp = grp;
   const int nv = nvalid - (nkb - 1) * 32;   /* valid keys in the last tile */
   const HVX_Vector *km = 0;
@@ -93,7 +100,7 @@ static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, i
     for (int s = 0; s <= nq; s++) {
       const int b = s & 1;
       uint64_t c1 = PC();
-      const int nks = nks_of(s, nkb, causal, ba, bb);   /* key tiles visible to slab s */
+      const int nks = nks_of(s, nkb, causal, bl);   /* key tiles visible to slab s */
       if (s < nq) {
         for (int nb = 0; nb < nks; nb++) {
           hmx_acc((uint8_t *)(Qh + (size_t)s * 4 * T16), (4 << 11) | 0x7C, (uint8_t *)(KT + (size_t)nb * 4 * T16), (4 << 11) - 1);
@@ -101,13 +108,13 @@ static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, i
         }
       }
       g_acc[1] += PC() - c1;
-      int npart = 0; if (causal == 2 && s < nq) npart = build_partial(s, nks, ba, bb);
-      sm_t sm = {Sb[b], Pb[b], nks, causal ? (const HVX_Vector *)g_cm : km, causal == 1, npart, g_pk, causal == 2 ? (const HVX_Vector *)g_pm : 0};
+      int npart = 0; if (causal == 2 && s < nq) npart = build_partial(s, nks, bl);
+      sm_t sm = {Sb[b], Pb[b], nks, causal ? (const HVX_Vector *)g_cm : km, causal == 1, npart, g_pk, g_pmi, causal == 2 ? (const HVX_Vector *)g_pm : 0};
       uint64_t c2 = PC();
       if (s < nq) pool_start(p_softmax, &sm);
       if (s > 0) {   /* PV for slab s-1 while the workers run softmax(s) */
         const u16 *P = Pb[(s - 1) & 1];
-        const int nkp = nks_of(s - 1, nkb, causal, ba, bb);   /* tiles of P for slab s-1 */
+        const int nkp = nks_of(s - 1, nkb, causal, bl);   /* tiles of P for slab s-1 */
         for (int j = 0; j < 5; j++) {
           for (int k0 = 0; k0 < nkp; k0 += 32) { int c = nkp - k0 < 32 ? nkp - k0 : 32; hmx_acc((uint8_t *)(P + (size_t)k0 * T16), (c << 11) | 0x7C, (uint8_t *)(Vw + ((size_t)j * nkb + k0) * T16), (c << 11) - 1); }
           hmx_store((uint8_t *)(Ob + (size_t)j * T16), 0);
@@ -231,7 +238,7 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
         const uint8_t *kvp = (const uint8_t *)WB(H->off[1]);   /* kv pack = [64 n-blocks][128 kb] records: k = first 32 n-blocks, v = last 32 */
         e.gain = vec + 8192 + 128; gemm_set_q8(H->fmt[1]); gemm_run_geo(h16, ntok, 4096, (const u16 *)kvp, 1024, k16, vt, &e, 0);
         gemm_run_geo(h16, ntok, 4096, (const u16 *)(kvp + (size_t)32 * 128 * (H->fmt[1] == 2 ? 768 : 1152)), 1024, v16, vt, 0, 0); TICK();
-        attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 1, 0, 0, 128, 32, 4, vt); TICK();
+        attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 1, 0, 128, 32, 4, vt); TICK();
       } else {
       const int qw = v3 ? 4096 : 8192;
       float *Rq = R, *Rkv = Rq + (size_t)ntok * qw, *Ro = Rkv + (size_t)ntok * 2048, *Kts = Ro + (size_t)ntok * 4096;
@@ -270,7 +277,8 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
       gemm_set_q8(qf[0]); gemm_run_geo(h16, ntok, DIM + 128, WB(qo[0]), DIM, q16, vt, &e, &gq);
       e.gain = gn + 128; gemm_set_q8(qf[1]); gemm_run_geo(h16, ntok, DIM + 128, WB(qo[1]), DIM, k16, vt, &e, &gk);
       gemm_set_q8(qf[2]); gemm_run_geo(h16, ntok, DIM + 128, WB(qo[2]), DIM, v16, vt, 0, &gv); } TICK();
-    attn_run(q16, k16, v16, o16, ns, (ns + npre) * 32, meta[M_NVALID], causal, meta[M_BA], meta[M_BB], NCB, NCB, 1, vt); TICK();
+    const int bl[6] = {meta[M_BA], meta[M_BB], meta[M_B2A], meta[M_B2B], meta[M_B3A], meta[M_B3B]};
+    attn_run(q16, k16, v16, o16, ns, (ns + npre) * 32, meta[M_NVALID], causal, bl, NCB, NCB, 1, vt); TICK();
     { gemm_set_q8(1); gemm_run(o16, ntok, DIM, WB(qo[7]), 128, Lo, vt);
       gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x; e.gate = g1;
       const gemm_geo_t go = {NCB, NCB + 4, 0, Lo, 4, 4};
@@ -296,7 +304,7 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
       gemm_run_geo(h16, ntok, DIM + 128, WB(QV_Q), 2048, q16, vt, &e, &gq);
       gemm_run_geo(h16, ntok, DIM + 128, WB(QV_K), 2048, k16, vt, &e, &gk);
       gemm_run_geo(h16, ntok, DIM + 128, WB(QV_V), 2048, v16, vt, 0, &gv); } TICK();
-    attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 0, 0, 0, 64, 64, 1, vt); TICK();
+    attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 0, 0, 64, 64, 1, vt); TICK();
     { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x; e.gate = ones; const gemm_geo_t go = {64, 68, 0, Lo, 4, 4};
       gemm_run_geo(o16, ntok, 2048 + 128, WB(QV_O), DIM, t16, vt, &e, &go); } TICK();
     for (int cb = 0; cb < NCB; cb++) { LM[cb] = *(const HVX_Vector *)(gw + 2 * 1152 + cb * 32); LN[cb] = *(const HVX_Vector *)(gw + 3 * 1152 + cb * 32); }
@@ -337,7 +345,7 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     gemm_run_geo(h16, ntok, DIM + 128, WB(W_Q), DIM, q16, vt, &e, &gq);
     e.gain = gain + 128; gemm_run_geo(h16, ntok, DIM + 128, WB(W_K), DIM, k16, vt, &e, &gk);
     gemm_run_geo(h16, ntok, DIM + 128, WB(W_V), DIM, v16, vt, 0, &gv); } TICK();
-  attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 0, 0, 0, NCB, NCB, 1, vt); TICK();
+  attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 0, 0, NCB, NCB, 1, vt); TICK();
   { if (!nolora) gemm_run(o16, ntok, DIM, WB(W_AO), 128, Lo, vt);
     gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x; e.gate = gt_a;
     const gemm_geo_t go = {NCB, NCB + 4, 0, Lo, 4, 4};

@@ -332,6 +332,12 @@ static bool generate(const std::vector<int>& ids, int Hpx, int Wpx, unsigned see
       for (int i = 0; i < 3072; i++) r[i] = r[i] * rs * nfin[i] * (1.f + head[3072 + i]) + head[i];
       for (int o = 0; o < 128; o++) { const f32* w = Wfin + (size_t)o * 3072; float a = 0; for (int i = 0; i < 3072; i++) a += w[i] * r[i]; v[(size_t)o * Ni + t] = a; } } });
     for (size_t i = 0; i < (size_t)128 * Ni; i++) x0s[i] = zs[i] - v[i];
+    if (const char* pv = getenv("MOSS_PREVIEW")) if (*pv && s < steps - 1) {   // preview: the x0 estimate, BN-denormalised and unpatchified like the final latent, [32][2Hs][2Ws], written atomically
+      const f32* bm = g_glue.f("bn.mean"); const f32* bv = g_glue.f("bn.var"); const int h2 = 2 * Hs, w2 = 2 * Ws; std::vector<f32> xo((size_t)32 * h2 * w2);
+      for (int c = 0; c < 128; c++) { const float sc = sqrtf(bv[c] + 1e-4f), mu = bm[c]; const int cc = c / 4, pi = (c / 2) % 2, pj = c % 2;
+        for (int hh = 0; hh < Hs; hh++) for (int ww = 0; ww < Ws; ww++) xo[((size_t)cc * h2 + 2 * hh + pi) * w2 + 2 * ww + pj] = x0s[(size_t)c * Ni + hh * Ws + ww] * sc + mu; }
+      const std::string tmp = std::string(pv) + ".tmp"; FILE* pf = fopen(tmp.c_str(), "wb");
+      if (pf) { int hdr[4] = {h2, w2, 32, s}; fwrite(hdr, 4, 4, pf); fwrite(xo.data(), 4, xo.size(), pf); fclose(pf); rename(tmp.c_str(), pv); } }
     fprintf(stderr, "  step %d%s: mix+embed %.0f ms, time/mod %.0f ms, to-x32 %.0f ms, DSP blocks %.0f ms, head+sampler %.0f ms\n", s, lowstep ? " (low-res)" : "", (tB - tA) * 1e3, (tC - tB) * 1e3, (tD - tC) * 1e3, (tE - tD) * 1e3, (now() - tE) * 1e3);
     printf("step %d %.0f\n", s, (now() - ts) * 1000); fflush(stdout);
   }

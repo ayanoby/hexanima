@@ -38,7 +38,7 @@ if ! pidof $NA >/dev/null; then
   # lcache: the folded blocks of the last LoRA set (q8); the next load with the same set reads them instead of folding again
   # tecache: the text encoder with the LoRAs' text-encoder weights merged in (F16; animad writes it and names it in $A/te_llm, sd.cpp then encodes on the CPU)
   rm -f $A/te_llm
-  if [ -n "$LORA" ]; then export MEGA_LORA="$LORA" MEGA_LORA_S="${LORA_S:-1}" MEGA_LORA_CACHE=$A/lcache ANIMA_TE=$S/miaomiao3DHarem_animaLH3D10_txt.safetensors ANIMA_TE_CACHE=$A/tecache
+  if [ -n "$LORA" ]; then export MEGA_LORA="$LORA" MEGA_LORA_S="${LORA_S:-1}" MEGA_LORA_CACHE=$A/lcache   # no ANIMA_TE: the text encoder runs on the NPU from a compiled graph and $S/*_txt.safetensors is only a stub here, so lora_te_* weights are ignored
   else unset MEGA_LORA MEGA_LORA_S MEGA_LORA_CACHE ANIMA_TE ANIMA_TE_CACHE; fi
   cd $A && LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $ANIMAD $SM --serve $ROOT < /dev/null > $A/animad.log 2>&1 &
   while ! grep -q serving $A/animad.log 2>/dev/null && [ ! -f $A/cancel ]; do sleep 0.3; done

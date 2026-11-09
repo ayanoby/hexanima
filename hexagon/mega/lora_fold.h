@@ -65,7 +65,10 @@ struct LoraFile {
   // tensor as fp32 (F32 / F16 / BF16)
   bool get(const std::string& k, std::vector<float>& out, std::vector<int64_t>* shape = nullptr) const {
     auto it = t.find(k); if (it == t.end() || it->second.end > size) return false;
-    const T& x = it->second; size_t n = 1; for (auto d : x.shape) n *= d; out.resize(n);
+    const T& x = it->second; size_t n = 1; for (auto d : x.shape) { if (d < 0 || (d > 0 && n > ((size_t)1 << 32) / d)) return false; n *= d; }   // a malformed header must not make us read past the data
+    const size_t el = x.dtype == "F32" ? 4 : (x.dtype == "F16" || x.dtype == "BF16") ? 2 : 0;
+    if (!el || x.end < x.off || x.end - x.off != n * el) return false;
+    out.resize(n);
     const uint8_t* s = data + x.off;
     if (x.dtype == "F32") memcpy(out.data(), s, n * 4);
     else if (x.dtype == "F16") for (size_t i = 0; i < n; i++) out[i] = (float)((const __fp16*)s)[i];

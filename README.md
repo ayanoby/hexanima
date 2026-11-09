@@ -16,7 +16,7 @@ It can also run **MOSS-Image 5B** (OpenMOSS, Apache-2.0), a larger model that yo
 about 30 s for 512x768 and about 80 s for 1 Mpx; any size with sides that are multiples of 16 (up to 6144 patches). It is an optional ~14 GB download.
 
 And **Qwen-Image 2.1 Turbo** (Qwen team, with the 4-step Lightning adapter by LightX2V): it draws legible text inside pictures, follows long prompts, and **edits your photos by a prompt** ("make the sky a sunset"). The text encoder (Qwen3-VL-8B), its vision tower, the 20B transformer and the VAE all run on the NPU.
-About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below. *The Qwen-Image pack is still being uploaded: it appears in the model manager (no app update needed) once it is published.*
+About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below.
 
 ## Features
 
@@ -62,6 +62,19 @@ The LoRA is folded with the built-in 4-step adapter on the phone (about 15 s the
 <p align="center"><img src="docs/screens/quality/moss-lora-compare.jpg" width="640" alt="Without and with a LoRA"></p>
 
 Limits worth knowing: MOSS-Image only does text-to-image (no editing or image input), it needs about 14 GB of storage and was tested on a 12 GB phone only, and its weights are streamed from storage for every picture, so a picture takes 30 s at 512x768 and about 80 s at 1 Mpx.
+
+### Qwen-Image 2.1 Turbo
+
+Text-to-image: four prompts, three portrait 512x768 and one landscape 768x512, 4 steps, 40-50 s each, straight from the phone (nothing retouched, the first attempt for each prompt). The text in the picture is read from the prompt: the sign says `HEXANIMA`, the chalkboard `Fresh Coffee $3`, the neon sign `OPEN`.
+
+<p align="center"><img src="docs/screens/quality/qwen-t2i.jpg" width="760" alt="Qwen-Image 2.1 Turbo: anime girl with a HEXANIMA sign, girl with a red scarf on a snowy street, old fisherman, coffee shop with OPEN sign"></p>
+
+**Editing a photo by a prompt.** The same four pictures after one edit each (the picture is the photo, the sentence is the whole instruction; an edit takes about a minute):
+"make her hair pink and change the sign text to "HELLO"" · "make it a sunny summer day: no snow, green trees and a blue sky" · "turn him into a smiling man wearing a red knitted hat" · "change the neon sign text from "OPEN" to "CLOSED"". Everything not mentioned stays as it was.
+
+<p align="center"><img src="docs/screens/quality/qwen-edits.jpg" width="760" alt="The same four pictures after editing: pink hair and a HELLO sign, a sunny day, a red knitted hat, CLOSED instead of OPEN"></p>
+
+Limits worth knowing: about 14 GB of storage, tested on a 12 GB phone only, weights are streamed from storage for every picture (RAM use stays near 1.2 GB), the photo for an edit is reduced to about 0.4 Mpx, and **non-commercial use only** (Qwen Research License).
 
 ## A tour of the app
 

@@ -260,3 +260,5 @@ Layer sizes do not match Anima (%s). It is probably a LoRA for another version o
 The LoRA has blocks that Anima does not have (%s).	LoRA có các khối mà Anima không có (%s).
 A .safetensors file for Anima: it is checked as soon as you pick it	Tệp .safetensors cho Anima: được kiểm tra ngay khi bạn chọn
 LoRA for Anima	LoRA cho Anima
+Temperature  battery %.1f °C	Nhiệt độ  pin %.1f °C
+  ·  margin before throttling %d%%	  ·  còn trước khi bị giảm tốc %d%%

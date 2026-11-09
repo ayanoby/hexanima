@@ -57,7 +57,7 @@ public class Main extends Base {
     boolean statusSeen;
     int tick;
 
-    TextView chipName, chipDot, state, status, saved, placeholder, ramTxt, warnTxt, sizeText;
+    TextView chipName, chipDot, state, status, saved, placeholder, ramTxt, tempTxt, warnTxt, sizeText;
     LinearLayout customRow, imgBox;
     Button loadBtn, genBtn, countBtn;
     ImageButton dlBtn, shareBtn, favBtn, againBtn;
@@ -126,6 +126,9 @@ public class Main extends Base {
         ramBar.setMax(1000);
         ramBar.setProgressBackgroundTintList(ColorStateList.valueOf(CARD));
         root.addView(ramBar, new LinearLayout.LayoutParams(-1, dp(5)));
+        tempTxt = text("", 12, DIM, false);   // battery temperature and the margin before the phone throttles
+        tempTxt.setPadding(dp(2), dp(6), 0, 0);
+        root.addView(tempTxt);
         warnTxt = text("", 12, WARN, false);   // thermal / battery / unsupported chip
         warnTxt.setPadding(dp(2), dp(6), 0, 0);
         warnTxt.setVisibility(View.GONE);
@@ -402,6 +405,14 @@ public class Main extends Base {
             if (pm.isPowerSaveMode()) w.add(L.s("Экономия заряда замедляет NPU", "Battery saver slows the NPU"));
             Intent bat = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             if (bat != null) { int lvl = bat.getIntExtra("level", -1) * 100 / Math.max(1, bat.getIntExtra("scale", 100)), st = bat.getIntExtra("status", 0); if (lvl >= 0 && lvl < 15 && st != 2 && st != 5) w.add(L.f("Низкий заряд батареи (%d%%)", "Low battery (%d%%)", lvl)); }
+            if (bat != null && bat.hasExtra("temperature")) {   // battery temperature (tenths of a degree) is the one reading an app may take; the headroom (Android 11+) says how far the SoC is from throttling
+                double tc = bat.getIntExtra("temperature", 0) / 10.0; float hr = android.os.Build.VERSION.SDK_INT >= 30 ? pm.getThermalHeadroom(0) : Float.NaN;
+                String t = L.f("Температура  батарея %.1f °C", "Temperature  battery %.1f °C", tc);
+                int margin = Float.isNaN(hr) ? -1 : Math.max(0, Math.round(100 * (1 - Math.min(1f, hr))));
+                if (margin >= 0) t += L.f("  ·  запас до замедления %d%%", "  ·  margin before throttling %d%%", margin);
+                tempTxt.setText(t);
+                tempTxt.setTextColor(tc >= 45 || (margin >= 0 && margin < 10) ? BAD : tc >= 40 || (margin >= 0 && margin < 30) ? WARN : DIM);
+            }
             warnTxt.setVisibility(w.isEmpty() ? View.GONE : View.VISIBLE);
             warnTxt.setText("⚠  " + android.text.TextUtils.join("  ·  ", w));
             if (++tick % 5 == 0 && !busy) refreshState();

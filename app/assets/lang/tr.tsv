@@ -260,3 +260,5 @@ Layer sizes do not match Anima (%s). It is probably a LoRA for another version o
 The LoRA has blocks that Anima does not have (%s).	LoRA'da Anima'da olmayan bloklar var (%s).
 A .safetensors file for Anima: it is checked as soon as you pick it	Anima için bir .safetensors dosyası: seçer seçmez kontrol edilir
 LoRA for Anima	Anima için LoRA
+Temperature  battery %.1f °C	Sıcaklık  pil %.1f °C
+  ·  margin before throttling %d%%	  ·  yavaşlamaya kalan pay %d%%

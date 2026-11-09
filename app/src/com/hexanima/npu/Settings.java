@@ -54,7 +54,7 @@ public class Settings extends Base {
 
         LinearLayout c3 = card(col);
         c3.addView(toggle(L.s("Не гасить экран при генерации", "Keep the screen on while generating"), "", keepOn(this), on -> p.edit().putBoolean("keepon", on).apply()));
-        if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", ""))) return;
+        if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", "")) || Mage.is(p.getString("model", ""))) return;
         c3.addView(toggle(L.s("Экономия памяти (медленнее)", "Low-memory mode (slower)"), L.s("Веса модели читаются с накопителя при каждой картинке, а не держатся в ОЗУ. Нужно телефонам с 8 ГБ ОЗУ, на 12 ГБ не нужно.", "The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB."), lowRam(this), on -> p.edit().putBoolean("lowram", on).apply()));   // MOSS-Image takes plain sentences: the quality-tag prefix is for the Anima models only, so the setting is hidden while MOSS is selected
         TextView pl = text(L.s("Теги качества перед описанием (модели Anima)", "Quality tags before the prompt (Anima models)"), 15, TXT, true); pl.setPadding(dp(2), dp(14), 0, dp(6)); c3.addView(pl);
         prefixEdit = field("");

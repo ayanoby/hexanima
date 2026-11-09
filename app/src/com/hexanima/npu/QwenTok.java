@@ -88,4 +88,17 @@ public class QwenTok {
         int[] r = new int[a.length - 1 + nPads]; System.arraycopy(a, 0, r, 0, k); for (int i = 0; i < nPads; i++) r[k + i] = pad; System.arraycopy(a, k + 1, r, k + nPads, a.length - k - 1);
         return r;
     }
+
+    static final String MAGE_SYS = "<|im_start|>system\nDescribe the image by detailing the color, shape, size, texture, quantity, text, spatial relationships of the objects and background:<|im_end|>\n<|im_start|>user\n";
+    static final String MAGE_EDIT_SYS = "<|im_start|>system\nDescribe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate.<|im_end|>\n<|im_start|>user\n";
+    private static final String MAGE_END = "<|im_end|>\n<|im_start|>assistant\n";
+    /** Mage-Flow text-to-image prompt; the first {@link #dropMage(boolean)} tokens are the system message */
+    public int[] encodeMage(String prompt) { return encode(MAGE_SYS + prompt + MAGE_END); }
+    /** Mage-Flow-Edit prompt with the photo expanded to nPads image slots */
+    public int[] encodeMageEdit(String prompt, int nPads) {
+        StringBuilder sb = new StringBuilder(MAGE_EDIT_SYS).append("Image 1: <|vision_start|>");
+        for (int i = 0; i < nPads; i++) sb.append("<|image_pad|>");
+        return encode(sb.append("<|vision_end|>").append(prompt).append(MAGE_END).toString());
+    }
+    public int dropMage(boolean edit) { return encode(edit ? MAGE_EDIT_SYS : MAGE_SYS).length; }
 }

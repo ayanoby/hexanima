@@ -456,7 +456,7 @@ public class Main extends Base {
                     editBm = bm; refreshEdit();
                     // the output size follows the photo's shape: the preset with the closest aspect ratio, at most 0.8 Mpx
                     double r = (double) bm.getWidth() / bm.getHeight(), best = 1e9; int[] pick = null;
-                    for (int[] z : Qwen.PRESETS) { if (z[0] * z[1] > 800000) continue; double d = Math.abs(Math.log((double) z[0] / z[1] / r)) + Math.abs(z[0] * z[1] - 393216) / 5e7; if (d < best) { best = d; pick = z; } }
+                    for (int[] z : sizeList()) { if (z[0] * z[1] > 800000) continue; double d = Math.abs(Math.log((double) z[0] / z[1] / r)) + Math.abs(z[0] * z[1] - 393216) / 5e7; if (d < best) { best = d; pick = z; } }
                     if (pick != null) { customOpen = false; setRes(pick[0], pick[1]); }
                 });
             } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Не удалось открыть фото: %s", "Cannot open the photo: %s", e.getMessage()), Toast.LENGTH_LONG).show()); }
@@ -618,8 +618,9 @@ public class Main extends Base {
     }
 
     boolean isMoss() { return Moss.is(model); }
+    boolean isMage() { return Mage.is(model); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
-    java.util.List<int[]> sizeList() { return java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
+    java.util.List<int[]> sizeList() { return isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
 
     // ---- model state --------------------------------------------------------------------------
@@ -674,11 +675,11 @@ public class Main extends Base {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
             if (loraBox != null) loraBox.setVisibility(isMoss() ? View.VISIBLE : View.GONE);
-            if (editBox != null) editBox.setVisibility(isQwen() ? View.VISIBLE : View.GONE);
-            state.setText(working ? msg : isQwen() ? L.s("Qwen-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Qwen-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isMoss() ? L.s("MOSS-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "MOSS-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isLoaded ? L.s("Модель загружена в NPU, генерация стартует сразу", "Model is loaded on the NPU, generation starts at once")
+            if (editBox != null) editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE);
+            state.setText(working ? msg : isMage() ? L.s("Mage-Flow-Edit: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isQwen() ? L.s("Qwen-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Qwen-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isMoss() ? L.s("MOSS-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "MOSS-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isLoaded ? L.s("Модель загружена в NPU, генерация стартует сразу", "Model is loaded on the NPU, generation starts at once")
                 : L.s("Модель выгружена: при генерации загрузится сама (~5 с)", "Model is unloaded: it loads itself when you generate (~5 s)"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
-            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen());
+            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage());
             loadBtn.setAlpha(loadBtn.isEnabled() ? 1f : .5f);
             countBtn.setEnabled(!busy); countBtn.setAlpha(busy ? .5f : 1f);
             boolean can = busy ? !cancelled : !working;   // while a picture is made the main button is "Stop"
@@ -690,7 +691,7 @@ public class Main extends Base {
     }
 
     void refreshState() {
-        if (isMoss() || isQwen()) { setModelUi(false, false, ""); return; }
+        if (isMoss() || isQwen() || isMage()) { setModelUi(false, false, ""); return; }
         ex.submit(() -> {
             String s = su("sh " + D + "/anima.sh status", true);
             if (s.startsWith("ERR") || s.isEmpty()) {
@@ -715,7 +716,7 @@ public class Main extends Base {
     }
 
     void toggleModel() {
-        if (isMoss() || isQwen()) return;   // nothing to preload
+        if (isMoss() || isQwen() || isMage()) return;   // nothing to preload
         final boolean want = !loaded;
         setModelUi(loaded, true, want ? L.s("Загружаю модель…", "Loading the model…") : L.s("Выгружаю модель…", "Unloading the model…"));
         ex.submit(() -> {
@@ -727,7 +728,7 @@ public class Main extends Base {
 
     /** anima.sh ships in assets and is rewritten at every start (it is a script, so it may live in the app's data dir) */
     void installScript() {
-        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh"})
+        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh"})
             try (InputStream in = getAssets().open(nm); FileOutputStream o = new FileOutputStream(new File(D, nm))) {
                 byte[] b = new byte[8192]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n);
             } catch (IOException e) { Toast.makeText(this, nm + ": " + e, Toast.LENGTH_LONG).show(); }
@@ -779,7 +780,8 @@ public class Main extends Base {
         if (!busy || cancelled) return;
         cancelled = true;
         setModelUi(loaded, false, "");
-        if (isQwen()) ex2.submit(() -> ctlSh.run("sh " + D + "/qwen.sh stop < /dev/null >/dev/null 2>&1"));
+        if (isMage()) ex2.submit(() -> ctlSh.run("sh " + D + "/mage.sh stop < /dev/null >/dev/null 2>&1"));
+        else if (isQwen()) ex2.submit(() -> ctlSh.run("sh " + D + "/qwen.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isMoss()) ex2.submit(() -> ctlSh.run("sh " + D + "/moss.sh stop < /dev/null >/dev/null 2>&1"));
         else ex2.submit(() -> ctlSh.run("touch " + D + "/cancel; sh " + D + "/anima.sh stop < /dev/null >/dev/null 2>&1"));
     }
@@ -788,7 +790,7 @@ public class Main extends Base {
         if (model.isEmpty()) { openModels(); return; }
         int cw = 0, ch = 0;
         try { cw = Integer.parseInt(wEdit.getText().toString().trim()); ch = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
-        String bad = isMoss() ? mossSizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
+        String bad = isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
         if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
         if (cw != resW || ch != resH) setRes(cw, ch);
         final String pr = prompt.getText().toString().trim();
@@ -833,7 +835,7 @@ public class Main extends Base {
             final int total = made;
             if (wasCancelled) loaded = false;   // Stop shut the server down
             busy = false; cancelled = false;
-            app.stopService(new Intent(app, DownloadService.class));
+            DownloadService.stop(app);
             final Bitmap nb = lastBm;
             ui.post(() -> {
                 getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -849,6 +851,7 @@ public class Main extends Base {
 
     /** one picture: loads the model if needed, runs anima.sh, stores the PNG (with the settings inside) in the history; null on failure or Stop */
     File runOne(String pr, String seedS, int w, int h, long t0) {
+        if (isMage()) return runOneMage(pr, seedS, w, h, t0);
         if (isQwen()) return runOneQwen(pr, seedS, w, h, t0);
         if (isMoss()) return runOneMoss(pr, seedS, w, h, t0);
         if (!loaded) {
@@ -922,6 +925,50 @@ public class Main extends Base {
             if (useLora) meta.put("lora", prefs().getString("moss_lora_name", "LoRA")).put("lora_strength", lstr);
             return Gallery.save(this, PngMeta.embed(png, meta), meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/moss/moss.log)", "Generation failed: %s (log files/moss/moss.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
+    }
+
+    /** one Mage-Flow picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through mage.sh */
+    File runOneMage(String pr, String seedS, int w, int h, long t0) {
+        final File home = getFilesDir(), M = Mage.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.rgb");
+        final Bitmap src = editBm; final boolean edit = src != null;
+        setProgressUi(2, edit ? L.s("Подготовка фото…", "Preparing the photo…") : L.s("Токенизация…", "Tokenising…"), t0);
+        int drop, keys; String edArg = "";
+        try {
+            if (edit) {
+                if ((w / 16) * (h / 16) > Mage.MAX_EDIT_PATCHES) { ui.post(() -> Toast.makeText(this, L.s("Для редактирования размер не больше 1024×768", "For editing the size is at most 1024×768"), Toast.LENGTH_LONG).show()); return null; }
+                Mage.Edit e = Mage.prepareEdit(home, src, pr, w, h, new File(Mage.editDir(home), "ids.i32")); drop = e.drop; edArg = " " + q(Mage.editDir(home).getPath());
+                keys = 2 * (w / 16) * (h / 16) + e.tokens - e.drop;
+            } else { drop = Mage.writeIds(home, pr, ids); keys = (w / 16) * (h / 16) + (int) (ids.length() / 4) - drop; }
+            if (keys > Mage.MAX_KEYS) { ui.post(() -> Toast.makeText(this, L.s("Описание слишком длинное для этого размера: сократите его или выберите размер поменьше", "The prompt is too long for this size: shorten it or pick a smaller size"), Toast.LENGTH_LONG).show()); return null; }
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, "mage: " + e, Toast.LENGTH_LONG).show()); return null; }
+        final boolean[] done = {false};
+        Thread poll = new Thread(() -> {
+            while (!done[0]) {
+                try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                String s = su("echo $(grep -c '^vit:' " + M + "/mage.log) $(grep -c '^te:' " + M + "/mage.log) $(grep -c '^txt_in:' " + M + "/mage.log) $(grep -c '^step' " + M + "/mage.log) $(grep -c '^vae dec total' " + M + "/mage.log)", true);
+                try {
+                    String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
+                    if (dn > 0) setProgressUi(97, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (st >= STEPS) setProgressUi(90, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (ti > 0) setProgressUi(30 + 60 * st / STEPS, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
+                    else if (te > 0) setProgressUi(28, L.s("Подготовка текста…", "Preparing the text…"), t0);
+                    else if (edit && vit > 0) setProgressUi(15, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                    else if (edit) setProgressUi(5, L.s("Анализ фото на NPU…", "Analysing the photo on the NPU…"), t0);
+                    else setProgressUi(8, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                } catch (Exception ignored) { }
+            }
+        });
+        poll.start();
+        su("rm -f " + q(raw.getPath()) + "; M=" + q(M.getPath()) + " sh " + D + "/mage.sh " + q(ids.getPath()) + " " + drop + " " + w + " " + h + " " + seedS + " " + STEPS + " " + q(raw.getPath()) + edArg + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        done[0] = true;
+        try { poll.join(); } catch (InterruptedException ignored) { }
+        if (cancelled) return null;
+        try {
+            byte[] png = Mage.png(raw, w, h); raw.delete();
+            JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            if (edit) meta.put("edit", true);
+            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
     /** one Qwen-Image picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through qwen.sh */

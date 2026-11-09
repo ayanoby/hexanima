@@ -89,7 +89,7 @@ public class ModelsActivity extends Base {
         final String base = prefBase();
         final boolean needCommonAnima = !store.commonInstalled();
         for (final Models.Item it : items) {
-            final boolean needCommon = needCommonAnima && !it.moss && !it.qwen;
+            final boolean needCommon = needCommonAnima && !it.moss && !it.qwen && !it.mage;
             final boolean have = store.modelInstalled(it.id);
             final boolean busyThis = downloading && it.id.equals(dlId);
             LinearLayout c = card(list);
@@ -124,7 +124,7 @@ public class ModelsActivity extends Base {
         else if (!store.commonInstalled() && hasAnima()) { TextView n = text(L.f("К первой модели добавятся общие файлы (%s ГБ): текстовый энкодер и VAE. Они качаются один раз.", "The first model also fetches the shared files (%s GB): text encoder and VAE, once.", gb(store.commonSize)), 12, DIM, false); n.setPadding(dp(2), 0, 0, 0); list.addView(n); }
     }
 
-    boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen) return true; return false; }
+    boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen && !it.mage) return true; return false; }
 
     void start(String base, Models.Item it, boolean needCommon) {
         if (!Compat.chipAllowed(this)) {   // an unsupported chip: the models will not run, so ask before 4 GB are downloaded
@@ -156,12 +156,12 @@ public class ModelsActivity extends Base {
                 dlDone = d; dlTotal = tot; dlMsg = L.f("%s / %s ГБ  ·  %s", "%s / %s GB  ·  %s", gb(d), gb(tot), what);
             };
             String err = null;
-            try { if (!it.moss && !it.qwen) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
+            try { if (!it.moss && !it.qwen && !it.mage) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
             catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: файлы сохранены, можно продолжить", "Cancelled: the files are kept, you can resume"); }
             catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
             final String msg = err;
             downloading = false;
-            app.stopService(new Intent(app, DownloadService.class));
+            DownloadService.stop(app);
             if (msg != null) ui.post(() -> Toast.makeText(app, msg, Toast.LENGTH_LONG).show());
         }).start();
     }

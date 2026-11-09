@@ -17,7 +17,7 @@ import org.json.JSONObject;
  * Layout: files/anima/{te*.bin, te_embed.f16, vae.bin} (common), files/anima/m_ID/{small.bin, blkNN.bin}, files/sd/{ID.safetensors stub, llm stub, taew2_1.safetensors}.
  */
 final class Models {
-    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen; }   // speed: seconds per picture at 512x768
+    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage; }   // speed: seconds per picture at 512x768
     interface Progress { void on(long done, long total, String what); }
 
     final File anima, sd, home;
@@ -40,8 +40,8 @@ final class Models {
 
     long commonSize;
     List<Item> catalog(String base) throws Exception {
-        String txt;   // catalog2.json lists the Anima models and MOSS-Image (1.3+); catalog.json stays as is for older apps, which would misread a MOSS entry
-        try { txt = get(base + "catalog2.json"); } catch (Exception e) { txt = get(base + "catalog.json"); }
+        String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { txt = get(base + "catalog3.json"); } catch (Exception e) { try { txt = get(base + "catalog2.json"); } catch (Exception e2) { txt = get(base + "catalog.json"); } }
         JSONObject j = new JSONObject(txt);
         commonSize = j.optLong("common_size", 0);
         List<Item> out = new ArrayList<>();
@@ -49,26 +49,28 @@ final class Models {
         for (int i = 0; i < a.length(); i++) {
             JSONObject m = a.getJSONObject(i); Item it = new Item();
             it.id = m.getString("id"); it.name = m.getString("name"); it.desc = m.optString("desc", ""); it.size = m.getLong("size"); it.manifest = m.getString("manifest");
-            it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.quant = m.optString("quant", ""); it.author = m.optString("author", ""); it.speed = m.optInt("speed", 0); it.moss = m.optString("kind", "").equals("moss"); it.qwen = m.optString("kind", "").equals("qwen");
+            it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.quant = m.optString("quant", ""); it.author = m.optString("author", ""); it.speed = m.optInt("speed", 0); it.moss = m.optString("kind", "").equals("moss"); it.qwen = m.optString("kind", "").equals("qwen"); it.mage = m.optString("kind", "").equals("mage");
             out.add(it);
         }
         return out;
     }
 
     // ---- state ----------------------------------------------------------------------------------
-    File modelDir(String id) { return Moss.is(id) ? Moss.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
+    File modelDir(String id) { return Moss.is(id) ? Moss.dir(home) : Mage.is(id) ? Mage.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
     File doneMark(File dir) { return new File(dir, ".installed"); }
-    boolean modelInstalled(String id) { if (Moss.is(id)) return Moss.installed(home) && id.equals(mossId()); if (Qwen.is(id)) return Qwen.installed(home) && id.equals(qwenId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
+    boolean modelInstalled(String id) { if (Moss.is(id)) return Moss.installed(home) && id.equals(mossId()); if (Qwen.is(id)) return Qwen.installed(home) && id.equals(qwenId()); if (Mage.is(id)) return Mage.installed(home) && id.equals(mageId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
     /** v69 keeps the original "common" folder (older apps use it); other Hexagon generations have their own QNN contexts in common_<arch> */
     static String commonDir() { String a = Compat.dspArch(); return a.isEmpty() || a.equals("v69") ? "common" : "common_" + a; }
     boolean commonInstalled() { return doneMark(new File(anima, commonDir())).exists(); }
     String qwenId() { try { return new JSONObject(read(new File(Qwen.dir(home), "meta.json"))).getString("id"); } catch (Exception e) { return ""; } }
+    String mageId() { try { return new JSONObject(read(new File(Mage.dir(home), "meta.json"))).getString("id"); } catch (Exception e) { return ""; } }
     String mossId() { try { return new JSONObject(read(new File(Moss.dir(home), "meta.json"))).getString("id"); } catch (Exception e) { return ""; } }
     /** ids of installed models, in catalog order of installation directory names */
     List<String> installed() {
         List<String> out = new ArrayList<>();
         if (Moss.installed(home)) out.add(mossId());
         if (Qwen.installed(home)) out.add(qwenId());
+        if (Mage.installed(home)) out.add(mageId());
         File[] ds = anima.listFiles();
         if (ds != null) for (File d : ds) if (d.getName().startsWith("m_") && modelInstalled(d.getName().substring(2))) out.add(d.getName().substring(2));
         java.util.Collections.sort(out);
@@ -109,7 +111,7 @@ final class Models {
         JSONArray files = m.getJSONArray("files");
         long[] done = {0};
         fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel);
-        if (it.moss || it.qwen) {   // MOSS-Image / Qwen-Image: raw files only, no sd.cpp stub
+        if (it.moss || it.qwen || it.mage) {   // MOSS-Image / Qwen-Image: raw files only, no sd.cpp stub
             try (FileWriter w = new FileWriter(new File(dir, "meta.json"))) { w.write(new JSONObject().put("id", it.id).put("name", it.name).put("speed", it.speed).toString()); }
             doneMark(dir).createNewFile(); return;
         }
@@ -128,7 +130,7 @@ final class Models {
 
     void delete(String id) {
         File dir = modelDir(id);
-        if (Moss.is(id) || Qwen.is(id)) { deleteTree(dir); return; }
+        if (Moss.is(id) || Qwen.is(id) || Mage.is(id)) { deleteTree(dir); return; }
         File[] fs = dir.listFiles(); if (fs != null) for (File f : fs) f.delete();
         dir.delete(); new File(sd, id + ".safetensors").delete();
     }

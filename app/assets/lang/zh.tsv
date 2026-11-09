@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	省内存模式（较慢）
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	模型权重不常驻内存，而是每张图都从存储中读取。内存 8 GB 的手机需要，12 GB 的不需要。
   ·  app %.1f GB	  ·  应用 %.1f GB
+Too large: at most 6144 patches (1536×1024)	太大：最多 6144 个 patch（例如 1536×1024）
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit：文本编码器、DiT 和 VAE 都在 NPU 上运行；每张图都会从存储中流式读取权重
+Generation failed: %s (log files/mage/mage.log)	生成失败：%s（日志 files/mage/mage.log）
+Mage-Flow notices (changes made)	Mage-Flow 声明（所做的更改）
+Mage-Flow sizes	Mage-Flow 尺寸
+For editing the size is at most 1024×768	编辑时尺寸最大为 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	描述对于这个尺寸来说太长：请缩短描述或选择更小的尺寸
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft，4B，MIT 许可证）可按描述在 4 步内生成图片并编辑照片，每张约 12 秒。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；下载约 8.7 GB。要编辑照片，请在“编辑照片”区块中选择照片并描述要修改的内容。
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	两边都必须是 16 的倍数，且 patch 数（宽/16 × 高/16）能被 32 整除。生成图片：最多 6144 个 patch，例如 1536×1024。编辑：最多 3200 个 patch，例如 1024×768，因为照片也参与计算。

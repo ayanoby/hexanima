@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Speicherschonmodus (langsamer)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Die Gewichte des Modells werden für jedes Bild vom Speicher gelesen, statt im RAM zu bleiben. Nötig bei Telefonen mit 8 GB RAM, bei 12 GB nicht.
   ·  app %.1f GB	  ·  App %.1f GB
+Too large: at most 6144 patches (1536×1024)	Zu groß: höchstens 6144 Patches (z. B. 1536×1024)
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: Textencoder, DiT und VAE laufen auf der NPU; die Gewichte werden für jedes Bild vom Speicher gestreamt
+Generation failed: %s (log files/mage/mage.log)	Generierung fehlgeschlagen: %s (Protokoll files/mage/mage.log)
+Mage-Flow notices (changes made)	Mage-Flow-Hinweise (vorgenommene Änderungen)
+Mage-Flow sizes	Mage-Flow-Größen
+For editing the size is at most 1024×768	Beim Bearbeiten ist die Größe höchstens 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	Der Prompt ist für diese Größe zu lang: kürzen Sie ihn oder wählen Sie eine kleinere Größe
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT-Lizenz) zeichnet Bilder und bearbeitet Fotos per Prompt in 4 Schritten, etwa 12 Sekunden pro Bild. Textencoder, ViT, Transformer und VAE laufen alle auf der NPU; der Download umfasst etwa 8,7 GB. Um ein Foto zu bearbeiten, wählen Sie es im Block „Foto bearbeiten“ aus und beschreiben Sie die Änderung.
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Beide Seiten sind Vielfache von 16, und die Patch-Anzahl (Breite/16 × Höhe/16) ist durch 32 teilbar. Für ein Bild: höchstens 6144 Patches, zum Beispiel 1536×1024. Für das Bearbeiten: höchstens 3200 Patches, zum Beispiel 1024×768, weil das Foto ebenfalls in die Berechnung eingeht.

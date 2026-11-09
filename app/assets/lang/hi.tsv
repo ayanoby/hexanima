@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	कम मेमोरी मोड (धीमा)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	मॉडल के वज़न RAM में रखने के बजाय हर तस्वीर के लिए स्टोरेज से पढ़े जाते हैं। 8 GB RAM वाले फ़ोन पर ज़रूरी है, 12 GB पर नहीं।
   ·  app %.1f GB	  ·  ऐप %.1f GB
+Too large: at most 6144 patches (1536×1024)	बहुत बड़ा: अधिकतम 6144 पैच (जैसे 1536×1024)
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: टेक्स्ट एनकोडर, DiT और VAE NPU पर चलते हैं; हर तस्वीर के लिए वज़न स्टोरेज से स्ट्रीम किए जाते हैं
+Generation failed: %s (log files/mage/mage.log)	जनरेशन विफल: %s (लॉग files/mage/mage.log)
+Mage-Flow notices (changes made)	Mage-Flow सूचनाएँ (किए गए बदलाव)
+Mage-Flow sizes	Mage-Flow के आकार
+For editing the size is at most 1024×768	संपादन के लिए आकार अधिकतम 1024×768 है
+The prompt is too long for this size: shorten it or pick a smaller size	इस आकार के लिए विवरण बहुत लंबा है: उसे छोटा करें या छोटा आकार चुनें
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT लाइसेंस) विवरण से 4 चरणों में तस्वीरें बनाता और फ़ोटो संपादित करता है, लगभग 12 सेकंड प्रति तस्वीर। टेक्स्ट एन्कोडर, ViT, ट्रांसफ़ॉर्मर और VAE सब NPU पर चलते हैं; डाउनलोड लगभग 8.7 GB का है। फ़ोटो संपादित करने के लिए उसे «फ़ोटो संपादित करें» ब्लॉक में चुनें और बताएँ कि क्या बदलना है।
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	दोनों भुजाएँ 16 की गुणज हों और पैच की संख्या (चौड़ाई/16 × ऊँचाई/16) 32 से विभाज्य हो। तस्वीर के लिए: अधिकतम 6144 पैच, जैसे 1536×1024। संपादन के लिए: अधिकतम 3200 पैच, जैसे 1024×768, क्योंकि फ़ोटो भी गणना का हिस्सा है।

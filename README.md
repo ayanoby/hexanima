@@ -17,6 +17,7 @@ about 30 s for 512x768 and about 80 s for 1 Mpx; any size with sides that are mu
 
 And **Qwen-Image 2.1 Turbo** (Qwen team, with the 4-step Lightning adapter by LightX2V): it draws legible text inside pictures, follows long prompts, and **edits your photos by a prompt** ("make the sky a sunset"). The text encoder (Qwen3-VL-8B), its vision tower, the 20B transformer and the VAE all run on the NPU.
 About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below.
+And **Mage-Flow-Edit-Turbo** (Microsoft, MIT): a 4B model that draws and **edits photos by a prompt** in about 12 seconds a picture (a text encoder, a ViT, a 12-block transformer and the VAE, all on the NPU). The weights are about 8.7 GB (optional download) and are streamed from storage for every picture.
 
 ## Features
 
@@ -25,7 +26,7 @@ About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo)
 - Size picker with portrait / landscape / square presets (all multiples of 16) and custom sizes, seed, batch of several pictures, stop button.
 - History with favourites, trash, multi-select, share and save; settings are stored in the PNG, so any picture can be reopened with its prompt and seed.
 - Prompt tag suggestions (Danbooru tags), templates, quality-tag prefix (Anima models only; MOSS-Image takes plain sentences and gets no tags).
-- Photo editing with Qwen-Image: pick a photo, write what to change; the result keeps the photo's shape (the photo is reduced to about 0.4 Mpx).
+- Photo editing with Qwen-Image or Mage-Flow: pick a photo, write what to change; the result keeps the photo's shape (Qwen reduces the photo to about 0.4 Mpx).
 - Your own LoRA for MOSS-Image: pick a `.safetensors` file, the app checks it at once (layer names, shapes, rank, data type) and says why if it does not fit; a strength slider (0-2). The LoRA is folded with the built-in 4-step adapter on the phone (about 15 s the first time) and never leaves the device.
 - Low-memory mode for the Anima models (on by default below ~9.5 GB of RAM, in Settings): the DiT blocks are streamed from storage through two buffers instead of being pinned in RAM; about 2.5 GB less RAM for the 2.9B models, +1 s per 512x768 picture on a 12 GB phone.
 - Live RAM meter, thermal / battery warnings, the model unloads itself when idle.
@@ -76,6 +77,18 @@ Text-to-image: four prompts, three portrait 512x768 and one landscape 768x512, 4
 
 Limits worth knowing: about 14 GB of storage, tested on a 12 GB phone only, weights are streamed from storage for every picture (RAM use stays near 1.2 GB), the photo for an edit is reduced to about 0.4 Mpx, and **non-commercial use only** (Qwen Research License).
 
+### Mage-Flow-Edit-Turbo
+
+Text-to-image: four prompts at 576x768, 4 steps, about 12 s each, straight from the phone (nothing retouched, the first attempt for each prompt): a red fox in a snowy forest, a latte by a rainy window, an anime girl with silver hair under an umbrella, an anime village with a torii gate.
+
+<p align="center"><img src="docs/screens/quality/mage-t2i.jpg" width="760" alt="Mage-Flow-Edit-Turbo: a red fox in the snow, a latte by a window, an anime girl with an umbrella, an anime village with a torii gate"></p>
+
+**Editing a photo by a prompt.** The same four pictures after one edit each (about 21 s at this size): "turn the scene into a snowy night with a full moon" · "make it a sunny morning outside the window" · "change her hair to pink and make it a bright daytime scene" · "turn it into winter, covered in snow, with no cherry blossoms". The first and third edits did what they were asked, the second and fourth only partly (the light got warmer, snow lay on the gate but the blossoms stayed): short, concrete instructions work best.
+
+<p align="center"><img src="docs/screens/quality/mage-edits.jpg" width="760" alt="The same four pictures after editing: a night with a moon, warmer light, pink hair, snow on the torii gate"></p>
+
+Limits worth knowing: about 8.7 GB of storage, tested on a 12 GB phone only, pictures up to 6144 patches (for example 1536x1024) and edits up to 3200 patches (1024x768), the MIT license.
+
 ## A tour of the app
 
 <table>
@@ -125,19 +138,20 @@ Limits worth knowing: about 14 GB of storage, tested on a 12 GB phone only, weig
 2. Open the app and pick a model in **Models**. The files are downloaded from Hugging Face (`ayanoby/anima-npu-packs`) the first time.
 3. Type a prompt (Danbooru-style tags work best), press **Generate**.
 
-MOSS-Image and Qwen-Image are separate downloads in the same manager (each lives in its own Hugging Face repository with its own `LICENSE` and `NOTICE.md`).
+MOSS-Image, Qwen-Image and Mage-Flow are separate downloads in the same manager (each lives in its own Hugging Face repository with its own `LICENSE` and `NOTICE.md`).
 
 Tips: the models are distilled for 4 steps and use no negative prompt; see **Info** in the app for the other notes.
 
 ## Disclaimer
 
-**HexAnima is an independent, unofficial project. It is not affiliated with, endorsed by, sponsored by or otherwise connected to CircleStone Labs, NVIDIA, Qualcomm, Alibaba (Qwen), LightX2V, OpenMOSS, Unsloth, Black Forest Labs or the authors of the models it can download.**
+**HexAnima is an independent, unofficial project. It is not affiliated with, endorsed by, sponsored by or otherwise connected to CircleStone Labs, NVIDIA, Qualcomm, Alibaba (Qwen), Microsoft, LightX2V, OpenMOSS, Unsloth, Black Forest Labs or the authors of the models it can download.**
 "Anima" and "Cosmos" refer to third-party models, "NVIDIA" and "Qualcomm", "Snapdragon", "Hexagon" are trademarks of their respective owners.
 They are used only to describe what the software works with.
 The models (MiaoMiao Harem / 3D Harem / RealSkin by MIAOKA, based on Anima by CircleStone Labs and NVIDIA Cosmos) stay under their authors' licenses: non-commercial use only.
 The models are made with a turbo (distillation) LoRA merged in: Anima Turbo v1.1 Lora by somedoby for the 2B models and TURBO for ANIMA (V4-29B) by n_Arno for the 2.9B models (both on Civitai). See `THIRD_PARTY.md`.
 MOSS-Image, Qwen3.5-9B, the rapid-moss 4-step adapter (darask0, on lodestones' 8-step DMD), the FLUX.2 small decoder (Black Forest Labs) and the Unsloth GGUF quantisations are all under the **Apache License 2.0**; the MOSS-Image pack holds converted copies (the changes are listed in its `NOTICE.md`, also shown in the app under Info -> Licenses).
 Built with Qwen. **Qwen-Image 2.1 Turbo and the Lightning v2-RL adapter (LightX2V; its repository declares no license of its own, so it is treated as a derivative of the Qwen Materials) are under the Qwen Research License Agreement: non-commercial use only**, no redistribution of the model under another name, and the licence text travels with the files. Qwen3-VL-8B (Qwen team) and the Unsloth GGUF quantisations are Apache-2.0. The Qwen-Image pack holds converted copies (changes in its `NOTICE.md`, also in the app under Info -> Licenses). Qwen is a trademark of its owner, used only to name the model.
+Mage-Flow-Edit-Turbo and Mage-VAE (Microsoft) are under the **MIT License**; the Qwen3-VL-4B text encoder and vision tower that ship with it are Apache-2.0. The Mage-Flow pack holds converted copies (changes in its `NOTICE.md`, also in the app under Info -> Licenses).
 LoRA files that you load yourself stay under their authors' licenses; check them before you share pictures made with them.
 A model author can ask for removal of their model from the download catalog: open a discussion in the Community tab of the model packs repository.
 

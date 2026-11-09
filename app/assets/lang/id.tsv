@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Mode hemat memori (lebih lambat)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Bobot model dibaca dari penyimpanan untuk setiap gambar, bukan disimpan di RAM. Diperlukan di ponsel dengan RAM 8 GB, tidak perlu di 12 GB.
   ·  app %.1f GB	  ·  aplikasi %.1f GB
+Too large: at most 6144 patches (1536×1024)	Terlalu besar: maksimal 6144 patch (mis. 1536×1024)
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: text encoder, DiT, dan VAE berjalan di NPU; bobot dialirkan dari penyimpanan untuk setiap gambar
+Generation failed: %s (log files/mage/mage.log)	Pembuatan gagal: %s (log files/mage/mage.log)
+Mage-Flow notices (changes made)	Pemberitahuan Mage-Flow (perubahan yang dibuat)
+Mage-Flow sizes	Ukuran Mage-Flow
+For editing the size is at most 1024×768	Untuk pengeditan, ukuran maksimal 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	Deskripsi terlalu panjang untuk ukuran ini: persingkat atau pilih ukuran yang lebih kecil
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, lisensi MIT) membuat gambar dan mengedit foto berdasarkan deskripsi dalam 4 langkah, sekitar 12 detik per gambar. Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; unduhannya sekitar 8,7 GB. Untuk mengedit foto, pilih di blok «Edit foto» dan jelaskan apa yang diubah.
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Kedua sisi kelipatan 16 dan jumlah patch (lebar/16 × tinggi/16) habis dibagi 32. Untuk gambar: maksimal 6144 patch, misalnya 1536×1024. Untuk pengeditan: maksimal 3200 patch, misalnya 1024×768, karena foto juga ikut dihitung.

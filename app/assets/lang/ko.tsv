@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	저메모리 모드 (느림)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	모델 가중치를 RAM에 두지 않고 그림마다 저장소에서 읽습니다. RAM 8 GB 휴대폰에서 필요하며 12 GB에서는 필요 없습니다.
   ·  app %.1f GB	  ·  앱 %.1f GB
+Too large: at most 6144 patches (1536×1024)	너무 큽니다: 최대 6144 패치 (예: 1536×1024)
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: 텍스트 인코더, DiT, VAE가 NPU에서 실행되며, 가중치는 그림마다 저장소에서 스트리밍됩니다
+Generation failed: %s (log files/mage/mage.log)	생성 실패: %s (로그 files/mage/mage.log)
+Mage-Flow notices (changes made)	Mage-Flow 고지 (변경 사항)
+Mage-Flow sizes	Mage-Flow 크기
+For editing the size is at most 1024×768	편집할 때 크기는 최대 1024×768입니다
+The prompt is too long for this size: shorten it or pick a smaller size	이 크기에는 프롬프트가 너무 깁니다. 줄이거나 더 작은 크기를 선택하세요
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo(Microsoft, 4B, MIT 라이선스)는 프롬프트로 4단계 만에 이미지를 그리고 사진을 편집하며, 한 장에 약 12초가 걸립니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행되며 다운로드 용량은 약 8.7GB입니다. 사진을 편집하려면 "사진 편집" 블록에서 사진을 고르고 바꿀 내용을 적으세요.
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	양쪽 변은 16의 배수이고 패치 수(너비/16 × 높이/16)는 32로 나누어떨어져야 합니다. 이미지는 최대 6144패치(예: 1536×1024), 편집은 최대 3200패치(예: 1024×768)입니다. 사진도 계산에 포함되기 때문입니다.

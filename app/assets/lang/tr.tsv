@@ -242,3 +242,12 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Düşük bellek modu (daha yavaş)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Modelin ağırlıkları RAM'de kalmak yerine her resim için depolamadan okunur. 8 GB RAM'li telefonlarda gerekir, 12 GB'ta gerekmez.
   ·  app %.1f GB	  ·  uygulama %.1f GB
+Too large: at most 6144 patches (1536×1024)	Çok büyük: en fazla 6144 yama (ör. 1536×1024)
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: metin kodlayıcı, DiT ve VAE NPU'da çalışır; ağırlıklar her resim için depolamadan akıtılır
+Generation failed: %s (log files/mage/mage.log)	Üretim başarısız: %s (günlük files/mage/mage.log)
+Mage-Flow notices (changes made)	Mage-Flow bildirimleri (yapılan değişiklikler)
+Mage-Flow sizes	Mage-Flow boyutları
+For editing the size is at most 1024×768	Düzenlemede boyut en fazla 1024×768'dir
+The prompt is too long for this size: shorten it or pick a smaller size	Açıklama bu boyut için çok uzun: kısaltın veya daha küçük bir boyut seçin
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT lisansı) açıklamadan 4 adımda görüntü çizer ve fotoğrafları düzenler; görüntü başına yaklaşık 12 saniye sürer. Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU üzerinde çalışır; indirme yaklaşık 8,7 GB'dır. Bir fotoğrafı düzenlemek için «Fotoğraf düzenle» bloğundan seçin ve neyin değişeceğini yazın.
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Her iki kenar 16'nın katı olmalı ve yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünebilmelidir. Görüntü için en fazla 6144 yama, örneğin 1536×1024. Düzenleme için en fazla 3200 yama, örneğin 1024×768, çünkü fotoğraf da hesaba katılır.

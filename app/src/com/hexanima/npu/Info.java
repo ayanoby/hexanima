@@ -53,6 +53,12 @@ public class Info extends Base {
         {"Размеры Qwen-Image", "Qwen-Image sizes",
          "Обе стороны кратны 16, число патчей (ширина/16 × высота/16) делится на 32 и не больше 4608, например 1024×1024 или 768×1152. При редактировании фото и результат вместе не должны превышать примерно 6800 патчей.",
          "Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 4608, for example 1024×1024 or 768×1152. When editing, the photo and the result together must stay within about 6800 patches."},
+        {"Mage-Flow-Edit", "Mage-Flow-Edit",
+         "Mage-Flow-Edit-Turbo (Microsoft, 4B, лицензия MIT) рисует картинки и правит фото по описанию за 4 шага, около 12 секунд на картинку. Текст, ViT, DiT и VAE работают на NPU; загрузка около 8,7 ГБ. Чтобы изменить фото, выберите его в блоке «Редактирование фото» и опишите, что поменять.",
+         "Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change."},
+        {"Размеры Mage-Flow", "Mage-Flow sizes",
+         "Обе стороны кратны 16, число патчей (ширина/16 × высота/16) делится на 32. Для картинки — не больше 6144 патчей, например 1536×1024. Для редактирования — не больше 3200 патчей, например 1024×768, потому что фото тоже участвует в расчёте.",
+         "Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too."},
         {"Какие телефоны подходят", "Supported phones",
          "Проверено на Snapdragon 8 Gen 1 / 8+ Gen 1 (Hexagon V69). Root не нужен. Остальные чипы не поддерживаются.",
          "Tested on Snapdragon 8 Gen 1 / 8+ Gen 1 (Hexagon V69). No root needed. Other chips are not supported."},
@@ -111,13 +117,14 @@ public class Info extends Base {
             {"Qwen3 0.6B text encoder, Qwen-Image VAE — Apache 2.0", ""},
             {"MOSS-Image-SFT (OpenMOSS), rapid-moss adapter (darask0) and its 8-step DMD base (lodestones), Qwen3.5-9B (Qwen team), Unsloth GGUF quantisations, FLUX.2 small decoder (Black Forest Labs) — all Apache License 2.0. The MOSS-Image pack holds converted copies (re-packed for the NPU, the adapter kept unmerged); user LoRAs stay under their authors' licenses", ""},
             {"Qwen-Image-2.1-Turbo, its VAE and the Lightning v2-RL adapter (LightX2V) — Qwen RESEARCH LICENSE AGREEMENT, non-commercial use only; Qwen3-VL-8B-Instruct and its vision tower, Unsloth GGUF quantisations — Apache License 2.0. The Qwen-Image pack holds converted copies (re-packed for the NPU, the adapter kept unmerged)", ""},
+            {"Mage-Flow-Edit-Turbo and Mage-VAE (Microsoft) — MIT License; its Qwen3-VL-4B text encoder and vision tower (Qwen team) — Apache License 2.0. The Mage-Flow pack holds converted copies (re-packed for the NPU)", ""},
             {"stable-diffusion.cpp — MIT", ""},
             {"TAEHV preview decoder — see github.com/madebyollin/taehv", ""},
             {"Qualcomm AI Engine Direct (QNN) runtime libraries — Qualcomm AI Stack License (redistributed only inside this app)", ""},
             {"Tag suggestions — Danbooru tag list from DominikDoom/a1111-sd-webui-tagcomplete", ""},
         };
         for (String[] l : lic) { TextView t = text("•  " + l[0], 12, DIM, false); t.setPadding(0, dp(6), 0, 0); c.addView(t); }
-        for (String[] q : new String[][]{{"Qualcomm AI Stack License", "licenses/qualcomm_ai_stack_license.txt"}, {L.s("Уведомления QNN (сторонние компоненты)", "QNN notices (third-party components)"), "licenses/qnn_notice.txt"}, {"Apache License 2.0", "licenses/apache-2.0.txt"}, {"Qwen RESEARCH LICENSE AGREEMENT", "licenses/qwen_research_license.txt"}, {L.s("Уведомления Qwen-Image (изменения)", "Qwen-Image notices (changes made)"), "licenses/qwen_notice.txt"}, {L.s("Уведомления MOSS-Image (изменения)", "MOSS-Image notices (changes made)"), "licenses/moss_notice.txt"}}) {
+        for (String[] q : new String[][]{{"Qualcomm AI Stack License", "licenses/qualcomm_ai_stack_license.txt"}, {L.s("Уведомления QNN (сторонние компоненты)", "QNN notices (third-party components)"), "licenses/qnn_notice.txt"}, {"Apache License 2.0", "licenses/apache-2.0.txt"}, {"Qwen RESEARCH LICENSE AGREEMENT", "licenses/qwen_research_license.txt"}, {L.s("Уведомления Qwen-Image (изменения)", "Qwen-Image notices (changes made)"), "licenses/qwen_notice.txt"}, {L.s("Уведомления MOSS-Image (изменения)", "MOSS-Image notices (changes made)"), "licenses/moss_notice.txt"}, {L.s("Уведомления Mage-Flow (изменения)", "Mage-Flow notices (changes made)"), "licenses/mage_notice.txt"}}) {
             TextView t = text(q[0], 13, ACC, false); t.setPadding(0, dp(8), 0, 0);
             t.setOnClickListener(x -> showAsset(q[0], q[1]));
             c.addView(t);
@@ -140,7 +147,11 @@ public class Info extends Base {
         sb.append("\nChip ").append(Compat.soc()).append(", Android ").append(android.os.Build.VERSION.RELEASE).append(", ").append(android.os.Build.MODEL)
           .append(String.format(", RAM %.1f GB, free %.1f GB\n", Compat.ramGb(this), Compat.freeGb(this)));
         sb.append("Installed: ").append(new Models(getFilesDir()).installed()).append("\n");
+        sb.append("Low-memory mode: ").append(Settings.lowRam(this)).append(", app RAM ").append(String.format("%.1f GB", Compat.appRamGb())).append("\n");
         for (String n : new String[]{"animad.log", "sdcli.log", "gen.log"}) sb.append("\n==== ").append(n).append(" ====\n").append(tail(new java.io.File(getFilesDir(), "anima/" + n), 12000));
+        sb.append("\n==== moss.log ====\n").append(tail(new java.io.File(Moss.dir(getFilesDir()), "moss.log"), 8000));
+        sb.append("\n==== qwen.log ====\n").append(tail(new java.io.File(Qwen.dir(getFilesDir()), "qwen.log"), 8000));
+        sb.append("\n==== mage.log ====\n").append(tail(new java.io.File(Mage.dir(getFilesDir()), "mage.log"), 8000));
         android.content.Intent s = new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_SUBJECT, "HexAnima log").putExtra(android.content.Intent.EXTRA_TEXT, sb.toString());
         startActivity(android.content.Intent.createChooser(s, L.s("Отправить лог", "Send the log")));
     }

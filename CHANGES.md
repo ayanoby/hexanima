@@ -1,6 +1,6 @@
 # Changes
 
-## 1.5.2 (not released yet)
+## 1.5.2
 
 - **Queue:** any number of pictures per run (up to 999; tap the number to type it), and the number can be raised while a batch is running: the new pictures join the queue.
 - **Progress:** when the text stage was cached or skipped, the status no longer stays on "Encoding the text..." until the picture is ready; the first finished step switches it to "Step N/M" for Anima, Qwen-Image, Mage-Flow and MOSS-Image.

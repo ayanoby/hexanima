@@ -242,31 +242,3 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	省メモリモード（遅くなります）
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	モデルの重みは RAM に常駐させず、1 枚ごとにストレージから読み込みます。RAM 8 GB の端末で必要で、12 GB では不要です。
   ·  app %.1f GB	  ·  アプリ %.1f GB
-Too large: at most 6144 patches (1536×1024)	大きすぎます: 最大 6144 パッチ（例: 1536×1024）
-Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: テキストエンコーダー、DiT、VAE は NPU で動作し、重みは 1 枚ごとにストレージから読み込まれます
-Generation failed: %s (log files/mage/mage.log)	生成に失敗しました: %s（ログ files/mage/mage.log）
-Mage-Flow notices (changes made)	Mage-Flow の通知（行った変更）
-Mage-Flow sizes	Mage-Flow のサイズ
-For editing the size is at most 1024×768	編集時のサイズは最大 1024×768 です
-The prompt is too long for this size: shorten it or pick a smaller size	プロンプトがこのサイズには長すぎます。短くするか、小さいサイズを選んでください
-Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft、4B、MIT ライセンス）は、プロンプトから 4 ステップで画像を生成し、写真を編集します。1 枚あたり約 12 秒です。テキストエンコーダー、ViT、トランスフォーマー、VAE はすべて NPU で動作し、ダウンロードは約 8.7 GB です。写真を編集するには、「写真を編集」ブロックで写真を選び、変更したい内容を書いてください。
-Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	両辺は 16 の倍数で、パッチ数（幅/16 × 高さ/16）は 32 で割り切れる必要があります。画像の場合は最大 6144 パッチ（例: 1536×1024）、編集の場合は最大 3200 パッチ（例: 1024×768）です。写真も計算に含まれるためです。
-Loading the LoRA…	LoRA を読み込み中…
-Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Anima 用に作られた自分の .safetensors ファイルを選んでください（kohya、diffusers/PEFT、LoKr、LoHa 形式、28 または 40 ブロック）。選択するとすぐに検査されます。強度 1.00 は作者の設定です。LoRA はモデルの読み込み時に重みへ組み込まれるため、新しい LoRA（または新しい強度）での最初の 1 枚は 10〜15 秒長くかかります。組み込まれた重みは 8 ビットのブロックとして保存されます（最後の LoRA で約 2 GB）。LoRA のテキストエンコーダー部分は適用されません。
-Compatible: rank %d, %d of %d blocks	互換性あり: ランク %d、%d ブロック中 %d
-This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	この LoRA は別のモデル（FLUX、SDXL など）用です。Anima には合いません。
-This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	このファイルは Anima の LoRA ではないようです: 必要なレイヤー (blocks.N.*) がありません。
-Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	レイヤーのサイズが Anima と一致しません (%s)。モデルの別バージョン用の LoRA と思われます。
-The LoRA has blocks that Anima does not have (%s).	この LoRA には Anima にないブロックがあります (%s)。
-A .safetensors file for Anima: it is checked as soon as you pick it	Anima 用の .safetensors ファイル: 選ぶとすぐにチェックされます
-LoRA for Anima	Anima 用 LoRA
-Temperature  battery %.1f °C	温度  バッテリー %.1f °C
-  ·  margin before throttling %d%%	  ·  性能低下までの余裕 %d%%
-Picture %d  ·  %d×%d	画像 %d  ·  %d×%d
-+ Another picture (%d of %d)	+ 画像を追加 (%d / %d)
-Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	画像: %d 枚。プロンプトで「画像1」「画像2」のように指定してください。例: 「画像1のキャラクターが画像2の場面に立っている」。
-All models	すべてのモデル
-Out of memory	メモリ不足
-The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	端末のメモリが足りなくなったため、アプリが終了しないよう生成を停止しました。他のアプリを閉じるか、サイズ（編集では写真も）を小さくして、もう一度お試しください。
-Stopped: out of memory	停止: メモリ不足
-Little free memory (%d MB): close other apps, or the generation may stop	空きメモリが少なくなっています (%d MB)。他のアプリを閉じないと生成が止まることがあります

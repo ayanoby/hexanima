@@ -242,31 +242,3 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	कम मेमोरी मोड (धीमा)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	मॉडल के वज़न RAM में रखने के बजाय हर तस्वीर के लिए स्टोरेज से पढ़े जाते हैं। 8 GB RAM वाले फ़ोन पर ज़रूरी है, 12 GB पर नहीं।
   ·  app %.1f GB	  ·  ऐप %.1f GB
-Too large: at most 6144 patches (1536×1024)	बहुत बड़ा: अधिकतम 6144 पैच (जैसे 1536×1024)
-Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: टेक्स्ट एनकोडर, DiT और VAE NPU पर चलते हैं; हर तस्वीर के लिए वज़न स्टोरेज से स्ट्रीम किए जाते हैं
-Generation failed: %s (log files/mage/mage.log)	जनरेशन विफल: %s (लॉग files/mage/mage.log)
-Mage-Flow notices (changes made)	Mage-Flow सूचनाएँ (किए गए बदलाव)
-Mage-Flow sizes	Mage-Flow के आकार
-For editing the size is at most 1024×768	संपादन के लिए आकार अधिकतम 1024×768 है
-The prompt is too long for this size: shorten it or pick a smaller size	इस आकार के लिए विवरण बहुत लंबा है: उसे छोटा करें या छोटा आकार चुनें
-Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT लाइसेंस) विवरण से 4 चरणों में तस्वीरें बनाता और फ़ोटो संपादित करता है, लगभग 12 सेकंड प्रति तस्वीर। टेक्स्ट एन्कोडर, ViT, ट्रांसफ़ॉर्मर और VAE सब NPU पर चलते हैं; डाउनलोड लगभग 8.7 GB का है। फ़ोटो संपादित करने के लिए उसे «फ़ोटो संपादित करें» ब्लॉक में चुनें और बताएँ कि क्या बदलना है।
-Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	दोनों भुजाएँ 16 की गुणज हों और पैच की संख्या (चौड़ाई/16 × ऊँचाई/16) 32 से विभाज्य हो। तस्वीर के लिए: अधिकतम 6144 पैच, जैसे 1536×1024। संपादन के लिए: अधिकतम 3200 पैच, जैसे 1024×768, क्योंकि फ़ोटो भी गणना का हिस्सा है।
-Loading the LoRA…	LoRA लोड हो रही है…
-Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Anima के लिए बनी अपनी .safetensors फ़ाइल चुनें (kohya, diffusers/PEFT, LoKr और LoHa फ़ॉर्मेट; 28 या 40 ब्लॉक)। चुनते ही उसकी जाँच हो जाती है। शक्ति 1.00 लेखक की सेटिंग है। मॉडल लोड होते समय LoRA को मॉडल के वज़न में मिला दिया जाता है, इसलिए नई LoRA (या नई शक्ति) वाली पहली तस्वीर में 10–15 सेकंड ज़्यादा लगते हैं; मिलाए गए वज़न 8-बिट ब्लॉक के रूप में रखे जाते हैं (आख़िरी LoRA के लिए लगभग 2 GB स्टोरेज)। LoRA का टेक्स्ट एन्कोडर वाला हिस्सा लागू नहीं होता।
-Compatible: rank %d, %d of %d blocks	संगत: रैंक %d, %d में से %d ब्लॉक
-This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	यह LoRA किसी दूसरे मॉडल (FLUX, SDXL या ऐसे ही) के लिए है। यह Anima पर फिट नहीं बैठता।
-This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	यह फ़ाइल Anima LoRA जैसी नहीं दिखती: अपेक्षित लेयर (blocks.N.*) नहीं हैं।
-Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	लेयर के आकार Anima से मेल नहीं खाते (%s)। शायद यह मॉडल के किसी दूसरे संस्करण का LoRA है।
-The LoRA has blocks that Anima does not have (%s).	LoRA में ऐसे ब्लॉक हैं जो Anima में नहीं हैं (%s)।
-A .safetensors file for Anima: it is checked as soon as you pick it	Anima के लिए .safetensors फ़ाइल: चुनते ही उसकी जाँच होती है
-LoRA for Anima	Anima के लिए LoRA
-Temperature  battery %.1f °C	तापमान  बैटरी %.1f °C
-  ·  margin before throttling %d%%	  ·  धीमा होने से पहले गुंजाइश %d%%
-Picture %d  ·  %d×%d	चित्र %d  ·  %d×%d
-+ Another picture (%d of %d)	+ एक और चित्र (%d में से %d)
-Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	चित्र: %d. प्रॉम्प्ट में उनका उल्लेख करें: "चित्र 1", "चित्र 2", जैसे "चित्र 1 का पात्र चित्र 2 के दृश्य में खड़ा है".
-All models	सभी मॉडल
-Out of memory	मेमोरी कम पड़ गई
-The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	फ़ोन की मेमोरी खत्म हो गई, इसलिए ऐप बंद होने से बचाने के लिए जनरेशन रोक दिया गया। दूसरे ऐप बंद करें, या छोटा साइज़ (और एडिटिंग के लिए छोटी फ़ोटो) चुनकर फिर कोशिश करें।
-Stopped: out of memory	रुका: मेमोरी कम
-Little free memory (%d MB): close other apps, or the generation may stop	खाली मेमोरी कम है (%d MB): दूसरे ऐप बंद करें, वरना जनरेशन रुक सकता है

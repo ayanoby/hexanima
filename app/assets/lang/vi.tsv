@@ -242,31 +242,3 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Chế độ tiết kiệm bộ nhớ (chậm hơn)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Trọng số của model được đọc từ bộ nhớ cho mỗi ảnh thay vì giữ trong RAM. Cần cho điện thoại 8 GB RAM, không cần với 12 GB.
   ·  app %.1f GB	  ·  ứng dụng %.1f GB
-Too large: at most 6144 patches (1536×1024)	Quá lớn: tối đa 6144 patch (vd. 1536×1024)
-Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: text encoder, DiT và VAE chạy trên NPU; trọng số được đọc từ bộ nhớ cho mỗi ảnh
-Generation failed: %s (log files/mage/mage.log)	Tạo ảnh thất bại: %s (nhật ký files/mage/mage.log)
-Mage-Flow notices (changes made)	Thông báo Mage-Flow (các thay đổi đã thực hiện)
-Mage-Flow sizes	Kích thước Mage-Flow
-For editing the size is at most 1024×768	Khi chỉnh sửa, kích thước tối đa là 1024×768
-The prompt is too long for this size: shorten it or pick a smaller size	Mô tả quá dài cho kích thước này: hãy rút gọn hoặc chọn kích thước nhỏ hơn
-Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh theo mô tả chỉ trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh, hãy chọn ảnh trong khối «Chỉnh sửa ảnh» và mô tả điều cần thay đổi.
-Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Cả hai cạnh đều là bội số của 16 và số patch (rộng/16 × cao/16) chia hết cho 32. Với ảnh: tối đa 6144 patch, ví dụ 1536×1024. Với chỉnh sửa: tối đa 3200 patch, ví dụ 1024×768, vì ảnh gốc cũng tham gia tính toán.
-Loading the LoRA…	Đang tải LoRA…
-Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1,00 là thiết lập của tác giả. LoRA được gộp vào trọng số mô hình khi tải mô hình, nên ảnh đầu tiên với LoRA mới (hoặc cường độ mới) lâu hơn 10–15 giây; trọng số đã gộp được lưu thành các khối 8-bit (khoảng 2 GB bộ nhớ cho LoRA gần nhất). Phần LoRA dành cho bộ mã hóa văn bản không được áp dụng.
-Compatible: rank %d, %d of %d blocks	Tương thích: rank %d, %d trên %d khối
-This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	LoRA này dành cho model khác (FLUX, SDXL hoặc tương tự). Nó không phù hợp với Anima.
-This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Tệp này không giống LoRA của Anima: thiếu các lớp cần có (blocks.N.*).
-Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Kích thước lớp không khớp với Anima (%s). Có thể đây là LoRA cho phiên bản khác của model.
-The LoRA has blocks that Anima does not have (%s).	LoRA có các khối mà Anima không có (%s).
-A .safetensors file for Anima: it is checked as soon as you pick it	Tệp .safetensors cho Anima: được kiểm tra ngay khi bạn chọn
-LoRA for Anima	LoRA cho Anima
-Temperature  battery %.1f °C	Nhiệt độ  pin %.1f °C
-  ·  margin before throttling %d%%	  ·  còn trước khi bị giảm tốc %d%%
-Picture %d  ·  %d×%d	Ảnh %d  ·  %d×%d
-+ Another picture (%d of %d)	+ Thêm ảnh (%d/%d)
-Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Ảnh: %d. Hãy nhắc đến chúng trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật ở ảnh 1 đứng trong cảnh của ảnh 2".
-All models	Tất cả mô hình
-Out of memory	Không đủ bộ nhớ
-The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Điện thoại hết bộ nhớ nên việc tạo ảnh đã dừng để ứng dụng không bị đóng. Hãy đóng các ứng dụng khác, hoặc chọn kích thước nhỏ hơn (và ảnh nhỏ hơn khi chỉnh sửa) rồi thử lại.
-Stopped: out of memory	Đã dừng: hết bộ nhớ
-Little free memory (%d MB): close other apps, or the generation may stop	Bộ nhớ trống ít (%d MB): hãy đóng các ứng dụng khác, nếu không việc tạo ảnh có thể dừng

@@ -242,31 +242,3 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Modo de poca memoria (más lento)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Los pesos del modelo se leen del almacenamiento para cada imagen en lugar de quedarse en la RAM. Hace falta en teléfonos con 8 GB de RAM, no en los de 12 GB.
   ·  app %.1f GB	  ·  app %.1f GB
-Too large: at most 6144 patches (1536×1024)	Demasiado grande: máximo 6144 parches (p. ej. 1536×1024)
-Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: el codificador de texto, el DiT y el VAE se ejecutan en la NPU; los pesos se leen del almacenamiento para cada imagen
-Generation failed: %s (log files/mage/mage.log)	Error de generación: %s (registro files/mage/mage.log)
-Mage-Flow notices (changes made)	Avisos de Mage-Flow (cambios realizados)
-Mage-Flow sizes	Tamaños de Mage-Flow
-For editing the size is at most 1024×768	Al editar, el tamaño máximo es 1024×768
-The prompt is too long for this size: shorten it or pick a smaller size	La descripción es demasiado larga para este tamaño: acórtela o elija un tamaño menor
-Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, licencia MIT) crea imágenes y edita fotos con una descripción en 4 pasos, unos 12 segundos por imagen. El codificador de texto, el ViT, el transformer y el VAE se ejecutan en la NPU; la descarga ronda los 8,7 GB. Para editar una foto, elíjala en el bloque «Editar una foto» y describa qué cambiar.
-Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Ambos lados son múltiplos de 16 y el número de parches (ancho/16 × alto/16) es divisible por 32. Para una imagen: como máximo 6144 parches, por ejemplo 1536×1024. Para editar: como máximo 3200 parches, por ejemplo 1024×768, porque la foto también forma parte del cálculo.
-Loading the LoRA…	Cargando la LoRA…
-Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Elija su propio archivo .safetensors hecho para Anima (formatos kohya, diffusers/PEFT, LoKr y LoHa; 28 o 40 bloques). Se comprueba nada más elegirlo. La intensidad 1,00 es la del autor. La LoRA se integra en los pesos del modelo al cargarlo, así que la primera imagen con una LoRA nueva (o una intensidad nueva) tarda de 10 a 15 segundos más; los pesos integrados se guardan como bloques de 8 bits (unos 2 GB de almacenamiento para la última LoRA). La parte de la LoRA para el codificador de texto no se aplica.
-Compatible: rank %d, %d of %d blocks	Compatible: rango %d, %d de %d bloques
-This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	Este LoRA es para otro modelo (FLUX, SDXL o similar). No sirve para Anima.
-This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Este archivo no parece un LoRA de Anima: faltan las capas esperadas (blocks.N.*).
-Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Los tamaños de capa no coinciden con Anima (%s). Probablemente es un LoRA para otra versión del modelo.
-The LoRA has blocks that Anima does not have (%s).	El LoRA tiene bloques que Anima no tiene (%s).
-A .safetensors file for Anima: it is checked as soon as you pick it	Un archivo .safetensors para Anima: se comprueba en cuanto lo eliges
-LoRA for Anima	LoRA para Anima
-Temperature  battery %.1f °C	Temperatura  batería %.1f °C
-  ·  margin before throttling %d%%	  ·  margen antes de limitar %d%%
-Picture %d  ·  %d×%d	Imagen %d  ·  %d×%d
-+ Another picture (%d of %d)	+ Otra imagen (%d de %d)
-Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Imágenes: %d. Refiérete a ellas en el prompt: "imagen 1", "imagen 2", p. ej. "el personaje de la imagen 1 está en la escena de la imagen 2".
-All models	Todos los modelos
-Out of memory	Memoria insuficiente
-The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Al teléfono se le acabó la memoria, así que la generación se detuvo para que la app no se cierre. Cierra otras apps o elige un tamaño más pequeño (y una foto más pequeña para editar) e inténtalo de nuevo.
-Stopped: out of memory	Detenido: sin memoria
-Little free memory (%d MB): close other apps, or the generation may stop	Poca memoria libre (%d MB): cierra otras apps o la generación podría detenerse

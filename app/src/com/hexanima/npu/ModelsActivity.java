@@ -113,13 +113,13 @@ public class ModelsActivity extends Base {
     List<Entry> entries() {
         java.util.LinkedHashMap<String, Entry> map = new java.util.LinkedHashMap<>();
         for (Models.Item it : items) {
-            String fam = familyOf(it), key = it.qwen ? "qwen" : it.moss ? "moss" : fam.equals("Anima") ? Main.famOf(it.id) : it.id;
+            String fam = familyOf(it), key = it.qwen ? "qwen" : it.moss ? (Moss.isRs(it.id) ? "moss-rs" : "moss") : fam.equals("Anima") ? Main.famOf(it.id) : it.id;
             final boolean legacy = (it.qwen && !Qwen.is8(it.id)) || (fam.equals("Anima") && !it.id.endsWith("base"));   // old scheme: merged turbo checkpoints / the 4 step Qwen pack; new users see base + LoRA only
             if (legacy) { key = "legacy-" + it.id; fam = "Legacy"; }
             Entry e = map.get(key); if (e == null) { e = new Entry(); e.key = key; e.family = fam; e.line = fam.equals("Anima") ? lineOf(it) : ""; map.put(key, e); }
             e.v.add(it);
-            e.lbl.add(legacy ? "" : it.moss ? (Moss.is8(it.id) ? "8 step" : "4 step") : it.qwen ? "" : fam.equals("Anima") ? "" : "");
-            if (e.name == null || (it.moss && !Moss.is8(it.id))) e.name = legacy ? (it.qwen ? "Qwen-Image 2.1 Turbo (4 step, Lightning)" : it.name.replace(" (base)", "") + " (turbo)") : it.qwen ? "Qwen-Image-2.1-Turbo" : it.name.replace(" (base)", "");
+            e.lbl.add(legacy ? "" : it.moss ? (Moss.isRs(it.id) ? "" : Moss.is8(it.id) ? "8 step" : "4 step") : it.qwen ? "" : fam.equals("Anima") ? "" : "");
+            if (e.name == null || (it.moss && !Moss.is8(it.id) && !Moss.isRs(it.id))) e.name = legacy ? (it.qwen ? "Qwen-Image 2.1 Turbo (4 step, Lightning)" : it.name.replace(" (base)", "") + " (turbo)") : it.qwen ? "Qwen-Image-2.1-Turbo" : it.name.replace(" (base)", "");
         }
         return new ArrayList<>(map.values());
     }

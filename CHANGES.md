@@ -1,5 +1,11 @@
 # Changes
 
+## 1.5.2 (not released yet)
+
+- **Queue:** any number of pictures per run (up to 999; tap the number to type it), and the number can be raised while a batch is running: the new pictures join the queue.
+- **Progress:** when the text stage was cached or skipped, the status no longer stays on "Encoding the text..." until the picture is ready; the first finished step switches it to "Step N/M" for Anima, Qwen-Image, Mage-Flow and MOSS-Image.
+- **MiaoMiao RealSkin MOSS 1.0** (a fine-tune of MOSS-Image-SFT by MIAOKA, Civitai) as a separate model next to MOSS-Image: its own DiT / refiner / glue (`files/moss/rs`, about 5.9 GB), the text encoder, VAE and tokenizer are the MOSS-Image pack's. `moss/export_moss_orig.py` reads the single fp16 file (fused qkv) and undoes the "fp16 fix" scaling of such checkpoints, `moss/make_glue_ft.py` rebuilds glue.bin.
+
 ## 1.5.1
 
 - Fixed: the live preview was missing in 1.5.0 (the four `preview_*.bin` files were left out of the build); it is back for all models.

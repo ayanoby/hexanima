@@ -830,6 +830,7 @@ public class Main extends Base {
     String modelName() {   // the family name as in the model list: the 4/8 step variant is picked by the LoRA and the steps, it does not rename the model
         if (model.isEmpty()) return L.s("нет модели", "no model");
         if (isQwen()) return "Qwen-Image-2.1-Turbo";
+        if (Moss.isRs(model)) return store.name(model);
         if (isMoss() && ids.contains(mossBase())) return store.name(mossBase()).replace(" (base)", "");
         return store.name(model);
     }
@@ -845,16 +846,16 @@ public class Main extends Base {
             boolean head = false; final java.util.Set<String> seen = new java.util.HashSet<>();
             for (final String id0 : ids) {
                 String mg = modelGroup(id0); if (!(g[0].equals("anima") ? mg.equals("turbo") || mg.equals("base") : mg.equals(g[0]))) continue;
-                final boolean anima = g[0].equals("anima"), qw = g[0].equals("qwen"), ms = g[0].equals("moss"); final String fam = anima ? famOf(id0) : qw ? "qwen" : ms ? "moss" : id0;
+                final boolean anima = g[0].equals("anima"), qw = g[0].equals("qwen"), ms = g[0].equals("moss"); final String fam = anima ? famOf(id0) : qw ? "qwen" : ms ? (Moss.isRs(id0) ? "moss-rs" : "moss") : id0;
                 if (!seen.add(fam)) continue;
                 final String id = anima && ids.contains(fam) ? fam : id0; final boolean fm = anima || qw;   // the name of a family is the turbo one when it is installed
                 if (!head) { head = true; TextView h = text(g[1], 12, DIM, false); h.setLetterSpacing(0.04f); h.setPadding(dp(4), dp(18), 0, dp(6)); col.addView(h); }
-                final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() : id.equals(model);
+                final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() && Moss.isRs(model) == Moss.isRs(id0) : id.equals(model);
                 LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL); row.setPadding(dp(14), dp(10), dp(14), dp(10));
                 { GradientDrawable rb = bg(CARD, 12); if (sel) rb.setStroke(dp(2), TXT); row.setBackground(rb); }
-                row.addView(text(qw ? "Qwen-Image-2.1-Turbo" : store.name(id).replace(" (base)", ""), 15, TXT, true));
+                row.addView(text(qw ? "Qwen-Image-2.1-Turbo" : ms && Moss.isRs(id0) ? store.name(id0) : store.name(id).replace(" (base)", ""), 15, TXT, true));
                 TextView cap = text(anima ? familyCaption(fam) : qw ? qwenCaption() : ms ? mossCaption() : modelCaption(id), 12, DIM, false); cap.setPadding(0, dp(3), 0, 0); row.addView(cap);
-                row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(mossVariant()); } else if (!sel) setModel(id); });
+                row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(Moss.isRs(id0) ? Moss.IDRS : mossVariant()); } else if (!sel) setModel(id); });
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); col.addView(row, lp);
             }
         }
@@ -900,7 +901,7 @@ public class Main extends Base {
         if (variantRow == null) return;
         if (lab) { updateLabLora(); return; }
         final boolean qw = isQwen(), ms = isMoss(); final String fam = famOf(model);
-        boolean both = ms ? mossBoth() : qw ? qwenBoth() : isAnima() && ids.contains(fam) && ids.contains(fam + "base");
+        boolean both = ms ? mossBoth() && !Moss.isRs(model) : qw ? qwenBoth() : isAnima() && ids.contains(fam) && ids.contains(fam + "base");
         variantRow.setVisibility(both ? View.VISIBLE : View.GONE);
         if (!both) return;
         variantRow.removeAllViews();
@@ -929,7 +930,8 @@ public class Main extends Base {
             }
         }
         else if (isMoss()) {
-            if (ids.contains(mossBase())) o.add(new String[]{"4 step · rapid-moss", mossBase()}); if (ids.contains(Moss.ID8)) o.add(new String[]{"8 step · DMD", Moss.ID8});
+            if (Moss.isRs(model)) o.add(new String[]{"4 step · rapid-moss", Moss.IDRS});
+            else { if (ids.contains(mossBase())) o.add(new String[]{"4 step · rapid-moss", mossBase()}); } if (!Moss.isRs(model) && ids.contains(Moss.ID8)) o.add(new String[]{"8 step · DMD", Moss.ID8});
             if (MossLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("turbo_name", "LoRA") + " (" + prefs().getInt("turbo_sampler", 4) + " step)", "custom"});
             o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"});
         }
@@ -1253,7 +1255,7 @@ public class Main extends Base {
         final long t0 = System.currentTimeMillis();
         ex.submit(() -> {
             int made = 0; Bitmap lastBm = null;
-            for (int i = 0; i < n && !cancelled; i++) {
+            for (int i = 0; i < curN && !cancelled; i++) {
                 curIdx = i;
                 final String seedS = String.valueOf(randomSeed ? new Random().nextInt(1 << 30) : baseSeed + i);
                 File fr = null;
@@ -1319,7 +1321,7 @@ public class Main extends Base {
                 int st = (c[0] - base[0]) / cm();
                 if (c[1] > base[1]) setProgressUi(97, L.s("Сохраняю…", "Saving…"), t0);
                 else if (st >= steps()) setProgressUi(92, L.s("Декодирование…", "Decoding…"), t0);
-                else if (c[2] > base[2]) setProgressUi(15 + (int) (76 * stepShare(st)), L.f("Шаг %d/%d", "Step %d/%d", st + 1, steps()), t0);  // adapter line = step 1 started
+                else if (c[2] > base[2] || st > 0) setProgressUi(15 + (int) (76 * stepShare(st)), L.f("Шаг %d/%d", "Step %d/%d", st + 1, steps()), t0);  // adapter line = step 1 started
                 else setProgressUi(8, L.s("Кодирование текста…", "Encoding the text…"), t0);
             }
         });
@@ -1341,6 +1343,8 @@ public class Main extends Base {
     /** one MOSS-Image picture: tokenise here, text encoder + DiT + VAE on the NPU through moss.sh, PNG with the settings inside */
     File runOneMoss(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), M = Moss.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final int STEPS = steps();
+        final File MR;   // the dir mossrun runs in: the pack itself, or the RealSkin link dir
+        try { MR = Moss.isRs(model) ? Moss.variantRs(home) : M; } catch (Exception e) { ui.post(() -> Toast.makeText(this, "RealSkin: " + e, Toast.LENGTH_LONG).show()); return null; }
         setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
         try { Moss.writeIds(home, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
         String loraEnv = Moss.is8(model) ? "MODE=8 " : ""; final boolean useLora = loraOn();
@@ -1357,12 +1361,12 @@ public class Main extends Base {
             loraEnv = "MOSS_LORA=" + q(ovl.getPath()) + " ";
         }
         final boolean[] done = {false};
-        final Preview pv = Preview.load(this, "moss"); final File pvf = new File(M, "prev.bin"); pvf.delete();
+        final Preview pv = Preview.load(this, "moss"); final File pvf = new File(MR, "prev.bin"); pvf.delete();
         Thread poll = new Thread(() -> {
             while (!done[0]) {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
                 if (pv != null) showPreview(pv.poll(pvf));
-                String s = su("echo $(grep -c '^te:' " + M + "/moss.log) $(grep -c '^refiner:' " + M + "/moss.log) $(grep -c '^step' " + M + "/moss.log) $(grep -c '^done' " + M + "/moss.log)", true);
+                String s = su("echo $(grep -c '^te:' " + MR + "/moss.log) $(grep -c '^refiner:' " + MR + "/moss.log) $(grep -c '^step' " + MR + "/moss.log) $(grep -c '^done' " + MR + "/moss.log)", true);
                 try {
                     String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), rf = Integer.parseInt(a[1]), st = Integer.parseInt(a[2]), dn = Integer.parseInt(a[3]);
                     if (dn > 0) setProgressUi(94, L.s("Декодирование…", "Decoding…"), t0);
@@ -1373,7 +1377,7 @@ public class Main extends Base {
             }
         });
         poll.start();
-        su("rm -f " + q(raw.getPath()) + "; " + loraEnv + "M=" + q(M.getPath()) + " sh " + D + "/moss.sh " + q(ids.getPath()) + " " + w + " " + h + " " + seedS + " " + STEPS + " " + q(raw.getPath()) + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        su("rm -f " + q(raw.getPath()) + "; " + loraEnv + "M=" + q(MR.getPath()) + " sh " + D + "/moss.sh " + q(ids.getPath()) + " " + w + " " + h + " " + seedS + " " + STEPS + " " + q(raw.getPath()) + " < /dev/null >> " + D + "/gen.log 2>&1", false);
         done[0] = true;
         try { poll.join(); } catch (InterruptedException ignored) { }
         if (cancelled) return null;
@@ -1410,7 +1414,7 @@ public class Main extends Base {
                     String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
                     if (dn > 0) setProgressUi(97, L.s("Декодирование…", "Decoding…"), t0);
                     else if (st >= STEPS) setProgressUi(90, L.s("Декодирование…", "Decoding…"), t0);
-                    else if (ti > 0) setProgressUi(30 + 60 * st / STEPS, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
+                    else if (ti > 0 || st > 0) setProgressUi(30 + 60 * st / STEPS, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
                     else if (te > 0) setProgressUi(28, L.s("Подготовка текста…", "Preparing the text…"), t0);
                     else if (edit && vit > 0) setProgressUi(15, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
                     else if (edit) setProgressUi(5, L.s("Анализ фото на NPU…", "Analysing the photo on the NPU…"), t0);
@@ -1468,7 +1472,7 @@ public class Main extends Base {
                 try {
                     String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
                     if (dn >= (edit ? 2 : 1)) setProgressUi(94, L.s("Декодирование…", "Decoding…"), t0);
-                    else if (ti > 0) setProgressUi(30 + 62 * st / QS, st == 0 && edit ? L.s("Шаг 1/" + QS + " (разбор фото)", "Step 1/" + QS + " (reading the photo)") : L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, QS), QS), t0);
+                    else if (ti > 0 || st > 0) setProgressUi(30 + 62 * st / QS, st == 0 && edit ? L.s("Шаг 1/" + QS + " (разбор фото)", "Step 1/" + QS + " (reading the photo)") : L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, QS), QS), t0);
                     else if (te > 0) setProgressUi(28, L.s("Подготовка текста…", "Preparing the text…"), t0);
                     else if (edit && vit > 0) setProgressUi(15, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
                     else if (edit) setProgressUi(5, L.s("Анализ фото на NPU…", "Analysing the photo on the NPU…"), t0);
@@ -1534,9 +1538,21 @@ public class Main extends Base {
         for (TextView t : new TextView[]{mi, pl}) t.setGravity(Gravity.CENTER);
         mi.setOnClickListener(v -> bump(kind, -1)); pl.setOnClickListener(v -> bump(kind, 1));
         val.setGravity(Gravity.CENTER); val.setMinWidth(dp(44));
-        if (kind < 2) val.setOnClickListener(v -> { if (kind == 0) pickBaseSteps(); else pickBaseCfg(); });
+        val.setOnClickListener(v -> { if (kind == 0) pickBaseSteps(); else if (kind == 1) pickBaseCfg(); else pickCount(); });
         b.addView(mi, new LinearLayout.LayoutParams(dp(40), dp(40))); b.addView(val); b.addView(pl, new LinearLayout.LayoutParams(dp(40), dp(40)));
         return b;
+    }
+    /** pictures per run: any number; while a batch runs the value is the length of the queue (never below the picture being made) and the loop follows it */
+    void setCount(int v) {
+        v = Math.max(busy ? curIdx + 1 : 1, Math.min(999, v)); count = v; prefs().edit().putInt("count", count).apply();
+        if (busy) { curN = count; Toast.makeText(this, L.f("В очереди: %d", "In the queue: %d", count), Toast.LENGTH_SHORT).show(); }
+        refreshBaseUi(); updateChips();
+    }
+    void pickCount() {
+        final EditText e = new EditText(this); e.setText(String.valueOf(count)); e.setSelectAllOnFocus(true); e.setTextColor(TXT); e.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder().setTitle(L.s("Картинок за раз", "Pictures per run")).setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton("OK", (dd, w) -> {
+            try { setCount(Integer.parseInt(e.getText().toString().trim())); } catch (NumberFormatException x) { Toast.makeText(this, L.s("Введите число", "Enter a number"), Toast.LENGTH_SHORT).show(); }
+        }).show();
     }
     void bump(int kind, int dir) {
         if (kind == 0) {
@@ -1546,8 +1562,7 @@ public class Main extends Base {
             v = Math.max(1, Math.min(20, Math.round((v + 0.5f * dir) * 2) / 2f));
             prefs().edit().putString("base_cfg", v == (int) v ? String.valueOf((int) v) : String.valueOf(v)).apply();
         } else {
-            if (busy) return;
-            count = Math.max(1, Math.min(4, count + dir)); prefs().edit().putInt("count", count).apply();
+            setCount(count + dir); return;
         }
         refreshBaseUi();
     }

@@ -49,11 +49,14 @@ public class Main extends Base {
     /** sampling steps, typed or stepped by hand for every model; the range is what the engine of the model accepts (MOSS: the step codes of its LoRA, Qwen / Mage: their sigma tables), the default is the recipe of the model */
     /** Lab: the turbo LoRA of MOSS is a file picked by the user (sampler: 4 = rapid-moss like, 8 = DMD like) */
     boolean customTurbo() { return lab && isMoss() && prefs().getBoolean("turbo_on", false) && MossLora.turboSrc(getFilesDir()).exists(); }
-    int mossSteps() { return customTurbo() ? prefs().getInt("turbo_sampler", 4) : Moss.steps(model); }
+    /** RealSkin MOSS has one model id; its 4 / 8 step mode (rapid-moss / the DMD add-on of the installed MOSS-Image) is the "rs_mode" preference */
+    boolean rs8() { return Moss.isRs(model) && prefs().getString("rs_mode", "4").equals("8"); }
+    boolean moss8() { return Moss.is8(model) || rs8(); }
+    int mossSteps() { return customTurbo() ? prefs().getInt("turbo_sampler", 4) : rs8() ? 8 : Moss.steps(model); }
     int stepsDef() { return base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
     int stepsMin() { return 1; }
     int stepsMax() { return base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
-    String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
+    String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : "") + (rs8() && !customTurbo() ? "_8" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
     int steps() { return Math.max(stepsMin(), Math.min(stepsMax(), prefs().getInt(stepsKey(), stepsDef()))); }
     void setSteps(int v) { prefs().edit().putInt(stepsKey(), Math.max(stepsMin(), Math.min(stepsMax(), v))).apply(); if (base()) prefs().edit().putInt("base_steps", steps()).apply(); refreshBaseUi(); }
     int cm() { return base() ? 2 : 1; }   // DiT passes per step
@@ -560,7 +563,7 @@ public class Main extends Base {
     String lp() { return isMoss() ? "moss_lora_" : "anima_lora_"; }
     File loraSrc() { return isMoss() ? MossLora.src(getFilesDir()) : AnimaLora.src(getFilesDir()); }
     String loraId() { return prefs().getString(lp() + "id", ""); }
-    boolean loraOn() { return (isMoss() && !Moss.is8(model) && !customTurbo() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
+    boolean loraOn() { return (isMoss() && !moss8() && !customTurbo() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
     void refreshLora() {
         if (loraName == null) return;
         boolean has = !loraId().isEmpty() && loraSrc().exists();
@@ -930,7 +933,7 @@ public class Main extends Base {
             }
         }
         else if (isMoss()) {
-            if (Moss.isRs(model)) o.add(new String[]{"4 step · rapid-moss", Moss.IDRS});
+            if (Moss.isRs(model)) { o.add(new String[]{"4 step · rapid-moss", "rs4"}); if (Moss.installed8(getFilesDir())) o.add(new String[]{"8 step · DMD", "rs8"}); }
             else { if (ids.contains(mossBase())) o.add(new String[]{"4 step · rapid-moss", mossBase()}); } if (!Moss.isRs(model) && ids.contains(Moss.ID8)) o.add(new String[]{"8 step · DMD", Moss.ID8});
             if (MossLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("turbo_name", "LoRA") + " (" + prefs().getInt("turbo_sampler", 4) + " step)", "custom"});
             o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"});
@@ -943,6 +946,7 @@ public class Main extends Base {
         variantRow.removeAllViews(); variantRow.setPadding(dp(16), 0, dp(16), 0); variantRow.setGravity(Gravity.CENTER_VERTICAL);
         if (o.isEmpty()) return;
         int cur = 0; for (int i = 0; i < o.size(); i++) if (customTurbo() || customTurboAnima() || customTurboQwen() ? o.get(i)[1].equals("custom") : o.get(i)[1].equals(model)) cur = i;
+        if (Moss.isRs(model) && !customTurbo()) for (int i = 0; i < o.size(); i++) if (o.get(i)[1].equals(rs8() ? "rs8" : "rs4")) cur = i;
         variantRow.addView(text(L.s("Turbo LoRA", "Turbo LoRA"), 14, DIM, false), new LinearLayout.LayoutParams(0, -2, 1));
         variantRow.addView(text((cur < 0 ? L.s("не выбрана", "none") : o.get(cur)[0]) + "  ▾", 15, cur < 0 ? DIM : TXT, false));
         final int sel = cur;
@@ -954,6 +958,7 @@ public class Main extends Base {
                 if (id.equals("pick")) { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE), 14); return; }
                 if (id.equals("custom") && isQwen() && i == sel) { prefs().edit().putBoolean("qturbo_on", false).apply(); setModelUi(false, false, ""); return; }   // tapping the chosen file again turns the LoRA off
                 if (id.equals("custom")) { if (isQwen()) { prefs().edit().putBoolean("qturbo_on", true).apply(); if (!Qwen.is8(model)) { setModel(Qwen.ID8); return; } } else if (isAnima()) { prefs().edit().putBoolean("aturbo_on", true).apply(); if (!isBase(model)) { setModel(fam + "base"); return; } } else prefs().edit().putBoolean("turbo_on", true).apply(); setModelUi(false, false, ""); return; }
+                if (id.equals("rs4") || id.equals("rs8")) { prefs().edit().putBoolean("turbo_on", false).putString("rs_mode", id.substring(2)).apply(); setModelUi(false, false, ""); refreshBaseUi(); return; }
                 prefs().edit().putBoolean("turbo_on", false).putBoolean("aturbo_on", false).putBoolean("qturbo_on", false).apply();
                 if (!id.equals(model)) setModel(id); else setModelUi(false, false, "");
             }).show();
@@ -1084,7 +1089,7 @@ public class Main extends Base {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
             if (turboStrRow != null) { boolean tv = customTurbo() || customTurboAnima() || customTurboQwen(); turboStrRow.setVisibility(tv ? View.VISIBLE : View.GONE); if (tv) turboBar.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20)); }
-            if (loraBox != null) { loraBox.setVisibility(isMoss() && !Moss.is8(model) && !customTurbo() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
+            if (loraBox != null) { loraBox.setVisibility(isMoss() && !moss8() && !customTurbo() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
             if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
             if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
             applyFamily(); updateTokens();
@@ -1347,7 +1352,7 @@ public class Main extends Base {
         try { MR = Moss.isRs(model) ? Moss.variantRs(home) : M; } catch (Exception e) { ui.post(() -> Toast.makeText(this, "RealSkin: " + e, Toast.LENGTH_LONG).show()); return null; }
         setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
         try { Moss.writeIds(home, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
-        String loraEnv = Moss.is8(model) ? "MODE=8 " : ""; final boolean useLora = loraOn();
+        String loraEnv = moss8() ? "MODE=8 " : ""; final boolean useLora = loraOn();
         if (customTurbo()) {
             final String[] cm = {""}; setProgressUi(2, L.s("Подготовка turbo LoRA…", "Preparing the turbo LoRA…"), t0);
             File ovl = MossLora.ensureTurbo(home, BIN, prefs().getFloat("turbo_str", 1f), cm);

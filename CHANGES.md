@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+- RealSkin MOSS: "8 step · DMD" next to the 4 step rapid-moss in the Turbo LoRA row (uses the installed MOSS-Image 8 step add-on; the mode is the `rs_mode` preference).
+
 ## 1.5.2
 
 - **Queue:** any number of pictures per run (up to 999; tap the number to type it), and the number can be raised while a batch is running: the new pictures join the queue.

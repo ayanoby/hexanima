@@ -1,5 +1,10 @@
 # Changes
 
+## 1.5.1
+
+- Fixed: the live preview was missing in 1.5.0 (the four `preview_*.bin` files were left out of the build); it is back for all models.
+- MOSS-Image: the status line no longer sticks on "Preparing the text..." when the text was cached.
+
 ## 1.5.0
 
 The model manager and the generation screen now follow one scheme for every model family: **you download a base model, and speed comes from a separate LoRA file that you pick**. Existing pictures, history and settings stay; the old merged "Turbo" checkpoints of Anima are no longer used (delete them in the manager to free about 2-4 GB each).

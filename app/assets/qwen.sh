@@ -25,11 +25,23 @@ if [ -n "$ED" ]; then   # the condition images (up to 3: $ED, $ED/1, $ED/2): VAE
   fi
   for d in $ED $ED/1 $ED/2; do [ -s $d/meta.txt ] && { [ -s $d/cond_raw.f32 ] || exit 1; }; done
 fi
-# the decoder starts now and loads its 0.5 GB context while the transformer runs; the "run" command is appended to its command file afterwards
+# text-to-image: the decoder starts now and loads its 0.5 GB context while the transformer runs; the "run" command is appended to its command file afterwards.
+# Editing (ED set): the decoder starts only after the transformer has finished (its 0.7 GB would add to the peak memory of the longest, most memory-hungry pass: +2-4 s).
 VAE=${VAE:-vae_t32.bin}; rm -f $Q/vae.cmd $Q/vae.log; : > $Q/vae.cmd
-(tail -f $Q/vae.cmd | LIBS=$LIBS ADSPP=$ADSPP sh -c "$RUNX" sh $BIN/libqvaetile.so $BIN/libQnnHtp.so $BIN/libQnnSystem.so $Q/vae/$VAE > $Q/vae.log 2>&1 &)
-printf 'load %s\ngen %s %s %s %s %s %s %s/z.raw\nquit\n' "$Q" "$IDS" "$DROP" "$H" "$W" "$SEED" "$STEPS" "$Q" | LIBS=$LIBS ADSPP=$ADSPP QWEN_EDIT="$ED" QWEN_CACHE=$Q/cache QWEN_PREVIEW=$Q/prev.bin sh -c "$RUNX" sh $BIN/libqwenrun.so >> $Q/qwen.log 2>&1
+[ -z "$ED" ] && (tail -f $Q/vae.cmd | LIBS=$LIBS ADSPP=$ADSPP sh -c "$RUNX" sh $BIN/libqvaetile.so $BIN/libQnnHtp.so $BIN/libQnnSystem.so $Q/vae/$VAE > $Q/vae.log 2>&1 &)
+QL=$Q; QC=$Q/cache
+if [ -n "$QV" ]; then   # variant pack (QV=8: plain Turbo, 8 steps, no Lightning LoRA): its own dit/glue, the text encoder / ViT / embeddings of the default pack, its own caches (the cached text and prefix depend on the DiT weights)
+  QL=$Q/v$QV; QC=$Q/cache$QV; mkdir -p $QL $QC; ln -sfn $Q/te $QL/te; ln -sfn $Q/vit $QL/vit; ln -sfn $Q/embd.q4k $QL/embd.q4k; ln -sfn $Q/dit$QV $QL/dit; ln -sfn $Q/glue$QV.bin $QL/glue.bin
+fi
+# QLORA=<dir of overlays from liblorafold-like qwenfold> (+ QSCHED=4|8, the sigma table of that LoRA): a LoRA on the plain pack (QV=8); its own text/prefix caches
+[ -n "$QLORA" ] && { QC=$Q/cache${QV:-4}_$(basename $QLORA); mkdir -p $QC; }
+printf 'load %s\ngen %s %s %s %s %s %s %s/z.raw\nquit\n' "$QL" "$IDS" "$DROP" "$H" "$W" "$SEED" "$STEPS" "$Q" | LIBS=$LIBS ADSPP=$ADSPP QWEN_LORA="$QLORA" QWEN_SCHED="$QSCHED" QWEN_EDIT="$ED" QWEN_CACHE=$QC QWEN_PREVIEW=$Q/prev.bin sh -c "$RUNX" sh $BIN/libqwenrun.so >> $Q/qwen.log 2>&1
 if [ -s $Q/z.raw ]; then printf 'run %s/z.raw %s %s %s\nquit\n' "$Q" "$W" "$H" "$OUT" >> $Q/vae.cmd; else printf 'quit\n' >> $Q/vae.cmd; fi
+if [ -n "$ED" ]; then   # late decoder: started now, reads the command file that is already complete
+  [ -s $Q/z.raw ] && LIBS=$LIBS ADSPP=$ADSPP sh -c "$RUNX" sh $BIN/libqvaetile.so $BIN/libQnnHtp.so $BIN/libQnnSystem.so $Q/vae/$VAE < $Q/vae.cmd > $Q/vae.log 2>&1
+else
 n=0; while pidof libqvaetile.so >/dev/null && [ $n -lt 900 ]; do sleep 0.2; n=$((n+1)); done
-pkill -f "tail -f $Q/vae.cmd"; cat $Q/vae.log >> $Q/qwen.log 2>/dev/null
+pkill -f "tail -f $Q/vae.cmd"
+fi
+cat $Q/vae.log >> $Q/qwen.log 2>/dev/null
 [ -s $OUT ]

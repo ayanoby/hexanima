@@ -10,7 +10,8 @@ LIBS=$BIN:/system/lib64:/vendor/lib64; ADSPP="$M/dsp;$BIN"
 RUNX='export LD_LIBRARY_PATH="$LIBS" ADSP_LIBRARY_PATH="$ADSPP"; exec "$@"'
 mkdir -p $M/dsp && cp -f $BIN/libmossskel.so $M/dsp/libmega_skel.so
 rm -f $M/moss.log $M/z.raw $M/prev.bin $OUT
-printf 'load %s\ngen %s %s %s %s %s %s/z.raw\nquit\n' "$M" "$IDS" "$H" "$W" "$SEED" "$STEPS" "$M" | LIBS=$LIBS ADSPP=$ADSPP MOSS_PREVIEW=$M/prev.bin sh -c "$RUNX" sh $BIN/libmossrun.so > $M/moss.log 2>&1
+MODE=${MODE:-4}   # 8 = the DMD add-on (glue8.bin + lora8/)
+printf 'load %s\nmode %s\ngen %s %s %s %s %s %s/z.raw\nquit\n' "$M" "$MODE" "$IDS" "$H" "$W" "$SEED" "$STEPS" "$M" | LIBS=$LIBS ADSPP=$ADSPP MOSS_PREVIEW=$M/prev.bin sh -c "$RUNX" sh $BIN/libmossrun.so > $M/moss.log 2>&1
 [ -s $M/z.raw ] || exit 1
 if [ -f $M/vae/vae_${W}x${H}.bin ]; then   # a full-frame decoder context exists for this exact size (best fidelity)
   printf 'run %s/z.raw %s\nquit\n' "$M" "$OUT" | LIBS=$LIBS ADSPP=$ADSPP sh -c "$RUNX" sh $BIN/libvaerun.so $BIN/libQnnHtp.so $BIN/libQnnSystem.so $M/vae/vae_${W}x${H}.bin >> $M/moss.log 2>&1

@@ -143,13 +143,36 @@ public class History extends Base {
             TextView e = text(em[mode], 14, DIM, false); e.setGravity(Gravity.CENTER); e.setPadding(dp(32), dp(70), dp(32), 0);
             grid.addView(e);
         }
-        LinearLayout row = null;
+        LinearLayout[] colv = null; int[] colH = null; String lastDay = null;   // date sections, each a three-column masonry (tiles keep their picture's proportions)
         for (int i = 0; i < cur.length; i++) {
-            if (i % 3 == 0) { row = new LinearLayout(this); grid.addView(row); }
-            row.addView(makeCell(cur[i]));
+            String day = dayLabel(cur[i]);
+            if (!day.equals(lastDay)) {
+                lastDay = day;
+                TextView dh = text(day.toUpperCase(), 11, DIM, true); dh.setLetterSpacing(.08f); dh.setPadding(dp(6), dp(16), 0, dp(6)); grid.addView(dh);
+                LinearLayout rowc = new LinearLayout(this); grid.addView(rowc); colv = new LinearLayout[3]; colH = new int[3];
+                for (int c = 0; c < 3; c++) { colv[c] = new LinearLayout(this); colv[c].setOrientation(LinearLayout.VERTICAL); rowc.addView(colv[c]); }
+            }
+            FrameLayout cv = makeCell(cur[i]); int best = 0; for (int c = 1; c < 3; c++) if (colH[c] < colH[best]) best = c;
+            colv[best].addView(cv); colH[best] += cv.getLayoutParams().height + dp(6);
         }
         sel.retainAll(Arrays.asList(cur));
         if (selecting) updateBar();
+    }
+
+    String dayLabel(File f) {
+        java.util.Calendar a = java.util.Calendar.getInstance(), b = java.util.Calendar.getInstance(); b.setTimeInMillis(f.lastModified());
+        int d = (int) ((startOfDay(a) - startOfDay(b)) / 86400000L);
+        if (d <= 0) return L.s("Сегодня", "Today"); if (d == 1) return L.s("Вчера", "Yesterday");
+        return new java.text.SimpleDateFormat("d MMMM" + (a.get(java.util.Calendar.YEAR) != b.get(java.util.Calendar.YEAR) ? " yyyy" : ""), new java.util.Locale(L.lang)).format(new java.util.Date(f.lastModified()));
+    }
+    static long startOfDay(java.util.Calendar c) { java.util.Calendar x = (java.util.Calendar) c.clone(); x.set(java.util.Calendar.HOUR_OF_DAY, 0); x.set(java.util.Calendar.MINUTE, 0); x.set(java.util.Calendar.SECOND, 0); x.set(java.util.Calendar.MILLISECOND, 0); return x.getTimeInMillis(); }
+
+    /** short model tag for the corner of a tile */
+    static String shortModel(String n) {
+        if (n.contains("MOSS")) return "MOSS"; if (n.contains("Qwen")) return n.contains("8 step") ? "Qwen 8" : "Qwen"; if (n.contains("Mage")) return "Mage";
+        String s = n.contains("RealSkin") ? "Real" : n.contains("Harem") ? "Harem" : "";
+        if (s.isEmpty()) return n.length() > 8 ? n.substring(0, 8) : n;
+        return s + (n.contains("2.9B") ? " 2.9B" : n.contains("2B") || n.contains("1.3") || n.contains("LH3D") ? " 2B" : "") + (n.contains("(base)") ? " base" : "");
     }
 
     void addChip(String label, final String model) {
@@ -163,7 +186,7 @@ public class History extends Base {
 
     FrameLayout makeCell(final File f) {
         FrameLayout fl = new FrameLayout(this); fl.setTag(f);
-        ImageView iv = new ImageView(this); iv.setScaleType(ImageView.ScaleType.CENTER_CROP); iv.setBackground(bg(CARD, 12)); iv.setClipToOutline(true);
+        ImageView iv = new ImageView(this); iv.setScaleType(ImageView.ScaleType.CENTER_CROP); iv.setBackground(bg(CARD, 14)); iv.setClipToOutline(true);
         fl.addView(iv, new FrameLayout.LayoutParams(-1, -1));
         TextView star = text("★", 16, WARN, true); star.setShadowLayer(4, 0, 0, 0xFF000000);
         FrameLayout.LayoutParams sp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END); sp.setMargins(0, dp(4), dp(8), 0);
@@ -171,7 +194,13 @@ public class History extends Base {
         TextView chk = text("✓", 16, ON_ACC, true); chk.setGravity(Gravity.CENTER); chk.setBackground(bg(ACC, 12));
         FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.TOP | Gravity.START); cp.setMargins(dp(8), dp(8), 0, 0);
         fl.addView(chk, cp);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(cell - dp(6), (int) ((cell - dp(6)) * 1.3f)); lp.setMargins(dp(3), dp(3), dp(3), dp(3));
+        org.json.JSONObject mo = Gallery.meta(f); String mname = mo.optString("model", "");
+        if (!mname.isEmpty()) {
+            TextView badge = text(shortModel(mname), 10, 0xFFFFFFFF, true); badge.setBackground(bg(0x99000000, 8)); badge.setPadding(dp(6), dp(2), dp(6), dp(2));
+            FrameLayout.LayoutParams bp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START); bp.setMargins(dp(6), 0, 0, dp(6)); fl.addView(badge, bp);
+        }
+        float asp = 1.3f; int pw = mo.optInt("w"), ph2 = mo.optInt("h"); if (pw > 0 && ph2 > 0) asp = Math.max(0.7f, Math.min(1.6f, ph2 / (float) pw));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(cell - dp(6), (int) ((cell - dp(6)) * asp)); lp.setMargins(dp(3), dp(3), dp(3), dp(3));
         fl.setLayoutParams(lp);
         fl.setOnClickListener(v -> { if (selecting) { if (!sel.remove(f)) sel.add(f); refreshSel(); } else { int k = Arrays.asList(cur).indexOf(f); Viewer.open(this, cur, Math.max(0, k), mode, true); } });
         fl.setOnLongClickListener(v -> { if (!selecting) { setSelecting(true); sel.add(f); refreshSel(); } return true; });

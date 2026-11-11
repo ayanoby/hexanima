@@ -12,6 +12,8 @@ import org.json.JSONObject;
 final class AnimaLora {
     static File dir(File home) { return new File(home, "anima/lora"); }
     static File src(File home) { return new File(dir(home), "user.safetensors"); }
+    /** Lab: the turbo LoRA picked for a base pack (folded together with the user LoRA) */
+    static File turboSrc(File home) { return new File(dir(home), "turbo.safetensors"); }
 
     static final class Check {
         boolean ok; String code = "", detail = ""; int blocks, of, rank; String format = ""; boolean te, adapter;

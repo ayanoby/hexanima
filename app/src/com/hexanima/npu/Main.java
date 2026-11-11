@@ -38,9 +38,28 @@ import org.json.JSONObject;
 public class Main extends Base {
     static final String DEFAULT_BASE = "https://huggingface.co/ayanoby/anima-npu-packs/resolve/main/";
     static final int STEPS = 4;   // the models are distilled for 4 steps (see Info)
-    /** popular sizes, all valid for the NPU pipeline (multiples of 16, patch count divisible by 32, at most 6144); grouped by aspect ratio, a portrait and its landscape twin next to each other */
+    /** an Anima base model (no turbo LoRA, id ends with "base"): many steps, CFG with a negative prompt (two DiT passes per step) */
+    static boolean isBase(String id) { return id.endsWith("base"); }
+    boolean base() { return isBase(model) && !customTurboAnima(); }
+    /** Lab: a turbo LoRA file on an Anima base pack (megarun folds it with the other LoRAs when the model loads: LORA="file*strength|file*strength") */
+    boolean customTurboAnima() { return lab && isAnima() && isBase(model) && prefs().getBoolean("aturbo_on", false) && AnimaLora.turboSrc(getFilesDir()).exists(); }
+    /** Lab: a turbo LoRA file on the plain Qwen pack (dit8): slot overlays + glue override made by libqwenfold; sampler = the sigma table of the LoRA (4 or 8) */
+    boolean customTurboQwen() { return lab && isQwen() && Qwen.is8(model) && prefs().getBoolean("qturbo_on", false) && QwenLora.turboSrc(getFilesDir()).exists(); }
+    String turboStrKey() { return isAnima() ? "aturbo_str" : isQwen() ? "qturbo_str" : "turbo_str"; }
+    /** sampling steps, typed or stepped by hand for every model; the range is what the engine of the model accepts (MOSS: the step codes of its LoRA, Qwen / Mage: their sigma tables), the default is the recipe of the model */
+    /** Lab: the turbo LoRA of MOSS is a file picked by the user (sampler: 4 = rapid-moss like, 8 = DMD like) */
+    boolean customTurbo() { return lab && isMoss() && prefs().getBoolean("turbo_on", false) && MossLora.turboSrc(getFilesDir()).exists(); }
+    int mossSteps() { return customTurbo() ? prefs().getInt("turbo_sampler", 4) : Moss.steps(model); }
+    int stepsDef() { return base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
+    int stepsMin() { return 1; }
+    int stepsMax() { return base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
+    String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
+    int steps() { return Math.max(stepsMin(), Math.min(stepsMax(), prefs().getInt(stepsKey(), stepsDef()))); }
+    void setSteps(int v) { prefs().edit().putInt(stepsKey(), Math.max(stepsMin(), Math.min(stepsMax(), v))).apply(); if (base()) prefs().edit().putInt("base_steps", steps()).apply(); refreshBaseUi(); }
+    int cm() { return base() ? 2 : 1; }   // DiT passes per step
+    /** popular sizes, all valid for the NPU pipeline (multiples of 16, patch count divisible by 32, at most 6912); grouped by aspect ratio, a portrait and its landscape twin next to each other */
     static final int[][] SIZES = {{512, 512}, {640, 640}, {768, 768}, {1024, 1024}, {512, 768}, {768, 512}, {768, 1152}, {1152, 768}, {1024, 1536}, {1536, 1024}, {768, 1024}, {1024, 768}, {960, 1280}, {1280, 960},
-        {576, 1024}, {1024, 576}, {640, 1152}, {1152, 640}, {960, 1536}, {1536, 960}};
+        {576, 1024}, {1024, 576}, {640, 1152}, {1152, 640}, {960, 1536}, {1536, 960}, {768, 1216}, {1216, 768}, {1280, 1280}, {1152, 1536}, {1536, 1152}};
     static volatile boolean visible;   // the main screen is in front (otherwise a finished picture is announced by a notification)
 
     String D, BIN;   // work dir (files/anima) and the native lib dir with the bundled executables
@@ -57,39 +76,50 @@ public class Main extends Base {
     boolean statusSeen;
     int tick;
 
-    TextView chipName, chipDot, state, status, saved, placeholder, ramTxt, tempTxt, warnTxt, sizeText;
+    TextView chipName, chipDot, state, status, saved, phSize, ramTxt, tempTxt, warnTxt, sizeText;
+    View placeholder; LinearLayout sizeChips, advBox; ImageView advArrow; TextView advSum;
     LinearLayout customRow, imgBox;
-    Button loadBtn, genBtn, countBtn;
+    LinearLayout baseRow, stepsRow, variantRow, turboStrRow; SeekBar turboBar; TextView countVal;
+    Button loadBtn, genBtn; LinearLayout baseBody;
     ImageButton dlBtn, shareBtn, favBtn, againBtn;
     MultiAutoCompleteTextView prompt;
     EditText seed, wEdit, hEdit;
+    TextView tokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
+    final Runnable tokTick = this::updateTokens;
+    LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal;   // Anima base models: negative prompt, steps and CFG under the prompt
     LinearLayout loraBox; TextView loraName, loraInfo, strText; SeekBar strBar; Button loraPick, loraDrop;
-    LinearLayout editBox; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
+    LinearLayout editBox; TextView editNote; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
     ProgressBar bar, ramBar;
     ImageView img;
     File lastFile;
     boolean customOpen;
 
-    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + (Settings.lowRam(this) ? "MEGA_STREAM=1 " : "") + (loraOn() ? "LORA=" + q(AnimaLora.src(getFilesDir()).getPath() + "*" + String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f)) + " " : ""); }
+    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + "MEGA_STREAM=1 " + animaLoraEnv(); }
+    String animaLoraEnv() {
+        StringBuilder l = new StringBuilder();
+        if (customTurboAnima()) l.append(AnimaLora.turboSrc(getFilesDir()).getPath()).append('*').append(String.format(java.util.Locale.US, "%.2f", prefs().getFloat("aturbo_str", 1f)));
+        if (loraOn()) { if (l.length() > 0) l.append('|'); l.append(AnimaLora.src(getFilesDir()).getPath()).append('*').append(String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f)); }
+        return l.length() == 0 ? "" : "LORA=" + q(l.toString()) + " ";
+    }
     /** the LoRA the Anima server has loaded (changing it restarts the server, anima.sh keeps the LoRA in the server key) */
     String servedSig = "";
     String loraSig() { return loraOn() && isAnima() ? loraId() + "*" + strBar.getProgress() : ""; }
 
-    GradientDrawable gradient(boolean enabled) {
-        GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{enabled ? ACC : 0xFF3A4158, enabled ? ACC2 : 0xFF3A4158});
-        g.setCornerRadius(dp(18)); return g;
-    }
-    SharedPreferences prefs() { return getSharedPreferences("anima", 0); }
+    GradientDrawable gradient(boolean enabled) { return bg(enabled ? ACC : CARD, 12); }
+    /** "HexAnima Lab" (second launcher icon, activity-alias .Lab -> this activity): the layout of the new loader design: only the base of a model is listed, the turbo LoRA is a row under it, the manual LoRA stays; own preferences, the same models and pictures */
+    boolean lab;
+    SharedPreferences prefs() { return getSharedPreferences(lab ? "lab" : "anima", 0); }
     void setFavIcon(boolean on) { favBtn.setImageResource(getResources().getIdentifier(on ? "ic_star" : "ic_star_off", "drawable", getPackageName())); favBtn.setImageTintList(on ? null : ColorStateList.valueOf(TXT)); }
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        lab = true;   // the former Lab layout is the main app now (base + separate turbo-LoRA file); the flag only keeps the old branches reachable
         D = new File(getFilesDir(), "anima").getPath(); BIN = getApplicationInfo().nativeLibraryDir;
         store = new Models(getFilesDir());
         main.env = pollSh.env = ctlSh.env = new String[]{D, new File(getFilesDir(), "sd").getPath(), BIN};
         installScript();
-        getWindow().setNavigationBarColor(CARD);
+        getWindow().setNavigationBarColor(0);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         LinearLayout frame = new LinearLayout(this);
@@ -101,197 +131,206 @@ public class Main extends Base {
         sv.setVerticalScrollBarEnabled(false);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16), dp(12), dp(16), dp(20));
+        root.setPadding(dp(20), dp(4), dp(20), dp(20));
         sv.addView(root, new ViewGroup.LayoutParams(-1, -2));
         frame.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1));
 
-        // header: title, history, menu
-        LinearLayout tr = new LinearLayout(this);
-        tr.setGravity(Gravity.CENTER_VERTICAL);
-        tr.addView(text("HexAnima", 28, TXT, true), new LinearLayout.LayoutParams(0, -2, 1));
-        Button hist = button(L.s("История", "History"), CARD, TXT);
-        hist.setTextSize(13);
+        // header: name, history, menu
+        LinearLayout tr = new LinearLayout(this); tr.setGravity(Gravity.CENTER_VERTICAL);
+        tr.addView(text("HexAnima", 20, TXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        ramTxt = statusItem("ic_memory"); tempTxt = statusItem("ic_thermo");
+        tr.addView(ramTxt); tr.addView(tempTxt);
+        ImageButton hist = icon("ic_photo", 0); hist.setContentDescription(L.s("История", "History"));
         hist.setOnClickListener(v -> startActivityForResult(new Intent(this, History.class), 7));
-        tr.addView(hist, new LinearLayout.LayoutParams(-2, dp(40)));
-        Button more = button("⋯", CARD, TXT);
-        more.setTextSize(20);
+        tr.addView(hist, new LinearLayout.LayoutParams(dp(44), dp(44)));
+        ImageButton more = icon("ic_more", 0); more.setContentDescription(L.s("Меню", "Menu"));
         more.setOnClickListener(v -> menu(v));
-        LinearLayout.LayoutParams ml = new LinearLayout.LayoutParams(dp(48), dp(40)); ml.leftMargin = dp(6);
-        tr.addView(more, ml);
-        root.addView(tr);
-        ramTxt = text("", 12, DIM, false);
-        ramTxt.setPadding(dp(2), dp(10), 0, dp(4));
-        root.addView(ramTxt);
-        ramBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        ramBar.setMax(1000);
-        ramBar.setProgressBackgroundTintList(ColorStateList.valueOf(CARD));
-        root.addView(ramBar, new LinearLayout.LayoutParams(-1, dp(5)));
-        tempTxt = text("", 12, DIM, false);   // battery temperature and the margin before the phone throttles
-        tempTxt.setPadding(dp(2), dp(6), 0, 0);
-        root.addView(tempTxt);
-        warnTxt = text("", 12, WARN, false);   // thermal / battery / unsupported chip
-        warnTxt.setPadding(dp(2), dp(6), 0, 0);
-        warnTxt.setVisibility(View.GONE);
+        tr.addView(more, new LinearLayout.LayoutParams(dp(44), dp(44)));
+        root.addView(tr, new LinearLayout.LayoutParams(-1, dp(56)));
+        ramTxt.setOnClickListener(v -> Toast.makeText(this, ramDetail, Toast.LENGTH_LONG).show());
+        tempTxt.setOnClickListener(v -> Toast.makeText(this, tempDetail, Toast.LENGTH_LONG).show());
+        ramBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); ramBar.setMax(1000);   // kept for the tick code
+        warnTxt = text("", 13, WARN, false); warnTxt.setPadding(0, 0, 0, dp(8)); warnTxt.setVisibility(View.GONE);
         root.addView(warnTxt);
 
-        // model chip + load/unload, then the state line
-        LinearLayout head = new LinearLayout(this);
-        head.setGravity(Gravity.CENTER_VERTICAL);
-        head.setPadding(0, dp(12), 0, 0);
-        LinearLayout mc = new LinearLayout(this);
-        mc.setGravity(Gravity.CENTER_VERTICAL);
-        mc.setBackground(bg(CARD, 20));
-        mc.setPadding(dp(14), dp(10), dp(14), dp(10));
-        chipDot = text("●", 12, DIM, false);
-        chipName = text("…", 14, TXT, true);
-        chipName.setPadding(dp(8), 0, dp(6), 0); chipName.setMaxLines(2); chipName.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        mc.addView(chipDot); mc.addView(chipName, new LinearLayout.LayoutParams(0, -2, 1)); mc.addView(text("▾", 12, DIM, false));
-        mc.setOnClickListener(v -> pickModel());
-        head.addView(mc, new LinearLayout.LayoutParams(0, -2, 1));
-        loadBtn = button(L.s("Загрузить", "Load"), CARD, TXT);
-        loadBtn.setTextSize(13);
+        // model: name and state; tap = choose another; Load / Unload on the right
+        LinearLayout mc = new LinearLayout(this); mc.setGravity(Gravity.CENTER_VERTICAL); mc.setPadding(dp(16), dp(12), dp(12), dp(12)); mc.setBackground(bg(CARD, 14));
+        chipDot = text("●", 9, DIM, false); chipDot.setPadding(0, 0, dp(10), 0); mc.addView(chipDot);
+        LinearLayout names = new LinearLayout(this); names.setOrientation(LinearLayout.VERTICAL);
+        chipName = text("…", 16, TXT, true); chipName.setMaxLines(2); chipName.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        state = text(L.s("Проверяю…", "Checking…"), 13, DIM, false); state.setMaxLines(1); state.setEllipsize(android.text.TextUtils.TruncateAt.END); state.setPadding(0, dp(2), 0, 0);
+        names.addView(chipName); names.addView(state);
+        mc.addView(names, new LinearLayout.LayoutParams(0, -2, 1));
+        loadBtn = button(L.s("Загрузить", "Load"), BG, TXT); loadBtn.setTextSize(13); loadBtn.setPadding(dp(14), 0, dp(14), 0);
         loadBtn.setOnClickListener(v -> toggleModel());
-        LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(-2, dp(42)); lb.leftMargin = dp(8);
-        head.addView(loadBtn, lb);
-        root.addView(head);
-        state = text(L.s("Проверяю…", "Checking…"), 12, DIM, false);
-        state.setPadding(dp(4), dp(6), 0, dp(12));
-        root.addView(state);
+        LinearLayout.LayoutParams lbl = new LinearLayout.LayoutParams(-2, dp(34)); lbl.leftMargin = dp(10); mc.addView(loadBtn, lbl);
+        ImageView chev = new ImageView(this); chev.setImageDrawable(vec("ic_chevron", DIM, 20)); LinearLayout.LayoutParams cvl = new LinearLayout.LayoutParams(dp(20), dp(20)); cvl.leftMargin = dp(8); mc.addView(chev, cvl);
+        mc.setOnClickListener(v -> pickModel());
+        root.addView(mc, new LinearLayout.LayoutParams(-1, -2));
+        variantRow = new LinearLayout(this); variantRow.setBackground(bg(CARD, 12)); variantRow.setPadding(dp(3), dp(3), dp(3), dp(3)); variantRow.setVisibility(View.GONE);
+        LinearLayout.LayoutParams vrl = new LinearLayout.LayoutParams(-1, dp(42)); vrl.topMargin = dp(8); root.addView(variantRow, vrl);
 
-        // result card
+        // the picture
         imgBox = new LinearLayout(this);
         imgBox.setOrientation(LinearLayout.VERTICAL);
         imgBox.setGravity(Gravity.CENTER);
-        imgBox.setBackground(bg(CARD, 24));
+        imgBox.setBackground(bg(CARD, 14));
         imgBox.setClipToOutline(true);
         imgBox.setOutlineProvider(new ViewOutlineProvider() {
-            @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), dp(24)); }
+            @Override public void getOutline(View v, Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), dp(16)); }
         });
-        placeholder = text(L.s("Здесь появится картинка", "Your picture will appear here"), 14, DIM, false);
-        placeholder.setGravity(Gravity.CENTER);
-        placeholder.setPadding(dp(24), dp(64), dp(24), dp(64));
-        imgBox.addView(placeholder, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout ph = new LinearLayout(this); ph.setOrientation(LinearLayout.VERTICAL); ph.setGravity(Gravity.CENTER);
+        phSize = text("", 14, DIM, false); phSize.setGravity(Gravity.CENTER); ph.addView(phSize, new LinearLayout.LayoutParams(-1, -2));
+        placeholder = ph;
+        imgBox.addView(placeholder, new LinearLayout.LayoutParams(-1, dp(300)));
         img = new ImageView(this);
         img.setAdjustViewBounds(true);
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
         img.setVisibility(View.GONE);
         img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
         imgBox.addView(img, new LinearLayout.LayoutParams(-1, -2));
-        root.addView(imgBox, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams ibl = new LinearLayout.LayoutParams(-1, -2); ibl.topMargin = dp(12); root.addView(imgBox, ibl);
         LinearLayout resRow = new LinearLayout(this);
         resRow.setGravity(Gravity.CENTER_VERTICAL);
         saved = text("", 12, DIM, false);
-        saved.setPadding(dp(4), dp(8), dp(8), 0);
         resRow.addView(saved, new LinearLayout.LayoutParams(0, -2, 1));
-        againBtn = icon("ic_refresh", CARD);
+        againBtn = icon("ic_refresh", 0);
         againBtn.setOnClickListener(v -> generate(true));   // the same prompt with a new random seed
-        favBtn = icon("ic_star_off", CARD);
+        favBtn = icon("ic_star_off", 0);
         favBtn.setOnClickListener(v -> { if (lastFile == null) return; boolean nv = !Gallery.fav(lastFile); Gallery.setFav(lastFile, nv); setFavIcon(nv); });
-        dlBtn = icon("ic_download", CARD);
+        dlBtn = icon("ic_download", 0);
         dlBtn.setOnClickListener(v -> { if (lastFile == null) return; try { Gallery.export(this, lastFile); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } });
-        shareBtn = icon("ic_share", CARD);
+        shareBtn = icon("ic_share", 0);
         shareBtn.setOnClickListener(v -> { if (lastFile != null) Gallery.share(this, lastFile); });
-        for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) {
-            x.setVisibility(View.GONE);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(46), dp(40)); lp.leftMargin = dp(6);
-            resRow.addView(x, lp);
-        }
+        for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) { x.setVisibility(View.GONE); resRow.addView(x, new LinearLayout.LayoutParams(dp(44), dp(44))); }
         root.addView(resRow);
 
         // prompt
-        LinearLayout pl = new LinearLayout(this);
-        pl.setGravity(Gravity.CENTER_VERTICAL);
-        pl.addView(label(L.s("ОПИСАНИЕ", "PROMPT")), new LinearLayout.LayoutParams(0, -2, 1));
-        TextView tpl = text(L.s("Шаблоны", "Templates"), 12, ACC, true);
-        tpl.setPadding(dp(8), dp(14), dp(8), dp(6));
-        tpl.setOnClickListener(v -> templates());
-        pl.addView(tpl);
-        TextView clr = text(L.s("Очистить", "Clear"), 12, ACC, true);
-        clr.setPadding(dp(8), dp(14), dp(2), dp(6));
-        clr.setOnClickListener(v -> prompt.setText(""));
-        pl.addView(clr);
+        LinearLayout pl = new LinearLayout(this); pl.setGravity(Gravity.BOTTOM);
+        pl.addView(label(L.s("Описание", "Prompt")), new LinearLayout.LayoutParams(0, -2, 1));
+        TextView tpl = text(L.s("Шаблоны", "Templates"), 13, TXT, false); tpl.setPadding(dp(8), dp(20), 0, dp(8)); tpl.setOnClickListener(v -> templates()); pl.addView(tpl);
         root.addView(pl);
         prompt = new MultiAutoCompleteTextView(this);   // Danbooru tag suggestions while typing, comma separated
         prompt.setHint("1girl, smile, outdoors, cherry blossoms…");
-        prompt.setHintTextColor(DIM); prompt.setTextColor(TXT); prompt.setTextSize(16);
-        prompt.setMinLines(3);
+        prompt.setHintTextColor(DIM); prompt.setTextColor(TXT); prompt.setTextSize(15);
+        prompt.setMinLines(3); prompt.setMaxLines(8);
         prompt.setGravity(Gravity.TOP);
         prompt.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        prompt.setBackground(bg(CARD, 18));
-        prompt.setPadding(dp(16), dp(14), dp(16), dp(14));
+        prompt.setBackground(bg(FIELD, 12));
+        prompt.setPadding(dp(14), dp(12), dp(14), dp(12));
         prompt.setThreshold(2);
         prompt.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         prompt.setDropDownBackgroundDrawable(bg(CARD, 12));
         prompt.setDropDownHeight(dp(240));
         root.addView(prompt, new LinearLayout.LayoutParams(-1, -2));
+        tokView = text("", 12, DIM, false); tokView.setGravity(Gravity.END); tokView.setPadding(0, dp(6), 0, 0); tokView.setVisibility(View.GONE); root.addView(tokView, new LinearLayout.LayoutParams(-1, -2));
+        prompt.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence a, int b, int c, int d) { }
+            public void onTextChanged(CharSequence a, int b, int c, int d) { }
+            public void afterTextChanged(android.text.Editable e) { ui.removeCallbacks(tokTick); ui.postDelayed(tokTick, 350); }
+        });
         loadTags();
 
-        // size: a drop-down button that opens a two-column picker, and the portrait <-> landscape swap
-        root.addView(label(L.s("РАЗМЕР", "SIZE")));
-        LinearLayout sizeRow = new LinearLayout(this);
-        sizeRow.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout sizeBtn = new LinearLayout(this);
-        sizeBtn.setGravity(Gravity.CENTER_VERTICAL); sizeBtn.setBackground(bg(CARD, 16)); sizeBtn.setPadding(dp(16), 0, dp(16), 0);
-        sizeText = text("", 15, TXT, true);
-        sizeBtn.addView(sizeText, new LinearLayout.LayoutParams(0, -2, 1)); sizeBtn.addView(text("▾", 14, DIM, false));
-        sizeBtn.setOnClickListener(v -> pickSize());
-        sizeRow.addView(sizeBtn, new LinearLayout.LayoutParams(0, dp(48), 1));
-        Button swap = button("⇄", CARD, TXT);
-        swap.setTextSize(18);
+        // Anima base models: negative prompt
+        baseBox = new LinearLayout(this); baseBox.setOrientation(LinearLayout.VERTICAL); baseBox.setVisibility(View.GONE); baseBody = baseBox;
+        baseBox.addView(label(L.s("Негативный промпт", "Negative prompt")));
+        negEdit = field(Settings.DEFAULT_NEG); negEdit.setTextSize(14);
+        negEdit.setMinLines(2); negEdit.setGravity(Gravity.TOP); negEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        negEdit.setPadding(dp(14), dp(12), dp(14), dp(12));
+        negEdit.setText(prefs().getString("base_neg", Settings.DEFAULT_NEG));
+        negEdit.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+            public void onTextChanged(CharSequence s, int a, int b, int c) { }
+            public void afterTextChanged(android.text.Editable e) { prefs().edit().putString("base_neg", e.toString()).apply(); ui.removeCallbacks(tokTick); ui.postDelayed(tokTick, 350); }
+        });
+        baseBox.addView(negEdit, new LinearLayout.LayoutParams(-1, -2));
+        root.addView(baseBox);
+
+        // Qwen-Image / Mage-Flow: the photo to edit
+        editBox = new LinearLayout(this); editBox.setOrientation(LinearLayout.VERTICAL);
+        editBox.addView(label(L.s("Фото для правки", "Pictures to edit")));
+        LinearLayout er = new LinearLayout(this); er.setGravity(Gravity.CENTER_VERTICAL);
+        editThumb = new ImageView(this); editThumb.setScaleType(ImageView.ScaleType.CENTER_CROP); editThumb.setBackground(bg(CARD, 10)); editThumb.setClipToOutline(true);
+        er.addView(editThumb, new LinearLayout.LayoutParams(dp(56), dp(56)));
+        editInfo = text("", 13, DIM, false); editInfo.setPadding(dp(12), 0, dp(8), 0); er.addView(editInfo, new LinearLayout.LayoutParams(0, -2, 1));
+        editPick = button(L.s("Выбрать", "Choose"), CARD, TXT); editPick.setTextSize(13); editPick.setPadding(dp(14), 0, dp(14), 0); editPick.setOnClickListener(v -> pickEdit());
+        er.addView(editPick, new LinearLayout.LayoutParams(-2, dp(36)));
+        editDrop = button("✕", BG, DIM); editDrop.setOnClickListener(v -> dropEdit());
+        er.addView(editDrop, new LinearLayout.LayoutParams(dp(40), dp(36)));
+        editBox.addView(er);
+        extraBox = new LinearLayout(this); extraBox.setOrientation(LinearLayout.VERTICAL); editBox.addView(extraBox);   // Qwen: up to two more reference pictures
+        editAdd = button("", BG, TXT); editAdd.setTextSize(13); editAdd.setGravity(Gravity.START | Gravity.CENTER_VERTICAL); editAdd.setPadding(0, 0, 0, 0); editAdd.setOnClickListener(v -> pickExtra(extraBm.size()));
+        editBox.addView(editAdd, new LinearLayout.LayoutParams(0, 0));
+        editNote = text("", 12, DIM, false); editNote.setPadding(0, dp(10), 0, 0); editBox.addView(editNote);
+        root.addView(editBox);
+        refreshEdit();
+
+        // size: ratio segments, the exact size (tap = full list), swap
+        LinearLayout szh = new LinearLayout(this); szh.setGravity(Gravity.BOTTOM);
+        szh.addView(label(L.s("Размер", "Size")), new LinearLayout.LayoutParams(0, -2, 1));
+        sizeText = text("", 13, TXT, false); sizeText.setPadding(dp(8), dp(20), dp(8), dp(8)); sizeText.setOnClickListener(v -> pickSize()); szh.addView(sizeText);
+        TextView swap = text("⇄", 16, TXT, false); swap.setPadding(dp(8), dp(18), 0, dp(6)); swap.setContentDescription(L.s("Повернуть", "Swap"));
         swap.setOnClickListener(v -> {
             int w = resW, h = resH;
             if (customRow.getVisibility() == View.VISIBLE) try { w = Integer.parseInt(wEdit.getText().toString().trim()); h = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
             setRes(h, w);
         });
-        LinearLayout.LayoutParams sw = new LinearLayout.LayoutParams(dp(56), dp(48)); sw.leftMargin = dp(8);
-        sizeRow.addView(swap, sw);
-        root.addView(sizeRow);
+        szh.addView(swap);
+        root.addView(szh);
+        sizeChips = new LinearLayout(this); sizeChips.setBackground(bg(CARD, 12)); sizeChips.setPadding(dp(3), dp(3), dp(3), dp(3));
+        root.addView(sizeChips, new LinearLayout.LayoutParams(-1, dp(42)));
         customRow = new LinearLayout(this);
         customRow.setGravity(Gravity.CENTER_VERTICAL);
-        customRow.setPadding(0, dp(10), 0, 0);
+        customRow.setPadding(0, dp(8), 0, 0);
         wEdit = field(L.s("ширина", "width")); hEdit = field(L.s("высота", "height"));
         wEdit.setInputType(InputType.TYPE_CLASS_NUMBER); hEdit.setInputType(InputType.TYPE_CLASS_NUMBER);
-        wEdit.setBackground(bg(CARD, 14)); hEdit.setBackground(bg(CARD, 14));
         customRow.addView(wEdit, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView times = text("×", 18, DIM, false); times.setGravity(Gravity.CENTER);
-        customRow.addView(times, new LinearLayout.LayoutParams(dp(36), -2));
+        TextView times = text("×", 16, DIM, false); times.setGravity(Gravity.CENTER);
+        customRow.addView(times, new LinearLayout.LayoutParams(dp(32), -2));
         customRow.addView(hEdit, new LinearLayout.LayoutParams(0, -2, 1));
         customRow.setVisibility(View.GONE);
         root.addView(customRow);
 
-        // seed
-        root.addView(label(L.s("SEED  ·  -1 = случайный", "SEED  ·  -1 = random")));
-        LinearLayout sr = new LinearLayout(this);
-        sr.setGravity(Gravity.CENTER_VERTICAL);
-        seed = field("-1");
-        seed.setText("-1");
+        // parameters: one row each, label on the left, the control on the right
+        root.addView(label(L.s("Параметры", "Settings")));
+        LinearLayout pcard = new LinearLayout(this); pcard.setOrientation(LinearLayout.VERTICAL); pcard.setBackground(bg(CARD, 14)); pcard.setPadding(dp(16), 0, dp(12), 0);
+        root.addView(pcard, new LinearLayout.LayoutParams(-1, -2));
+        baseRow = new LinearLayout(this); baseRow.setOrientation(LinearLayout.VERTICAL); baseRow.setVisibility(View.GONE);
+        stepsVal = text("", 15, TXT, false); cfgVal = text("", 15, TXT, false);
+        stepsRow = new LinearLayout(this); stepsRow.setOrientation(LinearLayout.VERTICAL);
+        stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0))); stepsRow.addView(divider());
+        pcard.addView(stepsRow);
+        baseRow.addView(paramRow("CFG", stepper(cfgVal, 1))); baseRow.addView(divider());
+        pcard.addView(baseRow);
+        LinearLayout sr = new LinearLayout(this); sr.setGravity(Gravity.CENTER_VERTICAL);
+        seed = field("-1"); seed.setText("-1"); seed.setGravity(Gravity.END); seed.setBackground(null); seed.setPadding(0, 0, dp(4), 0);
         seed.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
-        seed.setBackground(bg(CARD, 14));
-        sr.addView(seed, new LinearLayout.LayoutParams(0, -2, 1));
-        Button dice = button("🎲", CARD, TXT);
-        dice.setOnClickListener(v -> seed.setText(String.valueOf(new Random().nextInt(1 << 30))));
-        LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(dp(52), dp(44)); dl.leftMargin = dp(8);
-        sr.addView(dice, dl);
-        root.addView(sr);
+        sr.addView(seed, new LinearLayout.LayoutParams(dp(130), -2));
+        TextView dice = text("↻", 18, DIM, false); dice.setGravity(Gravity.CENTER); dice.setContentDescription(L.s("Случайный", "Random"));
+        dice.setOnClickListener(v -> seed.setText("-1"));
+        sr.addView(dice, new LinearLayout.LayoutParams(dp(36), dp(36)));
+        pcard.addView(paramRow(L.s("Seed  (−1 = случайный)", "Seed  (−1 = random)"), sr)); pcard.addView(divider());
+        count = Math.max(1, Math.min(4, prefs().getInt("count", 1)));
+        countVal = text(String.valueOf(count), 15, TXT, false);
+        pcard.addView(paramRow(L.s("Картинок за раз", "Pictures per run"), stepper(countVal, 2)));
 
-        // MOSS-Image: user LoRA (picked file is checked at once; strength slider; folded with the turbo adapter on first use)
+        // LoRA (Anima, MOSS-Image)
         loraBox = new LinearLayout(this); loraBox.setOrientation(LinearLayout.VERTICAL);
-        loraBox.addView(label(L.s("LORA  ·  необязательно", "LORA  ·  optional")));
         LinearLayout lr = new LinearLayout(this); lr.setGravity(Gravity.CENTER_VERTICAL);
-        loraName = text(L.s("не выбрана", "none"), 14, TXT, false); loraName.setSingleLine(true); loraName.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
-        loraName.setBackground(bg(CARD, 16)); loraName.setPadding(dp(16), dp(12), dp(16), dp(12));
-        lr.addView(loraName, new LinearLayout.LayoutParams(0, -2, 1));
-        loraPick = button(L.s("Выбрать", "Choose"), CARD, TXT); loraPick.setOnClickListener(v -> pickLora());
-        LinearLayout.LayoutParams pl2 = new LinearLayout.LayoutParams(-2, dp(44)); pl2.leftMargin = dp(8); lr.addView(loraPick, pl2);
-        loraDrop = button("✕", CARD, TXT); loraDrop.setOnClickListener(v -> dropLora());
-        LinearLayout.LayoutParams dl2 = new LinearLayout.LayoutParams(dp(48), dp(44)); dl2.leftMargin = dp(8); lr.addView(loraDrop, dl2);
-        loraBox.addView(lr);
-        loraInfo = text("", 12, DIM, false); loraInfo.setPadding(dp(4), dp(6), dp(4), 0); loraBox.addView(loraInfo);
-        LinearLayout sr2 = new LinearLayout(this); sr2.setGravity(Gravity.CENTER_VERTICAL); sr2.setPadding(0, dp(6), 0, 0);
-        sr2.addView(text(L.s("Сила", "Strength"), 14, TXT, false));
+        loraName = text(L.s("не выбрана", "none"), 14, DIM, false); loraName.setSingleLine(true); loraName.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE); loraName.setGravity(Gravity.END);
+        lr.addView(loraName, new LinearLayout.LayoutParams(dp(150), -2));
+        loraPick = button(L.s("Выбрать", "Choose"), BG, TXT); loraPick.setTextSize(14); loraPick.setPadding(dp(12), 0, 0, 0); loraPick.setBackground(null); loraPick.setOnClickListener(v -> pickLora());
+        lr.addView(loraPick, new LinearLayout.LayoutParams(-2, dp(36)));
+        loraDrop = button("✕", BG, DIM); loraDrop.setBackground(null); loraDrop.setOnClickListener(v -> dropLora());
+        lr.addView(loraDrop, new LinearLayout.LayoutParams(dp(36), dp(36)));
+        loraBox.addView(divider()); loraBox.addView(paramRow("LoRA", lr));
+        loraInfo = text("", 12, DIM, false); loraInfo.setPadding(0, 0, 0, dp(8)); loraBox.addView(loraInfo);
+        LinearLayout sr2 = new LinearLayout(this); sr2.setGravity(Gravity.CENTER_VERTICAL); sr2.setPadding(0, 0, 0, dp(8));
+        sr2.addView(text(L.s("Сила", "Strength"), 15, TXT, false));
         strBar = new SeekBar(this); strBar.setMax(40); strBar.setProgress(Math.round(prefs().getFloat("moss_lora_str", 1f) * 20));
+        strBar.setProgressTintList(ColorStateList.valueOf(TXT)); strBar.setThumbTintList(ColorStateList.valueOf(TXT)); strBar.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
         sr2.addView(strBar, new LinearLayout.LayoutParams(0, -2, 1));
-        strText = text("", 14, TXT, true); strText.setMinWidth(dp(44)); strText.setGravity(Gravity.END); sr2.addView(strText);
+        strText = text("", 15, TXT, false); strText.setMinWidth(dp(40)); strText.setGravity(Gravity.END); sr2.addView(strText);
         strBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar b, int p, boolean u) { strText.setText(String.format(java.util.Locale.US, "%.2f", p * 0.05f)); if (u) prefs().edit().putFloat(lp() + "str", p * 0.05f).apply(); }
             public void onStartTrackingTouch(SeekBar b) { }
@@ -299,55 +338,42 @@ public class Main extends Base {
         });
         strText.setText(String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f));
         loraBox.addView(sr2);
-        root.addView(loraBox);
+        pcard.addView(loraBox);
+        turboStrRow = new LinearLayout(this); turboStrRow.setGravity(Gravity.CENTER_VERTICAL); turboStrRow.setPadding(0, dp(8), 0, dp(8)); turboStrRow.setVisibility(View.GONE);
+        turboStrRow.addView(text(L.s("Сила turbo LoRA", "Turbo LoRA strength"), 15, TXT, false));
+        turboBar = new SeekBar(this); final SeekBar tb = turboBar; tb.setMax(40); tb.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20));
+        tb.setProgressTintList(ColorStateList.valueOf(TXT)); tb.setThumbTintList(ColorStateList.valueOf(TXT)); tb.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
+        turboStrRow.addView(tb, new LinearLayout.LayoutParams(0, -2, 1));
+        final TextView tt = text(String.format(java.util.Locale.US, "%.2f", tb.getProgress() * 0.05f), 15, TXT, false); tt.setMinWidth(dp(40)); tt.setGravity(Gravity.END); turboStrRow.addView(tt);
+        tb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar b, int p, boolean u) { tt.setText(String.format(java.util.Locale.US, "%.2f", p * 0.05f)); if (u) prefs().edit().putFloat(turboStrKey(), Math.max(0.05f, p * 0.05f)).apply(); }
+            public void onStartTrackingTouch(SeekBar b) { }
+            public void onStopTrackingTouch(SeekBar b) { }
+        });
+        pcard.addView(divider()); pcard.addView(turboStrRow);
         refreshLora();
 
-        // Qwen-Image: a photo to edit (with it the picture is an edit of the photo, guided by the prompt)
-        editBox = new LinearLayout(this); editBox.setOrientation(LinearLayout.VERTICAL);
-        editBox.addView(label(L.s("РЕДАКТИРОВАНИЕ ФОТО  ·  необязательно", "EDIT A PHOTO  ·  optional")));
-        LinearLayout er = new LinearLayout(this); er.setGravity(Gravity.CENTER_VERTICAL);
-        editThumb = new ImageView(this); editThumb.setScaleType(ImageView.ScaleType.CENTER_CROP); editThumb.setBackground(bg(CARD, 16)); editThumb.setClipToOutline(true);
-        er.addView(editThumb, new LinearLayout.LayoutParams(dp(64), dp(64)));
-        editInfo = text("", 13, DIM, false); editInfo.setPadding(dp(12), 0, dp(8), 0); er.addView(editInfo, new LinearLayout.LayoutParams(0, -2, 1));
-        editPick = button(L.s("Выбрать", "Choose"), CARD, TXT); editPick.setOnClickListener(v -> pickEdit());
-        LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(-2, dp(44)); ep.leftMargin = dp(8); er.addView(editPick, ep);
-        editDrop = button("✕", CARD, TXT); editDrop.setOnClickListener(v -> dropEdit());
-        LinearLayout.LayoutParams ed2 = new LinearLayout.LayoutParams(dp(48), dp(44)); ed2.leftMargin = dp(8); er.addView(editDrop, ed2);
-        editBox.addView(er);
-        extraBox = new LinearLayout(this); extraBox.setOrientation(LinearLayout.VERTICAL); editBox.addView(extraBox);   // Qwen: up to two more reference pictures
-        editAdd = button("", CARD, TXT); editAdd.setOnClickListener(v -> pickExtra());
-        LinearLayout.LayoutParams eap = new LinearLayout.LayoutParams(-1, dp(44)); eap.topMargin = dp(8); editBox.addView(editAdd, eap);
-        root.addView(editBox);
-        refreshEdit();
-
-        // sticky bottom bar: progress + status + [pictures count] [Generate / Stop]
+        // bottom: progress, status, Generate
         LinearLayout bottom = new LinearLayout(this);
         bottom.setOrientation(LinearLayout.VERTICAL);
-        bottom.setBackgroundColor(CARD);
-        bottom.setPadding(dp(16), dp(10), dp(16), dp(10));
+        bottom.setBackgroundColor(BG);
+        bottom.setPadding(dp(20), dp(8), dp(20), dp(14));
         bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
-        bar.setProgressTintList(ColorStateList.valueOf(ACC));
-        bar.setProgressBackgroundTintList(ColorStateList.valueOf(FIELD));
+        bar.setProgressTintList(ColorStateList.valueOf(TXT));
+        bar.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
         bar.setVisibility(View.GONE);
-        LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-1, dp(5)); bl.bottomMargin = dp(6);
+        LinearLayout.LayoutParams bl = new LinearLayout.LayoutParams(-1, dp(2)); bl.bottomMargin = dp(8);
         bottom.addView(bar, bl);
         status = text("", 13, DIM, false);
         status.setVisibility(View.GONE);
-        status.setPadding(dp(2), 0, 0, dp(6));
+        status.setPadding(0, 0, 0, dp(8));
         bottom.addView(status);
-        LinearLayout brow = new LinearLayout(this);
-        count = Math.max(1, Math.min(4, prefs().getInt("count", 1)));
-        countBtn = button("×" + count, FIELD, TXT);
-        countBtn.setTextSize(16);
-        countBtn.setOnClickListener(v -> { count = count % 4 + 1; prefs().edit().putInt("count", count).apply(); countBtn.setText("×" + count); genBtn.setText(genLabel()); });
-        LinearLayout.LayoutParams cb = new LinearLayout.LayoutParams(dp(64), dp(54)); cb.rightMargin = dp(8);
-        brow.addView(countBtn, cb);
         genBtn = button("", ACC, ON_ACC);
-        genBtn.setTextSize(17);
+        genBtn.setTextSize(16);
         genBtn.setOnClickListener(v -> { if (busy) cancel(); else generate(false); });
-        brow.addView(genBtn, new LinearLayout.LayoutParams(0, dp(54), 1));
-        bottom.addView(brow);
+        bottom.addView(genBtn, new LinearLayout.LayoutParams(-1, dp(52)));
+        frame.addView(divider());
         frame.addView(bottom, new LinearLayout.LayoutParams(-1, -2));
 
         setContentView(frame);
@@ -356,7 +382,7 @@ public class Main extends Base {
         refreshModels();
         setRes(p.getInt("w", 512), p.getInt("h", 768));
         refreshState();
-        if (!p.getBoolean("welcomed", false)) startActivity(new Intent(this, Welcome.class));
+        if (!getSharedPreferences("anima", 0).getBoolean("welcomed", false)) startActivity(new Intent(this, Welcome.class));
     }
 
     /** the tag list for the suggestions is read in the background (8000 lines in assets/tags.txt) */
@@ -391,16 +417,16 @@ public class Main extends Base {
     }
 
     /** every 2 s: RAM strip, thermal / battery / chip warnings; every 10 s the model state (the idle watchdog may have unloaded it) */
-    volatile double appGb; volatile boolean appBusy;
+    volatile double appGb; volatile boolean appBusy; volatile String ramDetail = "", tempDetail = "";
     final Runnable ramTick = new Runnable() {
         @Override public void run() {
             android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
             ((android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE)).getMemoryInfo(mi);
             double g = 1024.0 * 1024 * 1024, tot = mi.totalMem / g, free = mi.availMem / g, used = tot - free;
             if (!appBusy) { appBusy = true; new Thread(() -> { appGb = Compat.appRamGb(); appBusy = false; }).start(); }   // /proc scan off the UI thread
-            ramTxt.setText(L.f("ОЗУ  всего %.1f  ·  занято %.1f  ·  свободно %.1f ГБ", "RAM  total %.1f  ·  used %.1f  ·  free %.1f GB", tot, used, free) + (appGb > 0.05 ? L.f("  ·  приложение %.1f ГБ", "  ·  app %.1f GB", appGb) : ""));
+            ramDetail = L.f("ОЗУ  всего %.1f  ·  занято %.1f  ·  свободно %.1f ГБ", "RAM  total %.1f  ·  used %.1f  ·  free %.1f GB", tot, used, free) + (appGb > 0.05 ? L.f("  ·  приложение %.1f ГБ", "  ·  app %.1f GB", appGb) : "");
+            setPill(ramTxt, String.format(java.util.Locale.US, "%.1f/%.1f/%.1f", tot, free, appGb), free < 0.8 ? BAD : free < 1.5 ? WARN : TXT);
             ramBar.setProgress((int) (1000 * used / tot));
-            ramBar.setProgressTintList(ColorStateList.valueOf(free < 0.8 ? BAD : free < 1.5 ? WARN : ACC));
             List<String> w = new ArrayList<>();
             if (!Compat.chipAllowed(Main.this)) w.add(L.f("Чип %s не поддерживается", "Chip %s is not supported", Compat.soc()));
             PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
@@ -413,8 +439,8 @@ public class Main extends Base {
                 String t = L.f("Температура  батарея %.1f °C", "Temperature  battery %.1f °C", tc);
                 int margin = Float.isNaN(hr) ? -1 : Math.max(0, Math.round(100 * (1 - Math.min(1f, hr))));
                 if (margin >= 0) t += L.f("  ·  запас до замедления %d%%", "  ·  margin before throttling %d%%", margin);
-                tempTxt.setText(t);
-                tempTxt.setTextColor(tc >= 45 || (margin >= 0 && margin < 10) ? BAD : tc >= 40 || (margin >= 0 && margin < 30) ? WARN : DIM);
+                tempDetail = t;
+                setPill(tempTxt, String.format(java.util.Locale.US, "%.0f°", tc), tc >= 45 || (margin >= 0 && margin < 10) ? BAD : tc >= 40 || (margin >= 0 && margin < 30) ? WARN : TXT);
             }
             warnTxt.setVisibility(w.isEmpty() ? View.GONE : View.VISIBLE);
             warnTxt.setText("⚠  " + android.text.TextUtils.join("  ·  ", w));
@@ -426,6 +452,7 @@ public class Main extends Base {
     @Override protected void onActivityResult(int req, int res, Intent d) {
         if (req == 9 && res == RESULT_OK && d != null && d.getData() != null) { importLora(d.getData()); return; }
         if (req == 10 && res == RESULT_OK && d != null && d.getData() != null) { importEdit(d.getData()); return; }
+        if (req == 14 && res == RESULT_OK && d != null && d.getData() != null) { if (isAnima()) importTurboAnima(d.getData()); else if (isQwen()) importTurboQwen(d.getData()); else importTurbo(d.getData()); return; }
         if (req == 12 && res == RESULT_OK && d != null && d.getData() != null) { importExtra(d.getData()); return; }
         if ((req == 7 || req == Viewer.REQ) && res == RESULT_OK && d != null && d.hasExtra("prompt")) {
             prompt.setText(d.getStringExtra("prompt")); seed.setText(d.getStringExtra("seed"));
@@ -447,26 +474,32 @@ public class Main extends Base {
 
     // ---- Qwen-Image: photo to edit ------------------------------------------------------------------
     boolean isQwen() { return Qwen.is(model); }
+    /** Qwen-Image: three fixed rows for the pictures (the empty ones wait in order), Mage-Flow: one photo */
     void refreshEdit() {
         if (editBm == null && prefs().getBoolean("qwen_edit_on", false) && Qwen.editSrc(getFilesDir()).exists()) editBm = BitmapFactory.decodeFile(Qwen.editSrc(getFilesDir()).getPath());
         if (extraBm.isEmpty() && editBm != null) for (int i = 1; i < Qwen.MAX_IMAGES; i++) { File f = Qwen.editSrc(getFilesDir(), i); Bitmap x = f.exists() ? BitmapFactory.decodeFile(f.getPath()) : null; if (x == null) break; extraBm.add(x); }
         final Bitmap b = editBm; final boolean multi = isQwen();
-        if (!multi && !extraBm.isEmpty()) { /* Mage takes a single photo: the extras stay stored but unused */ }
-        editThumb.setImageBitmap(b); editThumb.setVisibility(b != null ? View.VISIBLE : View.GONE);
+        editThumb.setImageBitmap(b);
+        editInfo.setText(b != null ? (multi ? L.f("Картинка 1  ·  %d×%d", "Picture 1  ·  %d×%d", b.getWidth(), b.getHeight()) : L.f("Фото  ·  %d×%d", "Photo  ·  %d×%d", b.getWidth(), b.getHeight())) : (multi ? L.s("Картинка 1", "Picture 1") : L.s("Фото", "Photo")));
+        editInfo.setTextColor(b != null ? TXT : DIM);
+        editPick.setText(b != null ? L.s("Заменить", "Replace") : L.s("Выбрать", "Choose"));
+        editDrop.setVisibility(b != null ? View.VISIBLE : View.INVISIBLE);
         extraBox.removeAllViews();
-        if (multi && b != null) for (int i = 0; i < extraBm.size(); i++) {
-            final int idx = i; LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
-            ImageView th = new ImageView(this); th.setScaleType(ImageView.ScaleType.CENTER_CROP); th.setBackground(bg(CARD, 16)); th.setClipToOutline(true); th.setImageBitmap(extraBm.get(i));
-            row.addView(th, new LinearLayout.LayoutParams(dp(48), dp(48)));
-            TextView tt = text(L.f("Картинка %d  ·  %d×%d", "Picture %d  ·  %d×%d", i + 2, extraBm.get(i).getWidth(), extraBm.get(i).getHeight()), 13, DIM, false); tt.setPadding(dp(12), 0, dp(8), 0); row.addView(tt, new LinearLayout.LayoutParams(0, -2, 1));
-            Button x = button("✕", CARD, TXT); x.setOnClickListener(v -> dropExtra(idx)); LinearLayout.LayoutParams xp = new LinearLayout.LayoutParams(dp(48), dp(40)); row.addView(x, xp);
+        if (multi) for (int i = 0; i < Qwen.MAX_IMAGES - 1; i++) {
+            final int idx = i; final boolean has = i < extraBm.size(), next = i == extraBm.size() && b != null;
+            LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
+            ImageView th = new ImageView(this); th.setScaleType(ImageView.ScaleType.CENTER_CROP); th.setBackground(bg(CARD, 10)); th.setClipToOutline(true); if (has) th.setImageBitmap(extraBm.get(i));
+            row.addView(th, new LinearLayout.LayoutParams(dp(56), dp(56)));
+            TextView tt = text(has ? L.f("Картинка %d  ·  %d×%d", "Picture %d  ·  %d×%d", i + 2, extraBm.get(i).getWidth(), extraBm.get(i).getHeight()) : L.f("Картинка %d", "Picture %d", i + 2), 13, has ? TXT : DIM, false); tt.setPadding(dp(12), 0, dp(8), 0); row.addView(tt, new LinearLayout.LayoutParams(0, -2, 1));
+            Button pk = button(has ? L.s("Заменить", "Replace") : L.s("Выбрать", "Choose"), CARD, TXT); pk.setTextSize(13); pk.setPadding(dp(14), 0, dp(14), 0); pk.setEnabled(has || next); pk.setAlpha(has || next ? 1f : .35f); pk.setOnClickListener(v -> pickExtra(idx));
+            row.addView(pk, new LinearLayout.LayoutParams(-2, dp(36)));
+            Button x = button("✕", BG, DIM); x.setVisibility(has ? View.VISIBLE : View.INVISIBLE); x.setOnClickListener(v -> dropExtra(idx));
+            row.addView(x, new LinearLayout.LayoutParams(dp(40), dp(36)));
             LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(-1, -2); rp.topMargin = dp(8); extraBox.addView(row, rp);
         }
-        editAdd.setVisibility(multi && b != null && extraBm.size() < Qwen.MAX_IMAGES - 1 ? View.VISIBLE : View.GONE);
-        editAdd.setText(L.f("+ Ещё картинка (%d из %d)", "+ Another picture (%d of %d)", extraBm.size() + 1, Qwen.MAX_IMAGES));
-        editInfo.setText(b != null && multi && !extraBm.isEmpty() ? L.f("Картинок: %d. В описании ссылайтесь на них: «картинка 1», «картинка 2», например «персонаж с картинки 1 стоит на фоне картинки 2».", "Pictures: %d. Refer to them in the prompt: \"picture 1\", \"picture 2\", e.g. \"the character from picture 1 stands in the scene of picture 2\".", extraBm.size() + 1) : b != null ? L.f("Фото %d×%d. Описание — что в нём изменить, например «сделай небо закатным».", "Photo %d×%d. The prompt says what to change, e.g. \"make the sky a sunset\".", b.getWidth(), b.getHeight())
-            : L.s("Выберите фото, чтобы изменить его по описанию. Без фото модель просто рисует картинку.", "Pick a photo to change it by the prompt. Without one the model just draws a picture."));
-        editDrop.setVisibility(b != null ? View.VISIBLE : View.GONE);
+        editAdd.setVisibility(View.GONE);
+        if (editNote != null) editNote.setText(b != null && multi ? L.s("В описании ссылайтесь на картинки: «картинка 1», «картинка 2», например «персонаж с картинки 1 стоит на фоне картинки 2».", "Refer to the pictures in the prompt: \"picture 1\", \"picture 2\", e.g. \"the character from picture 1 stands in the scene of picture 2\".")
+            : b != null ? L.s("Описание — что в фото изменить, например «сделай небо закатным».", "The prompt says what to change, e.g. \"make the sky a sunset\".") : L.s("Выберите фото, чтобы изменить его по описанию. Без фото модель просто рисует картинку.", "Pick a photo to change it by the prompt. Without one the model just draws a picture."));
     }
     void pickEdit() {
         if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
@@ -478,16 +511,19 @@ public class Main extends Base {
         ex2.submit(() -> { for (int i = 0; i < Qwen.MAX_IMAGES; i++) Qwen.editSrc(getFilesDir(), i).delete(); Models.deleteTree(Qwen.editDir(getFilesDir())); ui.post(this::refreshEdit); });
         setRes(resW, resH);
     }
-    void pickExtra() {
+    int extraSlot = -1;   // which extra row the picker was opened for
+    void pickExtra(int slot) {
+        extraSlot = slot;
         if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
         startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE), 12);
     }
     void importExtra(Uri uri) {
         ex2.submit(() -> {
             try {
-                final int idx = extraBm.size() + 1; if (idx >= Qwen.MAX_IMAGES) return;
+                final int slot = Math.min(extraSlot < 0 ? extraBm.size() : extraSlot, extraBm.size()); final int idx = slot + 1; if (idx >= Qwen.MAX_IMAGES) return;
                 final Bitmap bm = Qwen.importPhoto(getContentResolver(), uri, getFilesDir(), idx);
-                ui.post(() -> { extraBm.add(bm); refreshEdit(); });
+                Models.deleteTree(Qwen.editDir(getFilesDir(), idx));   // the cached condition of a replaced picture is stale
+                ui.post(() -> { if (slot < extraBm.size()) extraBm.set(slot, bm); else extraBm.add(bm); refreshEdit(); });
             } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Не удалось открыть фото: %s", "Cannot open the photo: %s", e.getMessage()), Toast.LENGTH_LONG).show()); }
         });
     }
@@ -524,15 +560,15 @@ public class Main extends Base {
     String lp() { return isMoss() ? "moss_lora_" : "anima_lora_"; }
     File loraSrc() { return isMoss() ? MossLora.src(getFilesDir()) : AnimaLora.src(getFilesDir()); }
     String loraId() { return prefs().getString(lp() + "id", ""); }
-    boolean loraOn() { return (isMoss() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
+    boolean loraOn() { return (isMoss() && !Moss.is8(model) && !customTurbo() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
     void refreshLora() {
         if (loraName == null) return;
         boolean has = !loraId().isEmpty() && loraSrc().exists();
         strBar.setProgress(Math.round(prefs().getFloat(lp() + "str", 1f) * 20));
         loraName.setText(has ? prefs().getString(lp() + "name", "LoRA") : L.s("не выбрана", "none"));
         loraInfo.setText(has ? prefs().getString(lp() + "info", "") : isMoss() ? L.s("Файл .safetensors для MOSS-Image: проверяется сразу после выбора", "A .safetensors file for MOSS-Image: it is checked as soon as you pick it") : L.s("Файл .safetensors для Anima: проверяется сразу после выбора", "A .safetensors file for Anima: it is checked as soon as you pick it"));
-        loraInfo.setTextColor(has ? OK : DIM);
-        loraDrop.setVisibility(has ? View.VISIBLE : View.GONE); strBar.setEnabled(has); strBar.setAlpha(has ? 1f : .4f);
+        loraInfo.setTextColor(DIM);
+        loraDrop.setVisibility(has ? View.VISIBLE : View.GONE); ((View) strBar.getParent()).setVisibility(has ? View.VISIBLE : View.GONE); loraName.setTextColor(has ? TXT : DIM); loraInfo.setVisibility(has || loraInfo.getCurrentTextColor() == WARN ? View.VISIBLE : View.GONE);
     }
     void pickLora() {
         if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
@@ -542,13 +578,13 @@ public class Main extends Base {
         if (busy) return;
         final String pf = lp(); final boolean moss = isMoss();
         prefs().edit().remove(pf + "id").remove(pf + "name").remove(pf + "info").apply();
-        ex2.submit(() -> { MossLora.deleteTree(moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir())); ui.post(this::refreshLora); });
+        ex2.submit(() -> { File d = moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir()); File[] fs = d.listFiles(); if (fs != null) for (File f : fs) if (!f.getName().startsWith("turbo")) MossLora.deleteTree(f); ui.post(this::refreshLora); });
     }
     void importLora(Uri uri) {
         String nm = "LoRA";
         try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
         final String name = nm;
-        loraInfo.setTextColor(WARN); loraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
+        loraInfo.setTextColor(WARN); loraInfo.setVisibility(View.VISIBLE); loraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
         ex2.submit(() -> {
             final boolean moss = isMoss(); final String pf = lp(); final File src = loraSrc();
             final File dir = moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "new.safetensors");
@@ -559,10 +595,75 @@ public class Main extends Base {
             final boolean ok; final String msg;
             if (moss) { MossLora.Check c = MossLora.check(BIN, tmp); ok = c.ok; msg = c.message(); } else { AnimaLora.Check c = AnimaLora.check(tmp); ok = c.ok; msg = c.message(); }
             if (!ok) { tmp.delete(); ui.post(() -> { refreshLora(); loraFail(name, msg); }); return; }
-            File[] old = dir.listFiles(); if (old != null) for (File f : old) if (!f.equals(tmp)) MossLora.deleteTree(f);   // the old LoRA and its folded patches go
+            File[] old = dir.listFiles(); if (old != null) for (File f : old) if (!f.equals(tmp) && !f.getName().startsWith("turbo")) MossLora.deleteTree(f);   // the old LoRA and its folded patches go (the Lab turbo LoRA stays)
             tmp.renameTo(src);
             prefs().edit().putString(pf + "id", Long.toHexString(System.currentTimeMillis())).putString(pf + "name", name).putString(pf + "info", "✓ " + msg).apply();
             ui.post(this::refreshLora);
+        });
+    }
+    /** Lab: import a turbo LoRA file for MOSS (checked like a user LoRA), then ask which sampler it was trained with */
+    void importTurbo(Uri uri) {
+        String nm = "LoRA";
+        try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
+        final String name = nm;
+        ex2.submit(() -> {
+            final File dir = MossLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "turbo_new.safetensors");
+            try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
+                byte[] b = new byte[1 << 16]; long total = 0;
+                for (int n; (n = in.read(b)) > 0; ) { o.write(b, 0, n); total += n; if (total > (2L << 30)) throw new IOException(L.s("файл больше 2 ГБ", "the file is larger than 2 GB")); }
+            } catch (Exception e) { tmp.delete(); ui.post(() -> loraFail(name, L.f("Не удалось прочитать файл: %s", "Cannot read the file: %s", e.getMessage()))); return; }
+            final MossLora.Check c = MossLora.check(BIN, tmp);
+            if (!c.ok) { tmp.delete(); ui.post(() -> loraFail(name, c.message())); return; }
+            ui.post(() -> builder().setTitle(L.s("Для какого расписания эта LoRA?", "Which sampler is this LoRA made for?")).setItems(new String[]{L.s("4 шага (как rapid-moss)", "4 steps (like rapid-moss)"), L.s("8 шагов (как DMD, нужен 8 step)", "8 steps (like DMD, needs 8 step)")}, (dd, k) -> {
+                final int sampler = k == 0 ? 4 : 8;
+                if (sampler == 8 && !ids.contains(Moss.ID8)) { tmp.delete(); Toast.makeText(this, L.s("Для 8 шагов нужна добавка MOSS 8 step", "8 steps need the MOSS 8 step add-on"), Toast.LENGTH_LONG).show(); return; }
+                ex2.submit(() -> {
+                    MossLora.deleteTree(MossLora.turboOvl(getFilesDir())); MossLora.turboSrc(getFilesDir()).delete(); tmp.renameTo(MossLora.turboSrc(getFilesDir()));
+                    prefs().edit().putString("turbo_name", name).putInt("turbo_sampler", sampler).putBoolean("turbo_on", true).apply();
+                    ui.post(() -> { setModelUi(false, false, ""); Toast.makeText(this, "✓ " + c.message(), Toast.LENGTH_LONG).show(); });
+                });
+            }).setNegativeButton(L.s("Отмена", "Cancel"), (dd, k) -> tmp.delete()).setOnCancelListener(dd -> tmp.delete()).show());
+        });
+    }
+    /** Lab: import a turbo LoRA file for Qwen-Image, then ask which sigma table it was trained with */
+    void importTurboQwen(Uri uri) {
+        String nm = "LoRA";
+        try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
+        final String name = nm;
+        ex2.submit(() -> {
+            final File dir = QwenLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "turbo_new.safetensors");
+            try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
+                byte[] b = new byte[1 << 16]; long total = 0;
+                for (int n; (n = in.read(b)) > 0; ) { o.write(b, 0, n); total += n; if (total > (2L << 30)) throw new IOException(L.s("файл больше 2 ГБ", "the file is larger than 2 GB")); }
+            } catch (Exception e) { tmp.delete(); ui.post(() -> loraFail(name, L.f("Не удалось прочитать файл: %s", "Cannot read the file: %s", e.getMessage()))); return; }
+            final QwenLora.Check c = QwenLora.check(BIN, tmp);
+            if (!c.ok) { tmp.delete(); ui.post(() -> loraFail(name, c.message())); return; }
+            ui.post(() -> builder().setTitle(L.s("Для какого расписания эта LoRA?", "Which sampler is this LoRA made for?")).setItems(new String[]{L.s("4 шага (как Lightning)", "4 steps (like Lightning)"), L.s("8 шагов (как обычный Turbo)", "8 steps (like plain Turbo)")}, (dd, k) -> {
+                final int sampler = k == 0 ? 4 : 8;
+                ex2.submit(() -> {
+                    MossLora.deleteTree(QwenLora.turboOvl(getFilesDir())); QwenLora.turboSrc(getFilesDir()).delete(); tmp.renameTo(QwenLora.turboSrc(getFilesDir()));
+                    prefs().edit().putString("qturbo_name", name).putInt("qturbo_sampler", sampler).putBoolean("qturbo_on", true).apply();
+                    ui.post(() -> { Toast.makeText(this, "✓ " + c.message(), Toast.LENGTH_LONG).show(); if (!Qwen.is8(model) && ids.contains(Qwen.ID8)) setModel(Qwen.ID8); else setModelUi(false, false, ""); });
+                });
+            }).setNegativeButton(L.s("Отмена", "Cancel"), (dd, k) -> tmp.delete()).setOnCancelListener(dd -> tmp.delete()).show());
+        });
+    }
+    /** Lab: a turbo LoRA file for an Anima base pack, checked like a user LoRA (header only) */
+    void importTurboAnima(Uri uri) {
+        String nm = "LoRA";
+        try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
+        final String name = nm;
+        ex2.submit(() -> {
+            final File dir = AnimaLora.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "turbo_new.safetensors");
+            try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
+                byte[] b = new byte[1 << 16]; long total = 0;
+                for (int n; (n = in.read(b)) > 0; ) { o.write(b, 0, n); total += n; if (total > (1L << 30)) throw new IOException(L.s("файл больше 1 ГБ", "the file is larger than 1 GB")); }
+            } catch (Exception e) { tmp.delete(); ui.post(() -> loraFail(name, L.f("Не удалось прочитать файл: %s", "Cannot read the file: %s", e.getMessage()))); return; }
+            final AnimaLora.Check c = AnimaLora.check(tmp);
+            if (!c.ok) { tmp.delete(); ui.post(() -> loraFail(name, c.message())); return; }
+            AnimaLora.turboSrc(getFilesDir()).delete(); tmp.renameTo(AnimaLora.turboSrc(getFilesDir()));
+            prefs().edit().putString("aturbo_name", name).putBoolean("aturbo_on", true).apply();
+            ui.post(() -> { Toast.makeText(this, "✓ " + c.message(), Toast.LENGTH_LONG).show(); final String fam = famOf(model); if (!isBase(model) && ids.contains(fam + "base")) setModel(fam + "base"); else setModelUi(false, false, ""); });
         });
     }
     void loraFail(String name, String why) {
@@ -571,19 +672,24 @@ public class Main extends Base {
 
     // ---- menu, dialogs ------------------------------------------------------------------------
     void menu(View anchor) {
-        PopupMenu pm = new PopupMenu(this, anchor);
-        pm.getMenu().add(0, 1, 0, L.s("Модели", "Models"));
-        pm.getMenu().add(0, 2, 1, L.s("Открыть настройки из PNG", "Load settings from a PNG"));
-        pm.getMenu().add(0, 3, 2, L.s("Настройки", "Settings"));
-        pm.getMenu().add(0, 4, 3, L.s("Инфо", "Info"));
-        pm.setOnMenuItemClickListener(i -> {
-            if (i.getItemId() == 1) openModels();
-            else if (i.getItemId() == 2) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/png").addCategory(Intent.CATEGORY_OPENABLE), 8);
-            else if (i.getItemId() == 3) startActivity(new Intent(this, Settings.class));
-            else startActivity(new Intent(this, Info.class));
-            return true;
-        });
-        pm.show();
+        final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(10), dp(14), dp(10), dp(14));
+        final AlertDialog[] dlg = new AlertDialog[1];
+        final String[] icons = {"ic_layers", "ic_add_photo", "ic_tune", "ic_info"};
+        final String[] names = {L.s("Модели", "Models"), L.s("Открыть настройки из PNG", "Load settings from a PNG"), L.s("Настройки", "Settings"), L.s("Инфо", "Info")};
+        for (int i = 0; i < names.length; i++) {
+            final int k = i;
+            LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(16), dp(16), dp(16), dp(16)); row.setBackground(bg(CARD, 12));
+            TextView t = text(names[i], 16, TXT, false); row.addView(t);
+            row.setOnClickListener(v -> {
+                dlg[0].dismiss();
+                if (k == 0) openModels();
+                else if (k == 1) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/png").addCategory(Intent.CATEGORY_OPENABLE), 8);
+                else if (k == 2) startActivity(new Intent(this, Settings.class));
+                else startActivity(new Intent(this, Info.class));
+            });
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2); rlp.bottomMargin = dp(8); col.addView(row, rlp);
+        }
+        dlg[0] = sheet(col);
     }
 
     void openModels() { if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; } startActivity(new Intent(this, ModelsActivity.class)); }
@@ -595,7 +701,7 @@ public class Main extends Base {
         final Runnable[] fill = new Runnable[1];
         fill[0] = () -> {
             box.removeAllViews();
-            Button save = button(L.s("Сохранить текущее описание", "Save the current prompt"), ACC, ON_ACC); save.setTextSize(14);
+            Button save = button(L.s("Сохранить текущее описание", "Save the current prompt"), CARD, TXT); save.setTextSize(14);
             save.setOnClickListener(v -> {
                 String t = prompt.getText().toString().trim();
                 if (t.isEmpty()) { Toast.makeText(this, L.s("Введите описание", "Enter a prompt"), Toast.LENGTH_SHORT).show(); return; }
@@ -616,7 +722,7 @@ public class Main extends Base {
     TextView sect(String s) { TextView t = text(s, 12, DIM, true); t.setPadding(dp(4), dp(14), 0, dp(6)); return t; }
 
     View promptRow(String t, boolean removable, AlertDialog[] dlg, Runnable[] fill) {
-        LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setBackground(bg(FIELD, 12)); r.setPadding(dp(12), dp(10), dp(8), dp(10));
+        LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(4), dp(12), dp(4), dp(12));
         TextView tv = text(t, 13, TXT, false); tv.setMaxLines(2); tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
         r.addView(tv, new LinearLayout.LayoutParams(0, -2, 1));
         if (removable) {
@@ -689,24 +795,191 @@ public class Main extends Base {
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
 
     // ---- model state --------------------------------------------------------------------------
-    String modelName() { return model.isEmpty() ? L.s("нет модели", "no model") : store.name(model); }
+    LinearLayout dropBtn(String title, TextView value, View.OnClickListener l) {
+        LinearLayout b = new LinearLayout(this); b.setGravity(Gravity.CENTER_VERTICAL); b.setBackground(bg(CARD, 16)); b.setPadding(dp(16), 0, dp(16), 0);
+        b.addView(text(title, 12, DIM, true)); value.setPadding(dp(12), 0, 0, 0); b.addView(value, new LinearLayout.LayoutParams(0, -2, 1)); b.addView(text("▾", 14, DIM, false));
+        b.setOnClickListener(l); return b;
+    }
+    void refreshBaseUi() {
+        if (stepsVal != null) { int st = steps(); stepsVal.setText(String.valueOf(st)); stepsVal.setTextColor(st == stepsDef() ? TXT : WARN); }   // an orange number: not the recipe of the model
+        if (cfgVal != null) cfgVal.setText(Settings.baseCfg(this));
+        updateChips();
+        if (genBtn != null && !busy) genBtn.setText(genLabel());
+    }
+    void pickBaseSteps() {
+        final EditText e = new EditText(this); e.setText(String.valueOf(steps())); e.setSelectAllOnFocus(true); e.setTextColor(TXT); e.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder().setTitle(L.f("Шагов (%d–%d, по умолчанию %d)", "Steps (%d–%d, default %d)", stepsMin(), stepsMax(), stepsDef())).setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton("OK", (dd, w) -> {
+            try { setSteps(Integer.parseInt(e.getText().toString().trim())); } catch (NumberFormatException x) { Toast.makeText(this, L.f("Введите число от %d до %d", "Enter a number from %d to %d", stepsMin(), stepsMax()), Toast.LENGTH_SHORT).show(); }
+        }).show();
+    }
+    void pickBaseCfg() {
+        final String cur = Settings.baseCfg(this);
+        final String[] opts = new String[Settings.BASE_CFG.length + 1]; System.arraycopy(Settings.BASE_CFG, 0, opts, 0, Settings.BASE_CFG.length); opts[opts.length - 1] = L.s("Своё значение…", "Custom value…");
+        int ci = java.util.Arrays.asList(Settings.BASE_CFG).indexOf(cur); if (ci < 0) ci = opts.length - 1;
+        builder().setTitle("CFG").setSingleChoiceItems(opts, ci, (d, i) -> {
+            d.dismiss();
+            if (i < Settings.BASE_CFG.length) { prefs().edit().putString("base_cfg", Settings.BASE_CFG[i]).apply(); refreshBaseUi(); return; }
+            final EditText e = new EditText(this); e.setText(cur); e.setSelectAllOnFocus(true); e.setTextColor(TXT); e.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            builder().setTitle("CFG (1–20)").setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton("OK", (dd, w) -> {
+                try { float v = Float.parseFloat(e.getText().toString().trim().replace(',', '.')); if (v < 1 || v > 20) throw new NumberFormatException();
+                    prefs().edit().putString("base_cfg", String.valueOf(Math.round(v * 100) / 100f).replaceAll("\\.0$", "")).apply(); refreshBaseUi(); }
+                catch (NumberFormatException x) { Toast.makeText(this, L.s("Введите число от 1 до 20", "Enter a number from 1 to 20"), Toast.LENGTH_SHORT).show(); }
+            }).show();
+        }).show();
+    }
+    String modelName() {   // the family name as in the model list: the 4/8 step variant is picked by the LoRA and the steps, it does not rename the model
+        if (model.isEmpty()) return L.s("нет модели", "no model");
+        if (isQwen()) return "Qwen-Image-2.1-Turbo";
+        if (isMoss() && ids.contains(mossBase())) return store.name(mossBase()).replace(" (base)", "");
+        return store.name(model);
+    }
 
     void pickModel() {
         if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
         if (ids.isEmpty()) { openModels(); return; }
-        String[] names = new String[ids.size() + 1];
-        for (int i = 0; i < ids.size(); i++) names[i] = (ids.get(i).equals(model) ? "✓  " : "      ") + store.name(ids.get(i));
-        names[ids.size()] = "＋  " + L.s("Каталог моделей…", "Model catalog…");
-        builder().setTitle(L.s("Модель", "Model")).setItems(names, (d, i) -> { if (i < ids.size()) setModel(ids.get(i)); else openModels(); }).show();
+        final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(16), dp(14), dp(16), dp(10));
+        final android.app.AlertDialog[] dlg = new android.app.AlertDialog[1];
+        TextView title = text(L.s("Модель", "Model"), 20, TXT, true); title.setPadding(dp(2), 0, 0, dp(6)); col.addView(title);
+        final String[][] groups = {{"anima", "ANIMA"}, {"moss", "MOSS-IMAGE"}, {"qwen", "QWEN-IMAGE"}, {"mage", "MAGE-FLOW"}};
+        for (String[] g : groups) {
+            boolean head = false; final java.util.Set<String> seen = new java.util.HashSet<>();
+            for (final String id0 : ids) {
+                String mg = modelGroup(id0); if (!(g[0].equals("anima") ? mg.equals("turbo") || mg.equals("base") : mg.equals(g[0]))) continue;
+                final boolean anima = g[0].equals("anima"), qw = g[0].equals("qwen"), ms = g[0].equals("moss"); final String fam = anima ? famOf(id0) : qw ? "qwen" : ms ? "moss" : id0;
+                if (!seen.add(fam)) continue;
+                final String id = anima && ids.contains(fam) ? fam : id0; final boolean fm = anima || qw;   // the name of a family is the turbo one when it is installed
+                if (!head) { head = true; TextView h = text(g[1], 12, DIM, false); h.setLetterSpacing(0.04f); h.setPadding(dp(4), dp(18), 0, dp(6)); col.addView(h); }
+                final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() : id.equals(model);
+                LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL); row.setPadding(dp(14), dp(10), dp(14), dp(10));
+                { GradientDrawable rb = bg(CARD, 12); if (sel) rb.setStroke(dp(2), TXT); row.setBackground(rb); }
+                row.addView(text(qw ? "Qwen-Image-2.1-Turbo" : store.name(id).replace(" (base)", ""), 15, TXT, true));
+                TextView cap = text(anima ? familyCaption(fam) : qw ? qwenCaption() : ms ? mossCaption() : modelCaption(id), 12, DIM, false); cap.setPadding(0, dp(3), 0, 0); row.addView(cap);
+                row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(mossVariant()); } else if (!sel) setModel(id); });
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); col.addView(row, lp);
+            }
+        }
+        TextView cat = text(L.s("Каталог моделей", "Model catalog"), 15, TXT, false); cat.setPadding(dp(14), dp(14), dp(14), dp(14)); 
+        cat.setOnClickListener(v -> { dlg[0].dismiss(); openModels(); }); col.addView(cat);
+        android.widget.ScrollView sv = new android.widget.ScrollView(this); sv.addView(col);
+        dlg[0] = builder().setView(sv).create(); dlg[0].show();
+        if (dlg[0].getWindow() != null) dlg[0].getWindow().setBackgroundDrawable(framed(20));
+    }
+    static String modelGroup(String id) { return Moss.is(id) ? "moss" : Qwen.is(id) ? "qwen" : Mage.is(id) ? "mage" : id.endsWith("base") ? "base" : "turbo"; }
+    /** an Anima family = the turbo model and its base twin (id + "base") */
+    static String famOf(String id) { return id.endsWith("base") ? id.substring(0, id.length() - 4) : id; }
+    /** the variant to open for a family: the last one used, else turbo, else base */
+    String variantOf(String fam) {
+        boolean t = ids.contains(fam), b = ids.contains(fam + "base");
+        if (t && b) return lab || prefs().getString("var_" + fam, "turbo").equals("base") ? fam + "base" : fam;
+        return t ? fam : fam + "base";
+    }
+    /** Qwen-Image: the default pack (4 step, Lightning LoRA) and the 8 step add-on are one entry with a switch */
+    String qwenBase() { return store.qwenId(); }
+    boolean qwenBoth() { return ids.contains(qwenBase()) && ids.contains(Qwen.ID8); }
+    String qwenVariant() {
+        if (qwenBoth()) return prefs().getString("var_qwen", "4").equals("8") ? Qwen.ID8 : qwenBase();
+        return ids.contains(qwenBase()) ? qwenBase() : Qwen.ID8;
+    }
+    String qwenCaption() { return modelCaption(qwenBase()); }
+    /** MOSS-Image: the default pack (4 step, rapid LoRA) and the 8 step DMD add-on are one entry with a switch */
+    String mossBase() { return store.mossId(); }
+    boolean mossBoth() { return ids.contains(mossBase()) && ids.contains(Moss.ID8); }
+    String mossVariant() {
+        if (mossBoth()) return prefs().getString("var_moss", "4").equals("8") ? Moss.ID8 : mossBase();
+        return mossBase();
+    }
+    String mossCaption() { return modelCaption(mossBase()); }
+    String familyCaption(String fam) {
+        boolean t = ids.contains(fam), b = ids.contains(fam + "base");
+        String sz = fam.contains("29") ? "2.9B" : "2B";
+        if (lab) return sz + "  ·  base" + (b ? "" : " (turbo pack only)");
+        return sz + "  ·  " + (t && b ? "Turbo  /  Base" : t ? "Turbo" : "Base");
+    }
+    /** Turbo | Base switch under the model: shown when both variants of the family are installed */
+    void updateVariant() {
+        if (variantRow == null) return;
+        if (lab) { updateLabLora(); return; }
+        final boolean qw = isQwen(), ms = isMoss(); final String fam = famOf(model);
+        boolean both = ms ? mossBoth() : qw ? qwenBoth() : isAnima() && ids.contains(fam) && ids.contains(fam + "base");
+        variantRow.setVisibility(both ? View.VISIBLE : View.GONE);
+        if (!both) return;
+        variantRow.removeAllViews();
+        for (int k = 0; k < 2; k++) {
+            final boolean second = k == 1; final boolean on = ms ? second == Moss.is8(model) : qw ? second == Qwen.is8(model) : second == model.endsWith("base");
+            TextView c = text(qw || ms ? (second ? "8 step" : "4 step") : (second ? "Base" : "Turbo"), 14, on ? BG : DIM, on); c.setGravity(Gravity.CENTER);
+            c.setBackground(on ? bg(TXT, 9) : null);
+            c.setOnClickListener(v -> {
+                if (busy) return;
+                if (ms) { prefs().edit().putString("var_moss", second ? "8" : "4").apply(); setModel(second ? Moss.ID8 : mossBase()); }
+                else if (qw) { prefs().edit().putString("var_qwen", second ? "8" : "4").apply(); setModel(second ? Qwen.ID8 : qwenBase()); }
+                else { prefs().edit().putString("var_" + fam, second ? "base" : "turbo").apply(); setModel(second ? fam + "base" : fam); }
+            });
+            variantRow.addView(c, new LinearLayout.LayoutParams(0, -1, 1));
+        }
+    }
+    /** Lab: one row "Turbo LoRA" under the model; its choices are the packs of the family (Anima: the base and the turbo pack, MOSS / Qwen: 4 step and 8 step). Until the kernels apply a LoRA on top of a base, a choice switches the pack. */
+    void updateLabLora() {
+        final java.util.List<String[]> o = new java.util.ArrayList<>();   // {label, model id}
+        final String fam = famOf(model);
+        if (isAnima()) {
+            if (ids.contains(fam + "base")) o.add(new String[]{L.s("Нет", "None"), fam + "base"}); if (ids.contains(fam)) o.add(new String[]{"Turbo · 4 step", fam});
+            if (ids.contains(fam + "base")) {
+                if (AnimaLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("aturbo_name", "LoRA"), "custom"});
+                o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"});
+            }
+        }
+        else if (isMoss()) {
+            if (ids.contains(mossBase())) o.add(new String[]{"4 step · rapid-moss", mossBase()}); if (ids.contains(Moss.ID8)) o.add(new String[]{"8 step · DMD", Moss.ID8});
+            if (MossLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("turbo_name", "LoRA") + " (" + prefs().getInt("turbo_sampler", 4) + " step)", "custom"});
+            o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"});
+        }
+        else if (isQwen()) {
+            if (ids.contains(Qwen.ID8)) o.add(new String[]{L.s("Нет", "None"), Qwen.ID8}); if (ids.contains(qwenBase())) o.add(new String[]{"4 step · Lightning", qwenBase()});
+            if (ids.contains(Qwen.ID8)) { if (QwenLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("qturbo_name", "LoRA") + " (" + prefs().getInt("qturbo_sampler", 4) + " step)", "custom"}); o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"}); }
+        }
+        variantRow.setVisibility(o.isEmpty() ? View.GONE : View.VISIBLE);
+        variantRow.removeAllViews(); variantRow.setPadding(dp(16), 0, dp(16), 0); variantRow.setGravity(Gravity.CENTER_VERTICAL);
+        if (o.isEmpty()) return;
+        int cur = 0; for (int i = 0; i < o.size(); i++) if (customTurbo() || customTurboAnima() || customTurboQwen() ? o.get(i)[1].equals("custom") : o.get(i)[1].equals(model)) cur = i;
+        variantRow.addView(text(L.s("Turbo LoRA", "Turbo LoRA"), 14, DIM, false), new LinearLayout.LayoutParams(0, -2, 1));
+        variantRow.addView(text((cur < 0 ? L.s("не выбрана", "none") : o.get(cur)[0]) + "  ▾", 15, cur < 0 ? DIM : TXT, false));
+        final int sel = cur;
+        variantRow.setOnClickListener(v -> {
+            if (busy) return;
+            String[] names = new String[o.size()]; for (int i = 0; i < names.length; i++) names[i] = o.get(i)[0];
+            builder().setTitle("Turbo LoRA").setSingleChoiceItems(names, sel, (d, i) -> {
+                d.dismiss(); final String id = o.get(i)[1];
+                if (id.equals("pick")) { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE), 14); return; }
+                if (id.equals("custom") && isQwen() && i == sel) { prefs().edit().putBoolean("qturbo_on", false).apply(); setModelUi(false, false, ""); return; }   // tapping the chosen file again turns the LoRA off
+                if (id.equals("custom")) { if (isQwen()) { prefs().edit().putBoolean("qturbo_on", true).apply(); if (!Qwen.is8(model)) { setModel(Qwen.ID8); return; } } else if (isAnima()) { prefs().edit().putBoolean("aturbo_on", true).apply(); if (!isBase(model)) { setModel(fam + "base"); return; } } else prefs().edit().putBoolean("turbo_on", true).apply(); setModelUi(false, false, ""); return; }
+                prefs().edit().putBoolean("turbo_on", false).putBoolean("aturbo_on", false).putBoolean("qturbo_on", false).apply();
+                if (!id.equals(model)) setModel(id); else setModelUi(false, false, "");
+            }).show();
+        });
+    }
+    /** the line under a model in the picker: what differs between the models of one group (the group header says the rest) */
+    String pickCaption(String id) {
+        String g = modelGroup(id);
+        if (g.equals("turbo") || g.equals("base")) return (id.contains("29") ? "2.9B" : "2B") + "  ·  " + L.f("~%d с", "~%d s", store.speed(id));
+        return modelCaption(id);
+    }
+    String modelCaption(String id) {
+        switch (modelGroup(id)) {
+            case "turbo": return L.s("4 шага · без CFG · одна картинка за секунды", "4 steps · no CFG · a picture in seconds");
+            case "base": return L.s("20–30 шагов · CFG и негативный промпт", "20–30 steps · CFG and negative prompt");
+            case "moss": return L.s("описания обычными предложениями, надписи", "plain-sentence prompts, text in pictures");
+            case "qwen": return L.s("правка фото, до 3 картинок", "photo editing, up to 3 pictures");
+            default: return L.s("4 шага · правка фото", "4 steps · photo editing");
+        }
     }
 
-    /** The NPU pipeline needs width/height multiples of 16, patch count divisible by 32 and at most 6144 patches (megarun TMAX). */
+    /** The NPU pipeline needs width/height multiples of 16, patch count divisible by 32 and at most 6912 patches (megarun TMAX; the attention fills the 8 MB VTCM at 7392 tokens). */
     static String sizeError(int w, int h) {
         if (w < 256 || h < 256) return L.s("Размер: минимум 256 по каждой стороне", "Size: at least 256 on each side");
         if (w % 16 != 0 || h % 16 != 0) return L.s("Ширина и высота должны быть кратны 16", "Width and height must be multiples of 16");
         int t = (w / 16) * (h / 16);
         if (t % 32 != 0) return L.f("Число патчей (%d) должно делиться на 32, например 640×640, 1024×1024, 704×832", "Patch count (%d) must be divisible by 32, e.g. 640×640, 1024×1024, 704×832", t);
-        if (t > 6144) return L.s("Слишком большой размер: максимум 6144 патча (например 1536×960)", "Too large: at most 6144 patches (e.g. 1536×960)");
+        if (t > 6912) return L.s("Слишком большой размер: максимум 6912 патчей (например 1152×1536)", "Too large: at most 6912 patches (e.g. 1152×1536)");
         return null;
     }
 
@@ -714,16 +987,51 @@ public class Main extends Base {
         resW = w; resH = h;
         boolean preset = false;
         for (int[] z : sizeList()) if (z[0] == w && z[1] == h) preset = true;
-        if (sizeText != null) sizeText.setText(sizeLabel(w, h) + (preset && !customOpen ? "" : "  ·  " + L.s("Свой", "Custom")));
+        if (sizeText != null) sizeText.setText(w + "×" + h);
         if (customRow != null) { customRow.setVisibility(customOpen || !preset ? View.VISIBLE : View.GONE); if (!wEdit.getText().toString().equals(String.valueOf(w)) || !hEdit.getText().toString().equals(String.valueOf(h))) { wEdit.setText(String.valueOf(w)); hEdit.setText(String.valueOf(h)); } }
         if (chipName != null) chipName.setText(modelName());
+        rebuildSizeChips(); updatePlaceholder(); updateChips();
         if (genBtn != null && !busy) genBtn.setText(genLabel());
     }
 
+    void updatePlaceholder() {
+        if (placeholder == null || phSize == null) return;
+        int cw = getResources().getDisplayMetrics().widthPixels - dp(40); double r = Math.max(0.56, Math.min(0.75, (double) resH / Math.max(1, resW)));
+        ViewGroup.LayoutParams lp = placeholder.getLayoutParams(); if (lp != null) { lp.height = (int) (cw * r); placeholder.setLayoutParams(lp); }
+        phSize.setText(resW + " × " + resH);
+    }
+
+    /** ratio shortcuts next to the current size: for each common ratio the preset of this model whose area is closest to the current one; the last chip opens the full picker */
+    void rebuildSizeChips() {
+        if (sizeChips == null) return;
+        sizeChips.removeAllViews();
+        final boolean land = resW > resH;
+        final String[] ratios = land ? new String[]{"1:1", "3:2", "4:3", "16:9"} : new String[]{"1:1", "2:3", "3:4", "9:16"};
+        final double area = (double) resW * resH;
+        for (String rt : ratios) {
+            int[] best = null;
+            for (int[] z : sizeList()) { int g = gcd(z[0], z[1]); if (!(z[0] / g + ":" + z[1] / g).equals(rt)) continue; if (best == null || Math.abs(z[0] * (double) z[1] - area) < Math.abs(best[0] * (double) best[1] - area)) best = z; }
+            if (best == null) continue;
+            final int[] z = best; final boolean on = z[0] == resW && z[1] == resH;
+            TextView c = text(rt, 14, on ? BG : DIM, on); c.setGravity(Gravity.CENTER);
+            c.setBackground(on ? bg(TXT, 9) : null);
+            c.setOnClickListener(v -> { customOpen = false; setRes(z[0], z[1]); });
+            sizeChips.addView(c, new LinearLayout.LayoutParams(0, -1, 1));
+        }
+    }
+
     /** rough time to a picture: the catalog speed at 512x768 scaled by the patch count, times the number of pictures */
+    /** Qwen time from phone measurements: a DiT step takes about 5 + 3.8e-4*N + 7.7e-7*N^2 s for N target tokens (7.4 s at 1536, 36 s at 6144), the tiled decoder 4.9 s per 512 px tile, text ~10 s, ~16 s per photo (ViT + encoder) */
+    long qwenEst() {
+        final int n = (resW / 16) * (resH / 16), st = steps(), imgs = editBm != null ? 1 + extraBm.size() : 0;
+        final double step = 5 + 3.8e-4 * n + 7.7e-7 * (double) n * n;
+        final int tiles = Math.max(1, (int) Math.ceil((resW - 64) / 448.0)) * Math.max(1, (int) Math.ceil((resH - 64) / 448.0));
+        return Math.round(10 + st * step + 4.9 * tiles + 16 * imgs);
+    }
     String genLabel() {
         if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
-        long est = Math.max(3, Math.round(store.speed(model) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
+        if (isQwen()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, qwenEst() * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", qwenEst());
+        long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
         return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, est) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", est);
     }
 
@@ -731,26 +1039,61 @@ public class Main extends Base {
     double stepShare(int st) {
         double lo = resW * resH < 500000 ? 0.3 : 0.22;
         double done = 0, total = 0;
-        for (int i = 0; i < STEPS; i++) { double c = i < 2 ? lo : 1.0; total += c; if (i < st) done += c; }
+        for (int i = 0; i < steps(); i++) { double c = i < 2 && !base() ? lo : 1.0; total += c; if (i < st) done += c; }
         return done / total;
     }
 
+    /** token limit of the prompt of the current model (0 = none): Anima keeps 512 text tokens, MOSS-Image and Qwen-Image text-to-image 480 (with their chat template) */
+    int tokLimit() { return isAnima() ? 512 : isMoss() ? 480 : isQwen() && editBm == null ? 480 : 0; }
+    /** tokens of `text` for the current model (the quality prefix counts for Anima); runs off the UI thread (the vocabulary takes a second to load) */
+    int tokCount(String text) throws Exception {
+        if (isMoss()) { if (tokM == null) tokM = new QwenTok(Moss.dir(getFilesDir()).getPath()); return tokM.encodePrompt(text).length; }
+        if (tokQ == null) {   // Anima and Qwen use the Qwen vocabulary (bundled; the installed Qwen pack is not required)
+            File d = new File(getFilesDir(), "tok"); d.mkdirs();
+            for (String f : new String[]{"tok_vocab.txt", "tok_merges.txt", "tok_special.txt"}) {
+                File o = new File(d, f); if (o.exists()) continue;
+                try (java.io.InputStream in = getAssets().open("tok/" + f); java.io.FileOutputStream w = new java.io.FileOutputStream(o)) { byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) w.write(b, 0, n); }
+            }
+            tokQ = new QwenTok(d.getPath());
+        }
+        return isQwen() ? tokQ.encodeQwenImage(text).length : tokQ.encode(text).length + 1;   // Anima: + end token
+    }
+    void updateTokens() {
+        final int lim = tokLimit();
+        if (tokView == null) return;
+        if (lim == 0) { tokOver = false; tokView.setVisibility(View.GONE); return; }
+        final String pr = prompt.getText().toString().trim(), neg = base() ? Settings.baseNeg(this) : "";
+        final String full = isAnima() ? Settings.prefix(this) + pr : pr; final boolean an = isAnima();
+        new Thread(() -> {
+            int n = 0, nn = 0;
+            try { n = pr.isEmpty() ? 0 : tokCount(full); if (!neg.isEmpty()) nn = tokCount(neg); } catch (Exception e) { return; }
+            final int a = n, b = nn;
+            ui.post(() -> {
+                if (tokLimit() != lim) return;
+                boolean over = a > lim || b > lim; tokOver = over;
+                String t = L.f("Токенов: %d / %d", "Tokens: %d / %d", a, lim) + (an && b > 0 ? L.f("  ·  негативный: %d", "  ·  negative: %d", b) : "");
+                tokView.setText(over ? t + L.s("  ·  слишком длинно", "  ·  too long") : t); tokView.setTextColor(over ? BAD : DIM); tokView.setVisibility(View.VISIBLE);
+            });
+        }).start();
+    }
+    void applyFamily() { rebuildSizeChips(); updateChips(); updateVariant(); }
     void setModelUi(boolean isLoaded, boolean working, String msg) {
         ui.post(() -> {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
-            if (loraBox != null) { loraBox.setVisibility(isMoss() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
+            if (turboStrRow != null) { boolean tv = customTurbo() || customTurboAnima() || customTurboQwen(); turboStrRow.setVisibility(tv ? View.VISIBLE : View.GONE); if (tv) turboBar.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20)); }
+            if (loraBox != null) { loraBox.setVisibility(isMoss() && !Moss.is8(model) && !customTurbo() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
+            if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
             if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
-            state.setText(working ? msg : isMage() ? L.s("Mage-Flow-Edit: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isQwen() ? L.s("Qwen-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "Qwen-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isMoss() ? L.s("MOSS-Image: текст, DiT и VAE работают на NPU; веса читаются с накопителя при каждой картинке", "MOSS-Image: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture") : isLoaded ? L.s("Модель загружена в NPU, генерация стартует сразу", "Model is loaded on the NPU, generation starts at once")
-                : L.s("Модель выгружена: при генерации загрузится сама (~5 с)", "Model is unloaded: it loads itself when you generate (~5 s)"));
+            applyFamily(); updateTokens();
+            state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена в NPU, генерация стартует сразу", "Loaded on the NPU, generation starts at once") : L.s("Выгружена · загрузится сама при генерации (~5 с)", "Unloaded · loads itself when you generate (~5 s)"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
             loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage());
-            loadBtn.setAlpha(loadBtn.isEnabled() ? 1f : .5f);
-            countBtn.setEnabled(!busy); countBtn.setAlpha(busy ? .5f : 1f);
+            loadBtn.setVisibility(loadBtn.isEnabled() || (isLoaded && isAnima()) ? View.VISIBLE : View.GONE);
             boolean can = busy ? !cancelled : !working;   // while a picture is made the main button is "Stop"
             genBtn.setEnabled(can);
-            genBtn.setBackground(busy ? bg(BAD, 18) : gradient(can));
-            genBtn.setTextColor(busy ? 0xFFFFFFFF : can ? ON_ACC : DIM);
+            genBtn.setBackground(busy ? bg(CARD, 12) : gradient(can));
+            genBtn.setTextColor(busy ? BAD : can ? ON_ACC : DIM);
             genBtn.setText(busy ? (cancelled ? L.s("Останавливаю…", "Stopping…") : L.s("Остановить", "Stop")) : genLabel());
         });
     }
@@ -885,6 +1228,10 @@ public class Main extends Base {
         if (cw != resW || ch != resH) setRes(cw, ch);
         final String pr = prompt.getText().toString().trim();
         if (pr.isEmpty()) { Toast.makeText(this, L.s("Введите описание", "Enter a prompt"), Toast.LENGTH_SHORT).show(); return; }
+        if (tokLimit() > 0) {   // counted here again (the counter on screen may be a keystroke behind)
+            int n; try { n = tokCount(isAnima() ? Settings.prefix(this) + pr : pr); if (base()) n = Math.max(n, tokCount(Settings.baseNeg(this))); } catch (Exception e) { n = 0; }
+            if (n > tokLimit()) { updateTokens(); Toast.makeText(this, L.f("Слишком длинный промпт: %d токенов, максимум %d. Сократите описание.", "Prompt too long: %d tokens, the limit is %d. Shorten it.", n, tokLimit()), Toast.LENGTH_LONG).show(); return; }
+        }
         String sd = seed.getText().toString().trim();
         final boolean randomSeed = newSeed || sd.isEmpty() || sd.equals("-1");   // -1 = random; the seed used is shown under the picture
         long base0 = 0; try { base0 = Long.parseLong(sd); } catch (NumberFormatException ignored) { }
@@ -917,7 +1264,7 @@ public class Main extends Base {
                 final Bitmap bm = BitmapFactory.decodeFile(f.getPath());
                 lastBm = bm;
                 ui.post(() -> {
-                    lastFile = f; img.setImageBitmap(bm); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE);
+                    lastFile = f; img.setImageBitmap(bm); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); img.setAlpha(0f); img.animate().alpha(1f).setDuration(250).start();
                     setFavIcon(false);
                     for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) x.setVisibility(View.VISIBLE);
                     final ScrollView svv = (ScrollView) imgBox.getParent().getParent(); svv.post(() -> svv.smoothScrollTo(0, 0));   // after the image has been laid out
@@ -955,7 +1302,7 @@ public class Main extends Base {
         if (isMoss()) return runOneMoss(pr, seedS, w, h, t0);
         final String sig = loraSig();
         if (!loaded || !sig.equals(servedSig)) {   // a new LoRA (or none) restarts the server: megarun folds it into the blocks while loading
-            setProgressUi(0, loaded ? L.s("Загружаю LoRA…", "Loading the LoRA…") : L.s("Загружаю модель…", "Loading the model…"), t0);
+            setProgressUi(0, !animaLoraEnv().isEmpty() ? L.s("Подготавливаю LoRA… (один раз для этого набора)", "Preparing the LoRA… (once for this set)") : loaded ? L.s("Загружаю LoRA…", "Loading the LoRA…") : L.s("Загружаю модель…", "Loading the model…"), t0);
             su("rm -f " + D + "/cancel; " + mp() + "sh " + D + "/anima.sh load < /dev/null >/dev/null 2>&1", false);
             if (cancelled) return null;
             loaded = true; servedSig = sig;
@@ -969,15 +1316,15 @@ public class Main extends Base {
                 try { Thread.sleep(700); } catch (InterruptedException e) { return; }
                 if (pv != null) showPreview(pv.poll(pvf));
                 int[] c = count();
-                int st = c[0] - base[0];
+                int st = (c[0] - base[0]) / cm();
                 if (c[1] > base[1]) setProgressUi(97, L.s("Сохраняю…", "Saving…"), t0);
-                else if (st >= STEPS) setProgressUi(92, L.s("Декодирование…", "Decoding…"), t0);
-                else if (c[2] > base[2]) setProgressUi(15 + (int) (76 * stepShare(st)), L.f("Шаг %d/%d", "Step %d/%d", st + 1, STEPS), t0);  // adapter line = step 1 started
+                else if (st >= steps()) setProgressUi(92, L.s("Декодирование…", "Decoding…"), t0);
+                else if (c[2] > base[2]) setProgressUi(15 + (int) (76 * stepShare(st)), L.f("Шаг %d/%d", "Step %d/%d", st + 1, steps()), t0);  // adapter line = step 1 started
                 else setProgressUi(8, L.s("Кодирование текста…", "Encoding the text…"), t0);
             }
         });
         poll.start();
-        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + STEPS + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
+        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + steps() + (base() ? " CFG=" + Settings.baseCfg(this) + " NEG=" + q(Settings.baseNeg(this)) : "") + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
         done[0] = true;
         try { poll.join(); } catch (InterruptedException ignored) { }
         if (cancelled) return null;
@@ -993,10 +1340,16 @@ public class Main extends Base {
 
     /** one MOSS-Image picture: tokenise here, text encoder + DiT + VAE on the NPU through moss.sh, PNG with the settings inside */
     File runOneMoss(String pr, String seedS, int w, int h, long t0) {
-        final File home = getFilesDir(), M = Moss.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32");
+        final File home = getFilesDir(), M = Moss.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final int STEPS = steps();
         setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
         try { Moss.writeIds(home, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
-        String loraEnv = ""; final boolean useLora = loraOn(); final float lstr = strBar.getProgress() * 0.05f;
+        String loraEnv = Moss.is8(model) ? "MODE=8 " : ""; final boolean useLora = loraOn();
+        if (customTurbo()) {
+            final String[] cm = {""}; setProgressUi(2, L.s("Подготовка turbo LoRA…", "Preparing the turbo LoRA…"), t0);
+            File ovl = MossLora.ensureTurbo(home, BIN, prefs().getFloat("turbo_str", 1f), cm);
+            if (ovl == null) { ui.post(() -> Toast.makeText(this, L.f("Не удалось подготовить LoRA: %s", "Could not prepare the LoRA: %s", cm[0]), Toast.LENGTH_LONG).show()); return null; }
+            loraEnv = "MOSS_LORA=" + q(ovl.getPath()) + " MODE=" + prefs().getInt("turbo_sampler", 4) + " ";
+        } final float lstr = strBar.getProgress() * 0.05f;
         if (useLora) {
             final String[] msg = {""};
             File ovl = MossLora.ensure(home, BIN, loraId(), lstr, (d, t) -> setProgressUi(1 + 5 * d / t, L.f("Подготовка LoRA… %d/%d", "Preparing the LoRA… %d/%d", d, t), t0), () -> cancelled, msg);
@@ -1034,7 +1387,7 @@ public class Main extends Base {
 
     /** one Mage-Flow picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through mage.sh */
     File runOneMage(String pr, String seedS, int w, int h, long t0) {
-        final File home = getFilesDir(), M = Mage.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.rgb");
+        final File home = getFilesDir(), M = Mage.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.rgb"); final int STEPS = steps();
         final Bitmap src = editBm; final boolean edit = src != null;
         setProgressUi(2, edit ? L.s("Подготовка фото…", "Preparing the photo…") : L.s("Токенизация…", "Tokenising…"), t0);
         int drop, keys; String edArg = "";
@@ -1084,10 +1437,17 @@ public class Main extends Base {
         ui.post(() -> { if (!busy) return; img.setImageBitmap(pb); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); });
     }
 
+    /** Lab: a turbo LoRA file on the plain pack: overlays (made now, cached by strength) + its sigma table */
+    String qwenLoraEnv() {
+        if (!customTurboQwen()) return "";
+        final String[] cm = {""}; File ovl = QwenLora.ensureTurbo(getFilesDir(), BIN, prefs().getFloat("qturbo_str", 1f), cm);
+        if (ovl == null) { ui.post(() -> Toast.makeText(this, L.f("Не удалось подготовить LoRA: %s", "Could not prepare the LoRA: %s", cm[0]), Toast.LENGTH_LONG).show()); return " QLORA_FAILED=1"; }
+        return " QLORA=" + q(ovl.getPath()) + " QSCHED=" + prefs().getInt("qturbo_sampler", 4);
+    }
     /** one Qwen-Image picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through qwen.sh */
     File runOneQwen(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), Q = Qwen.dir(home), ids = new File(Q, "ids.i32"), raw = new File(Q, "img.f32");
-        final Bitmap src = editBm; final boolean edit = src != null;
+        final int QS = steps(); final Bitmap src = editBm; final boolean edit = src != null;
         setProgressUi(2, edit ? L.s("Подготовка фото…", "Preparing the photo…") : L.s("Токенизация…", "Tokenising…"), t0);
         int drop; String edArg = "";
         try {
@@ -1108,7 +1468,7 @@ public class Main extends Base {
                 try {
                     String[] a = s.split("\\s+"); int vit = Integer.parseInt(a[0]), te = Integer.parseInt(a[1]), ti = Integer.parseInt(a[2]), st = Integer.parseInt(a[3]), dn = Integer.parseInt(a[4]);
                     if (dn >= (edit ? 2 : 1)) setProgressUi(94, L.s("Декодирование…", "Decoding…"), t0);
-                    else if (ti > 0) setProgressUi(30 + 62 * st / STEPS, st == 0 && edit ? L.s("Шаг 1/4 (разбор фото)", "Step 1/4 (reading the photo)") : L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
+                    else if (ti > 0) setProgressUi(30 + 62 * st / QS, st == 0 && edit ? L.s("Шаг 1/" + QS + " (разбор фото)", "Step 1/" + QS + " (reading the photo)") : L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, QS), QS), t0);
                     else if (te > 0) setProgressUi(28, L.s("Подготовка текста…", "Preparing the text…"), t0);
                     else if (edit && vit > 0) setProgressUi(15, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
                     else if (edit) setProgressUi(5, L.s("Анализ фото на NPU…", "Analysing the photo on the NPU…"), t0);
@@ -1117,7 +1477,7 @@ public class Main extends Base {
             }
         });
         poll.start();
-        su("rm -f " + q(raw.getPath()) + "; Q=" + q(Q.getPath()) + " VAE=" + Qwen.vaeCtx(home, w, h) + " sh " + D + "/qwen.sh " + q(ids.getPath()) + " " + drop + " " + w + " " + h + " " + seedS + " " + STEPS + " " + q(raw.getPath()) + edArg + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        su("rm -f " + q(raw.getPath()) + "; Q=" + q(Q.getPath()) + (Qwen.is8(model) ? " QV=8" : "") + qwenLoraEnv() + " VAE=" + Qwen.vaeCtx(home, w, h) + " sh " + D + "/qwen.sh " + q(ids.getPath()) + " " + drop + " " + w + " " + h + " " + seedS + " " + QS + " " + q(raw.getPath()) + edArg + " < /dev/null >> " + D + "/gen.log 2>&1", false);
         done[0] = true;
         try { poll.join(); } catch (InterruptedException ignored) { }
         if (cancelled) return null;
@@ -1154,6 +1514,48 @@ public class Main extends Base {
     }
 
     /** pct is the progress of the current picture; with several pictures the bar and the text cover the whole batch */
+    /** the ring replaces the "your picture will appear here" hint while a picture is made and no preview shows yet */
+    /** small header status: a white icon and a short value; a tap shows the details */
+    TextView statusItem(String icon) {
+        TextView t = text("", 13, TXT, false); t.setGravity(Gravity.CENTER_VERTICAL); t.setPadding(dp(8), 0, dp(8), 0);
+        t.setCompoundDrawablePadding(dp(4)); t.setCompoundDrawablesRelative(vec(icon, TXT, 16), null, null, null); return t;
+    }
+    /** label on the left, the control on the right, one line */
+    LinearLayout paramRow(String label, View control) {
+        LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setMinimumHeight(dp(52));
+        r.addView(text(label, 15, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        r.addView(control);
+        return r;
+    }
+    /** −  value  + : one tap changes the value; a tap on the value opens the full list (steps) or the free input (CFG) */
+    LinearLayout stepper(final TextView val, final int kind) {
+        LinearLayout b = new LinearLayout(this); b.setGravity(Gravity.CENTER_VERTICAL);
+        TextView mi = text("−", 20, DIM, false), pl = text("+", 20, DIM, false);
+        for (TextView t : new TextView[]{mi, pl}) t.setGravity(Gravity.CENTER);
+        mi.setOnClickListener(v -> bump(kind, -1)); pl.setOnClickListener(v -> bump(kind, 1));
+        val.setGravity(Gravity.CENTER); val.setMinWidth(dp(44));
+        if (kind < 2) val.setOnClickListener(v -> { if (kind == 0) pickBaseSteps(); else pickBaseCfg(); });
+        b.addView(mi, new LinearLayout.LayoutParams(dp(40), dp(40))); b.addView(val); b.addView(pl, new LinearLayout.LayoutParams(dp(40), dp(40)));
+        return b;
+    }
+    void bump(int kind, int dir) {
+        if (kind == 0) {
+            setSteps(steps() + dir); return;
+        } else if (kind == 1) {
+            float v; try { v = Float.parseFloat(Settings.baseCfg(this)); } catch (NumberFormatException e) { v = 4; }
+            v = Math.max(1, Math.min(20, Math.round((v + 0.5f * dir) * 2) / 2f));
+            prefs().edit().putString("base_cfg", v == (int) v ? String.valueOf((int) v) : String.valueOf(v)).apply();
+        } else {
+            if (busy) return;
+            count = Math.max(1, Math.min(4, count + dir)); prefs().edit().putInt("count", count).apply();
+        }
+        refreshBaseUi();
+    }
+    void updateChips() {
+        if (baseRow != null) baseRow.setVisibility(base() ? View.VISIBLE : View.GONE);
+        if (stepsRow != null) stepsRow.setVisibility(model.isEmpty() ? View.GONE : View.VISIBLE);
+        if (countVal != null) countVal.setText(String.valueOf(count));
+    }
     void setProgressUi(int pct, String msg, long t0) {
         final int all = (curIdx * 100 + pct) / curN;
         final String pre = curN > 1 ? "(" + (curIdx + 1) + "/" + curN + ")  " : "";

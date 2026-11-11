@@ -85,5 +85,20 @@ final class MossLora {
         } catch (Exception e) { msg[0] = String.valueOf(e); deleteTree(out); return null; }
     }
 
+    /** Lab: a turbo LoRA picked by the user replaces the built-in 4-step one (lorafold "replace": the rank-128 slots take it as they are, ~2 s). Files: lora/turbo.safetensors, lora/turbo_ovl/. */
+    static File turboSrc(File home) { return new File(dir(home), "turbo.safetensors"); }
+    static File turboOvl(File home) { return new File(dir(home), "turbo_ovl"); }
+    static File ensureTurbo(File home, String bin, float strength, String[] msg) {
+        File out = turboOvl(home), ok = new File(out, ".ok"); final String tag = String.format(java.util.Locale.US, "%.2f", strength);
+        try { if (ok.exists() && tag.equals(Models.read(ok).trim())) return out; } catch (IOException ignored) { }
+        deleteTree(out); out.mkdirs();
+        try {
+            Process p = new ProcessBuilder(bin + "/liblorafold.so", "replace", Moss.dir(home).getPath(), turboSrc(home).getPath(), tag, out.getPath()).redirectErrorStream(true).start();
+            String last = ""; try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) { for (String l; (l = r.readLine()) != null; ) if (!l.startsWith("progress ")) last = l; }
+            if (p.waitFor() != 0 || !last.startsWith("OK")) { msg[0] = last; deleteTree(out); return null; }
+            try (FileWriter w = new FileWriter(ok)) { w.write(tag); } return out;
+        } catch (Exception e) { msg[0] = String.valueOf(e); deleteTree(out); return null; }
+    }
+
     static void deleteTree(File f) { File[] k = f.listFiles(); if (k != null) for (File c : k) deleteTree(c); f.delete(); }
 }

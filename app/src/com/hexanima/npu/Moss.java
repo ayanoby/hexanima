@@ -10,6 +10,11 @@ final class Moss {
     static final String PREFIX_ID = "moss";
     static boolean is(String id) { return id != null && id.startsWith(PREFIX_ID); }
     static File dir(File home) { return new File(home, "moss"); }
+    /** a second MOSS entry: the 8-step DMD LoRA (lodestones) as an add-on to the installed pack: glue8.bin (time embedder, sampler tables) + lora8/ (overlays replacing the 4-step LoRA tiles of the DiT blocks), ~0.4 GB */
+    static final String ID8 = "moss-sft-q5-8";
+    static boolean is8(String id) { return ID8.equals(id); }
+    static boolean installed8(File home) { return new File(dir(home), "lora8/blk41.ovl").exists() && new File(dir(home), "glue8.bin").exists(); }
+    static int steps(String id) { return is8(id) ? 8 : 4; }
     static boolean installed(File home) { return new File(dir(home), ".installed").exists(); }
 
     /** size presets (W×H): around 1 Mpx is what the 4-step adapter was trained on (1024², 896×1152, 832×1216, 768×1344 and their landscape twins); smaller ones are faster */
@@ -39,9 +44,8 @@ final class Moss {
         if (bytes.length != 3 * w * h * 4) throw new IOException("decoder output has " + bytes.length + " bytes");
         java.nio.FloatBuffer f = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
         int[] px = new int[w * h]; int n = w * h;
-        float[][] ch = new float[3][n];   // 0..255, not rounded yet: the 4-px lattice of the adapter is removed first (see DeGrid)
-        for (int k = 0; k < 3; k++) for (int i = 0; i < n; i++) ch[k][i] = (f.get(k * n + i) + 1f) * 127.5f;   // not clamped: the lattice dips below black in dark areas and must stay a clean sinusoid for the filter
-        for (float[] z : ch) DeGrid.apply(z, w, h);
+        float[][] ch = new float[3][n];   // 0..255, rounded and clamped below
+        for (int k = 0; k < 3; k++) for (int i = 0; i < n; i++) ch[k][i] = (f.get(k * n + i) + 1f) * 127.5f;
         for (int i = 0; i < n; i++) px[i] = 0xFF000000 | (c8(ch[0][i]) << 16) | (c8(ch[1][i]) << 8) | c8(ch[2][i]);
         Bitmap bm = Bitmap.createBitmap(px, w, h, Bitmap.Config.ARGB_8888);
         ByteArrayOutputStream bo = new ByteArrayOutputStream();

@@ -12,6 +12,11 @@ final class Qwen {
     static final String PREFIX_ID = "qwen";
     static boolean is(String id) { return id != null && id.startsWith(PREFIX_ID); }
     static File dir(File home) { return new File(home, "qwen"); }
+    /** a second Qwen entry: plain Turbo without the Lightning LoRA, 8 steps. Its DiT pack (dit8/) and host tensors (glue8.bin) sit next to the default pack, which supplies the text encoder, ViT and embeddings (qwen.sh QV=8). */
+    static final String ID8 = "qwen-image-21-turbo-8";
+    static boolean is8(String id) { return ID8.equals(id); }
+    static boolean installed8(File home) { File d = dir(home); return new File(d, "dit8/blk31.bin").exists() && new File(d, "glue8.bin").exists() && new File(d, "embd.q4k").exists() && new File(d, "te").isDirectory() && new File(d, "vit").isDirectory() && new File(d, "vae").isDirectory(); }   // the plain Turbo is a pack of its own now (shared files + dit8); an old 4 step pack next to it only supplies the same shared files
+    static int steps(String id) { return is8(id) ? 8 : 4; }
     static boolean installed(File home) { return new File(dir(home), ".installed").exists(); }
     static final int MAX_IMAGES = 3;   // condition images ("Picture 1…3"); the first is the photo, the others are extra references
     static File editSrc(File home, int i) { return new File(dir(home), i == 0 ? "edit_src.png" : "edit_src" + i + ".png"); }
@@ -20,14 +25,14 @@ final class Qwen {
     static File editDir(File home) { return editDir(home, 0); }
 
     /** size presets (W×H): the patch count (W/16·H/16) must be a multiple of 32 */
-    static final int[][] PRESETS = {{512, 512}, {640, 640}, {768, 768}, {1024, 1024}, {512, 768}, {768, 512}, {640, 960}, {960, 640}, {576, 1024}, {1024, 576}, {768, 1024}, {1024, 768}, {896, 1152}, {1152, 896}};
+    static final int[][] PRESETS = {{512, 512}, {640, 640}, {768, 768}, {1024, 1024}, {512, 768}, {768, 512}, {640, 960}, {960, 640}, {576, 1024}, {1024, 576}, {768, 1024}, {1024, 768}, {896, 1152}, {1152, 896}, {1152, 1152}, {1280, 960}, {960, 1280}, {1600, 896}, {896, 1600}, {1536, 1024}, {1024, 1536}};   // the last seven: up to 6144 patches (1.5 Mpx), text-to-image
     static final int MAX_KEYS = 6800;   // the attention of one DiT step holds target + condition + text tokens in the 8 MB VTCM
     static String sizeError(int w, int h) {
         if (w < 256 || h < 256) return L.s("Размер: минимум 256 по каждой стороне", "Size: at least 256 on each side");
         if (w % 16 != 0 || h % 16 != 0) return L.s("Ширина и высота должны быть кратны 16", "Width and height must be multiples of 16");
         int t = (w / 16) * (h / 16);
         if (t % 32 != 0) return L.f("Число патчей (%d) должно делиться на 32, например 640×640, 1024×1024, 704×832", "Patch count (%d) must be divisible by 32, e.g. 640×640, 1024×1024, 704×832", t);
-        if (t > 4608) return L.s("Слишком большой размер: максимум 4608 патчей (например 1152×1024)", "Too large: at most 4608 patches (e.g. 1152×1024)");
+        if (t > 6144) return L.s("Слишком большой размер: максимум 6144 патча (например 1536×1024)", "Too large: at most 6144 patches (e.g. 1536×1024)");
         return null;
     }
 

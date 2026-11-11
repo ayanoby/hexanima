@@ -18,7 +18,13 @@ public class Settings extends Base {
     static boolean autoload(Context c) { return prefs(c).getBoolean("autoload", false); }
     static int idleMin(Context c) { return prefs(c).getInt("idle", 10); }
     /** low-memory mode for the Anima models (blocks are streamed from storage instead of being pinned in RAM): on by default below ~9.5 GB of RAM */
-    static boolean lowRam(Context c) { return prefs(c).getBoolean("lowram", Compat.ramGb(c) < 9.5); }
+    static final int[] BASE_STEPS = {20, 25, 30};
+    static final String[] BASE_CFG = {"3", "4", "5", "6"};
+    static final String DEFAULT_NEG = "worst quality, low quality, blurry, bad anatomy";
+    /** the Anima base models (no turbo LoRA): sampling steps, CFG scale and negative prompt */
+    static int baseSteps(Context c) { return prefs(c).getInt("base_steps", 20); }
+    static String baseCfg(Context c) { return prefs(c).getString("base_cfg", "4"); }
+    static String baseNeg(Context c) { String n = prefs(c).getString("base_neg", DEFAULT_NEG).trim(); return n.isEmpty() ? DEFAULT_NEG : n; }   // an empty negative prompt would make sd.cpp skip the second pass
     static boolean keepOn(Context c) { return prefs(c).getBoolean("keepon", true); }
     static String rawPrefix(Context c) { return prefs(c).getString("prefix", DEFAULT_PREFIX); }
     /** what goes before the prompt: trimmed, ending with a comma and a space; a single space when the user cleared it (anima.sh treats an empty PREFIX as "use the default") */
@@ -35,11 +41,12 @@ public class Settings extends Base {
         c1.addView(choice(L.s("Язык", "Language"), L.NAMES[L.index()], v -> {
             builder().setTitle(L.s("Язык", "Language")).setSingleChoiceItems(L.NAMES, L.index(), (d, i) -> { d.dismiss(); L.set(this, L.CODES[i]); recreate(); }).show();
         }));
-        String[] tn = {L.s("Как в системе", "Follow system"), L.s("Светлая", "Light"), L.s("Тёмная", "Dark")}, tv = {"system", "light", "dark"};
+        String[] tn = {L.s("Как в системе", "Follow system"), L.s("Светлая", "Light"), L.s("Тёмная", "Dark"), L.s("Чёрная (AMOLED)", "Black (AMOLED)")}, tv = {"system", "light", "dark", "amoled"};
         int ti = java.util.Arrays.asList(tv).indexOf(p.getString("theme", "system"));
         c1.addView(choice(L.s("Тема", "Theme"), tn[Math.max(ti, 0)], v -> {
             builder().setTitle(L.s("Тема", "Theme")).setSingleChoiceItems(tn, Math.max(ti, 0), (d, i) -> { d.dismiss(); p.edit().putString("theme", tv[i]).apply(); recreate(); }).show();
         }));
+        if (android.os.Build.VERSION.SDK_INT >= 31) c1.addView(toggle(L.s("Цвет акцента из системы", "Accent colour from the system"), L.s("Берётся из обоев (Android 12 и новее)", "Taken from the wallpaper (Android 12 and newer)"), p.getBoolean("dyn_accent", false), on -> { p.edit().putBoolean("dyn_accent", on).apply(); recreate(); }));
 
         LinearLayout c2 = card(col);
         c2.addView(toggle(L.s("Загружать модель при запуске", "Load the model at start"), L.s("Первая картинка появится быстрее, но модель занимает ОЗУ", "The first picture is faster, but the model holds RAM"), autoload(this), on -> p.edit().putBoolean("autoload", on).apply()));
@@ -55,7 +62,6 @@ public class Settings extends Base {
         LinearLayout c3 = card(col);
         c3.addView(toggle(L.s("Не гасить экран при генерации", "Keep the screen on while generating"), "", keepOn(this), on -> p.edit().putBoolean("keepon", on).apply()));
         if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", "")) || Mage.is(p.getString("model", ""))) return;
-        c3.addView(toggle(L.s("Экономия памяти (медленнее)", "Low-memory mode (slower)"), L.s("Веса модели читаются с накопителя при каждой картинке, а не держатся в ОЗУ. Нужно телефонам с 8 ГБ ОЗУ, на 12 ГБ не нужно.", "The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB."), lowRam(this), on -> p.edit().putBoolean("lowram", on).apply()));   // MOSS-Image takes plain sentences: the quality-tag prefix is for the Anima models only, so the setting is hidden while MOSS is selected
         TextView pl = text(L.s("Теги качества перед описанием (модели Anima)", "Quality tags before the prompt (Anima models)"), 15, TXT, true); pl.setPadding(dp(2), dp(14), 0, dp(6)); c3.addView(pl);
         prefixEdit = field("");
         prefixEdit.setText(rawPrefix(this)); prefixEdit.setTextSize(13); prefixEdit.setMinLines(2); prefixEdit.setGravity(Gravity.TOP);

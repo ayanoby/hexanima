@@ -173,6 +173,7 @@ static void x32_to_rows(const f32* x32, int nrows, int cols, f32* rows) {
 
 // ------------------------------------------------------------------ state
 static remote_handle64 g_h = 0;
+static int g_maxsteps = 4;   // the step codes of the active LoRA: 4 (rapid-moss) or 8 (DMD add-on)
 static Glue g_glue; static uint8_t* g_embd = nullptr; static size_t g_embd_len = 0; static std::string g_dir;
 static std::vector<Buf*> g_dit;         // 42 block packs, resident in rpcmem, mapped on demand
 static Buf g_te[2], *g_tep[2];                     // streaming pack buffers (TE layers, refiner packs)
@@ -373,10 +374,16 @@ int main(int argc, char** argv) {
         fprintf(stderr, "page cache keeps the first %d DiT blocks (MemAvailable %.1f GB)\n", g_keep_blocks, avail / 1e9); }
       printf("loaded %.1f\n", now() - t0); continue;
     }
+    if (cmd == "mode") {   // mode 4 | mode 8: 8 = glue8.bin overrides the time/sampler tensors and lora8/ replaces the turbo LoRA tiles of the packs (DMD 8-step add-on)
+      int m = 4; ss >> m; static const std::string user = getenv("MOSS_LORA") ? getenv("MOSS_LORA") : "";
+      if (m == 8) { if (!g_glue.load(g_dir + "/glue8.bin")) { printf("error glue8\n"); continue; } g_ovl = user.empty() ? g_dir + "/lora8" : user; }   // MOSS_LORA set: a turbo LoRA picked by the user (lorafold replace) takes the place of the DMD one
+      else { if (!g_glue.load(g_dir + "/glue.bin")) { printf("error glue\n"); continue; } g_ovl = user; }
+      g_maxsteps = m == 8 ? 8 : 4; printf("mode %d\n", m); continue;
+    }
     if (cmd == "gen") {
       std::string idsf, outz; int H, W, steps; unsigned seed; ss >> idsf >> H >> W >> seed >> steps >> outz;
       std::vector<int> ids; { FILE* f = fopen(idsf.c_str(), "rb"); if (!f) { printf("error ids\n"); continue; } fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET); ids.resize(n / 4); if (fread(ids.data(), 4, ids.size(), f) != ids.size()) {} fclose(f); }
-      if (ids.empty() || (int)ids.size() > MAXT || H % 16 || W % 16 || (H / 16) * (W / 16) > 6144 || steps < 1 || steps > 4) { printf("error args\n"); continue; }
+      if (ids.empty() || (int)ids.size() > MAXT || H % 16 || W % 16 || (H / 16) * (W / 16) > 6144 || steps < 1 || steps > g_maxsteps) { printf("error args\n"); continue; }
       if (!generate(ids, H, W, seed, steps, outz)) printf("error gen\n");
     }
   }

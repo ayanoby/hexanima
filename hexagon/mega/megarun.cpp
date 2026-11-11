@@ -33,7 +33,7 @@ extern "C" {
 
 struct dma_buf_sync_ { unsigned long long flags; };
 #define DMA_BUF_IOCTL_SYNC_ _IOW('b', 0, dma_buf_sync_)
-static const int D = 2048, NCTX = 512, TMAX = 6144;
+static const int D = 2048, NCTX = 512, TMAX = 6912;
 typedef float f32;
 static double now() { return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count(); }
 static std::vector<char> readfile(const std::string& p) {
@@ -186,23 +186,32 @@ int main(int argc, char** argv) {
     }
     struct stat st40; char p40[512]; snprintf(p40, sizeof p40, "%s/blk39.bin", dir.c_str());
     const int model_blocks = stat(p40, &st40) == 0 ? 40 : 28;
-    std::vector<uint8_t> buf(ok ? wtot : 0), qb(ok && !g_q8 ? WQ_TOTAL : 0);
-    int nm = 0;
-    for (int i = 0; i < count && ok; i++) {
-      char p[600], c[600], t[620];
-      snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first + i); snprintf(c, sizeof c, "%s/blk%02d.bin", cdir.c_str(), first + i); snprintf(t, sizeof t, "%s.tmp", c);
-      if (read_into(p, buf.data(), wtot) != wtot) { fprintf(stderr, "cannot read %s\n", p); ok = false; break; }
-      for (auto& [L, sv] : ls) { int src = lora_source(first + i, model_blocks, lora_blocks(*L)); if (src < 0) continue; int k = lora_fold_block(*L, sv, src, buf.data(), g_q8); if (k > 0) nm += k; }
-      const uint8_t* out = buf.data(); if (!g_q8) { to_q8(buf.data(), qb.data()); out = qb.data(); }
-      int fd = open(t, O_WRONLY | O_CREAT | O_TRUNC, 0600); if (fd < 0) { ok = false; break; }
-      size_t put = 0; while (put < WQ_TOTAL) { ssize_t r = write(fd, out + put, WQ_TOTAL - put); if (r <= 0) break; put += r; }
-      posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd);
-      if (put != WQ_TOTAL) { unlink(t); ok = false; break; }
-      rename(t, c);
-    }
-    if (ok && nm > 0) {
+    // blocks are independent: MEGA_FOLD_WORKERS (default 3) blocks are read, folded and written at the same time (the I/O of one overlaps the fold of another), each fold with
+    // cores / workers threads
+    int workers = getenv("MEGA_FOLD_WORKERS") ? std::max(1, atoi(getenv("MEGA_FOLD_WORKERS"))) : 3; workers = std::min(workers, std::max(1, count));
+    { int cores = (int)std::thread::hardware_concurrency(); if (cores < 2) cores = 4; g_fold_threads = std::max(2, std::min(8, cores / workers)); }
+    std::atomic<int> nm(0), next(0); std::atomic<bool> okA(ok); std::atomic<long> tRead(0), tFold(0), tWrite(0);   // summed over the workers, microseconds
+    auto work = [&] {
+      std::vector<uint8_t> buf(wtot), qb(!g_q8 ? WQ_TOTAL : 0);
+      for (;;) {
+        int i = next++; if (i >= count || !okA) break;
+        char p[600], c[600], t[620];
+        snprintf(p, sizeof p, "%s/blk%02d.bin", dir.c_str(), first + i); snprintf(c, sizeof c, "%s/blk%02d.bin", cdir.c_str(), first + i); snprintf(t, sizeof t, "%s.tmp", c);
+        double q0 = now(); if (read_into(p, buf.data(), wtot) != wtot) { fprintf(stderr, "cannot read %s\n", p); okA = false; break; }
+        double q1 = now(); for (auto& [L, sv] : ls) { int src = lora_source(first + i, model_blocks, lora_blocks(*L)); if (src < 0) continue; int k = lora_fold_block(*L, sv, src, buf.data(), g_q8); if (k > 0) nm += k; }
+        const uint8_t* out = buf.data(); if (!g_q8) { to_q8(buf.data(), qb.data()); out = qb.data(); }
+        double q2 = now(); int fd = open(t, O_WRONLY | O_CREAT | O_TRUNC, 0600); if (fd < 0) { okA = false; break; }
+        size_t put = 0; while (put < WQ_TOTAL) { ssize_t r = write(fd, out + put, WQ_TOTAL - put); if (r <= 0) break; put += r; }
+        posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); close(fd);
+        if (put != WQ_TOTAL) { unlink(t); okA = false; break; }
+        rename(t, c); double q3 = now(); tRead += (long)((q1 - q0) * 1e6); tFold += (long)((q2 - q1) * 1e6); tWrite += (long)((q3 - q2) * 1e6);
+      }
+    };
+    if (ok) { std::vector<std::thread> th; for (int w = 0; w < workers; w++) th.emplace_back(work); for (auto& x : th) x.join(); }
+    ok = okA; g_fold_threads = 4; fprintf(stderr, "megarun: LoRA cache build, summed over workers: read %.1fs fold %.1fs write %.1fs\n", tRead / 1e6, tFold / 1e6, tWrite / 1e6);
+    if (ok && nm.load() > 0) {
       cached = true; g_q8 = true; wtot = WQ_TOTAL; wmodw = WQ_MODW;
-      fprintf(stderr, "megarun: LoRA cache built for the low-memory mode: %d matrices, blocks %d..%d, %.1fs\n", nm, first, first + count - 1, now() - tb);
+      fprintf(stderr, "megarun: LoRA cache built for the low-memory mode: %d matrices, blocks %d..%d, %.1fs (%d workers x %d threads)\n", nm.load(), first, first + count - 1, now() - tb, workers, std::max(2, std::min(8, (int)std::thread::hardware_concurrency() / workers)));
     } else if (ok) fprintf(stderr, "megarun: LoRA: no matching layers in the blocks\n");
   }
   double t0 = now();

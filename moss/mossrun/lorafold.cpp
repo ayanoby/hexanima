@@ -228,10 +228,11 @@ static size_t a_off(int which) { size_t o = panel_off(6); static const size_t sz
 
 static bool pread_all(int fd, void* b, size_t n, size_t off) { u8* p = (u8*)b; while (n) { ssize_t r = pread(fd, p, n, off); if (r <= 0) return false; p += r; n -= r; off += r; } return true; }
 
+static bool g_replace = false;   // "replace": the user LoRA takes the turbo slots as they are (rank <= 128, zero padded); projections it does not cover are zeroed
 static bool fold_block(const ST& st, const Scan& sc, const std::string& pack, int L, float ustr, const std::string& outdir) {
   std::vector<std::pair<uint64_t, std::vector<u8>>> recs;
   bool any = false; for (int mi = 0; mi < NMOD; mi++) if (sc.m.count({L, mi})) any = true;
-  if (any) {
+  if (any || g_replace) {
     int fd = open(pack.c_str(), O_RDONLY); if (fd < 0) { fprintf(stderr, "cannot open %s\n", pack.c_str()); return false; }
     // user factors for the 6 pack matrices: A [r][in] (pointer to the tensor), B rows [N][r] with row offset; scale
     struct U { const TI* A = nullptr; const TI* B = nullptr; size_t brow0 = 0; int r = 0; float sc = 0; bool has = false; };
@@ -240,11 +241,12 @@ static bool fold_block(const ST& st, const Scan& sc, const std::string& pack, in
     setup(0, 0, 0); setup(0, 1, 3072); setup(0, 2, 6144); setup(1, 0, 0); setup(2, 1, 0); setup(3, 2, 0); setup(4, 3, 0); setup(5, 4, 0); setup(6, 5, 0);
     std::vector<u8> aqkv[3];
     for (int mi = 0; mi < 6; mi++) {
-      if (!us[mi].has) continue;
-      const MatG& g = MG[mi]; const U& u = us[mi]; const int R = 128 + u.r, KB = g.K / 32, NB = g.N / 32; const size_t N = g.N, I = g.K;
+      if (!us[mi].has && !g_replace) continue;
+      const MatG& g = MG[mi]; const U& u = us[mi]; const int R = g_replace ? u.r : 128 + u.r, KB = g.K / 32, NB = g.N / 32; const size_t N = g.N, I = g.K;
       std::vector<float> BT((size_t)R * N), AM((size_t)R * I);
       // turbo B^T from the panels' 4 LoRA tiles (pack nb order; up_gate interleaved up_j, gate_j)
       std::vector<u8> pn(4 * TILE); const size_t po = panel_off(mi), pnl = (size_t)(KB + 4) * TILE;
+      if (!g_replace) {
       for (int nb = 0; nb < NB; nb++) {
         if (!pread_all(fd, pn.data(), pn.size(), po + nb * pnl + (size_t)KB * TILE)) { close(fd); return false; }
         int lb = mi == 4 ? ((nb & 1) ? NB / 2 + nb / 2 : nb / 2) : nb;
@@ -255,12 +257,15 @@ static bool fold_block(const ST& st, const Scan& sc, const std::string& pack, in
         std::vector<u8> ar(ncb * KB * TILE); if (!pread_all(fd, ar.data(), ar.size(), a_off(which))) { close(fd); return false; }
         for (size_t cb = cofs / 32; cb < (size_t)(cofs + 128) / 32; cb++) for (int kb = 0; kb < KB; kb++) { const u8* t = &ar[(cb * KB + kb) * TILE];
           for (int r = 0; r < 32; r++) for (int c = 0; c < 32; c++) AM[(size_t)((cb * 32 + c) - cofs) * I + kb * 32 + r] = deq(t, r, c); } }
+      }
       // user part
       for (int c = 0; c < u.r; c++) {
-        float* bt = &BT[(size_t)(128 + c) * N]; for (size_t n = 0; n < N; n++) bt[n] = st.at(*u.B, (u.brow0 + n) * u.r + c) * u.sc;
-        float* am = &AM[(size_t)(128 + c) * I]; for (size_t i = 0; i < I; i++) am[i] = st.at(*u.A, (size_t)c * I + i);
+        float* bt = &BT[(size_t)((g_replace ? 0 : 128) + c) * N]; for (size_t n = 0; n < N; n++) bt[n] = st.at(*u.B, (u.brow0 + n) * u.r + c) * u.sc;
+        float* am = &AM[(size_t)((g_replace ? 0 : 128) + c) * I]; for (size_t i = 0; i < I; i++) am[i] = st.at(*u.A, (size_t)c * I + i);
       }
-      std::vector<float> Bo, Ao; fold(BT, AM, R, N, I, Bo, Ao);
+      std::vector<float> Bo, Ao;
+      if (g_replace) { Bo.assign((size_t)128 * N, 0); Ao.assign((size_t)128 * I, 0); memcpy(Bo.data(), BT.data(), sizeof(float) * (size_t)R * N); memcpy(Ao.data(), AM.data(), sizeof(float) * (size_t)R * I); }
+      else fold(BT, AM, R, N, I, Bo, Ao);
       // B' tiles: matrix [128][N]; only the 4 LoRA tiles of every panel
       std::vector<int> cmap; if (mi == 4) { cmap.resize(NB); for (int nb = 0; nb < NB; nb++) cmap[nb] = ((nb & 1) ? NB / 2 + nb / 2 : nb / 2) * 32; }
       std::vector<u8> tiles((size_t)NB * 4 * TILE); quant(Bo.data(), N, 1, 128, g.N, mi == 4 ? cmap.data() : nullptr, tiles.data());
@@ -269,7 +274,7 @@ static bool fold_block(const ST& st, const Scan& sc, const std::string& pack, in
       std::vector<u8> at((size_t)4 * KB * TILE); quant(Ao.data(), 1, I, g.K, 128, nullptr, at.data());
       if (mi < 3) aqkv[mi] = std::move(at); else recs.push_back({a_off(mi == 3 ? 1 : mi == 4 ? 2 : 3), std::move(at)});
     }
-    if (us[0].has || us[1].has || us[2].has) {   // A_qkv = q|k|v parts (4 n-blocks each); a projection the user LoRA does not cover keeps its turbo part
+    if (us[0].has || us[1].has || us[2].has || g_replace) {   // A_qkv = q|k|v parts (4 n-blocks each); a projection the user LoRA does not cover keeps its turbo part
       const size_t part = (size_t)4 * 96 * TILE; std::vector<u8> all(3 * part);
       for (int j = 0; j < 3; j++) { if (!aqkv[j].empty()) memcpy(&all[j * part], aqkv[j].data(), part); else if (!pread_all(fd, &all[j * part], part, a_off(0) + j * part)) { close(fd); return false; } }
       recs.push_back({a_off(0), std::move(all)});
@@ -288,7 +293,8 @@ int main(int argc, char** argv) {
     Info inf; std::string warn; int rc = check(st, inf, warn); if (rc) return rc;
     printf("OK\tlayers=%d\tmods=%d\trank=%d\talpha=%g\twarn=%s\n", inf.layers, inf.mods, inf.rank, inf.alpha, warn.c_str()); return 0;
   }
-  if (argc >= 6 && !strcmp(argv[1], "fold")) {
+  if (argc >= 6 && (!strcmp(argv[1], "fold") || !strcmp(argv[1], "replace"))) {
+    g_replace = !strcmp(argv[1], "replace");
     ST st; if (!st.open(argv[3])) return fail("FILE", st.err); Info inf; std::string warn; if (check(st, inf, warn)) return 1;
     Scan sc = scan(st); const float strength = (float)atof(argv[4]); std::string mdir = argv[2], out = argv[5];
     std::atomic<int> next(0), done(0), bad(0); std::mutex mu; int nth = std::max(1u, std::min(6u, std::thread::hardware_concurrency()));

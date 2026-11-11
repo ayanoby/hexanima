@@ -356,7 +356,8 @@ int main(int argc, char** argv) {
         else if (grp) { ch.push_back(spawn(ph, 0, 4, "q4")); ch.push_back(spawn(ph, 4, 3, "q4")); }  // one DSP session holds only 4 of these (0x3ea at the 5th)
         else { int rg[3][2] = {{0, 10}, {10, 10}, {20, 8}}; for (auto& r : rg) ch.push_back(spawn(ph, r[0], r[1], ".")); }
         for (auto& c : ch) waitline(c, "ready", nullptr);
-        if (serve || getenv("SD_VAE_DIR")) { vae.push_back(spawn_vae(ph)); waitline(vae[0], "ready", nullptr); }
+        fprintf(stderr, "animad: DiT workers ready %.1fs\n", now() - t0);
+        if (serve || getenv("SD_VAE_DIR")) { vae.push_back(spawn_vae(ph)); waitline(vae[0], "ready", nullptr); fprintf(stderr, "animad: VAE ready %.1fs\n", now() - t0); }
         // a LoRA with text-encoder weights: sd.cpp encodes the prompts on the CPU with the merged copy (anima.sh passes $A/te_llm as --llm), no NPU text encoder
         const std::string te_llm = serve ? te_merge() : "";
         if (serve) { if (te_llm.empty()) unlink((ph + "/te_llm").c_str()); else writefile(ph + "/te_llm", te_llm.data(), te_llm.size()); }
@@ -368,14 +369,14 @@ int main(int argc, char** argv) {
         }
         fprintf(stderr, "animad: chain ready %.1fs (text encoder on NPU: %s)\n", now() - t0, te.empty() ? "no" : "yes");
     }
-    auto handle = [&](const std::string& dir, int steps, const std::string& vd) {
-    std::vector<f32> ctx512;  // adapter output [512,1024]
+    auto handle = [&](const std::string& dir, int steps, const std::string& vd, int cm) {   // cm = DiT calls per step: 2 with CFG (the positive, then the negative prompt)
+    std::vector<f32> ctx512, ctxt[2];  // adapter output [512,1024]; ctxt[k] = transposed copy of prompt k for the chain (st_ctx.raw)
     if (te.empty() && serve) writefile(dir + "/qh.cpu", "", 0);  // no NPU text encoder: sd.cpp computes it
-    if (!te.empty()) {  // sd.cpp (SD_TE_MODE=extern) writes qids.bin/qids.shape (Qwen token ids) and waits for qh.bin(.done) or qh.cpu (= compute it yourself)
+    if (!te.empty()) for (int kp = 0; kp < cm; kp++) {  // sd.cpp (SD_TE_MODE=extern) writes qids.bin/qids.shape (Qwen token ids) and waits for qh.bin(.done) or qh.cpu (= compute it yourself); once per prompt (CFG: the negative one too)
         while (access((dir + "/qids.shape").c_str(), F_OK) && access((dir + "/ready_0").c_str(), F_OK)) usleep(2000);
         if (!access((dir + "/qids.shape").c_str(), F_OK)) {
             double tt = now();
-            auto ib = readfile(dir + "/qids.bin");
+            auto ib = readfile(dir + "/qids.bin"); unlink((dir + "/qids.shape").c_str());
             int S = (int)(ib.size() / 4); const int SM = 128;
             if (S > SM) { writefile(dir + "/qh.cpu", "", 0); fprintf(stderr, "animad: text S=%d > %d, CPU fallback\n", S, SM); }
             else {
@@ -398,23 +399,24 @@ int main(int argc, char** argv) {
     }
     // low-res first steps (ANIMAD_LOWRES=K): the first K steps run the DiT on a 2x downsampled latent (4x fewer tokens); the full-res x0 estimate is the upsampled low-res one,
     // and the full-res state is rebuilt as (1-t')*up(x0_low) + t'*noise, so sd.cpp's Euler update lands exactly there.
-    std::vector<int> lowF;   // per-step downsample factor (1 = full res); ANIMAD_LOWRES="2,2" or "4,2"; default for the HMX path: 2,2 for 4+ steps (the first two at half size), 2 for 3 steps; never the second-to-last step: the last step (t~0) cannot add detail
-    { std::string cfg = getenv("ANIMAD_LOWRES") ? getenv("ANIMAD_LOWRES") : (hmx ? (steps >= 4 ? "2,2" : steps == 3 ? "2" : "") : "");
+    std::vector<int> lowF;   // per-step downsample factor (1 = full res); ANIMAD_LOWRES="2,2" or "4,2"; default: none (all steps at full size); never the second-to-last step: the last step (t~0) cannot add detail
+    { std::string cfg = getenv("ANIMAD_LOWRES") ? getenv("ANIMAD_LOWRES") : "";   // off by default: low-res first steps pull the composition towards close-ups
       for (size_t p = 0; p < cfg.size();) { size_t q = cfg.find(',', p); if (q == std::string::npos) q = cfg.size(); int f = atoi(cfg.substr(p, q - p).c_str()); if (f > 0) lowF.push_back(f); p = q + 1; } }
     std::vector<double> sig(steps + 1);   // sd.cpp flow schedule: s = linspace(1, 0.001), sigma = 3s/(1+2s), final 0
     for (int i = 0; i < steps; i++) { double sv = steps > 1 ? 1.0 - (1.0 - 0.001) * i / (steps - 1) : 1.0; sig[i] = 3 * sv / (1 + 2 * sv); }
     sig[steps] = 0;
     std::vector<f32> nfull, xlow, dhatf;
-    for (int n = test ? steps : 0; n < (test ? steps + 1 : steps); n++) {
+    for (int n = test ? steps : 0; n < (test ? steps + 1 : steps * cm); n++) {
+        const int si = n / cm, kp = n % cm;   // step, and which prompt (0 positive, 1 negative)
         std::string sn = std::to_string(n);
         while (access((dir + "/ready_" + sn).c_str(), F_OK)) usleep(1000);  // sd.cpp writes it after all inputs of the step are complete
         double ts = now();
         auto xb = readfile(dir + "/x_" + sn + ".bin");
         auto xs = readshape(dir + "/x_" + sn + ".shape");  // ggml order: W,H,C
         int Wd = (int)xs[0], H = (int)xs[1], gw = Wd / 2, gh = H / 2, T = gh * gw;
-        const int Wf = Wd, Hf = H; const int fct = n < (int)lowF.size() ? lowF[n] : 1; const bool lr = fct > 1 && (H % (2 * fct) == 0) && (Wd % (2 * fct) == 0) && (((H / 2 / fct) * (Wd / 2 / fct)) % 32 == 0);   // the low-res token count must also be a multiple of 32
+        const int Wf = Wd, Hf = H; const int fct = si < (int)lowF.size() ? lowF[si] : 1; const bool lr = fct > 1 && (H % (2 * fct) == 0) && (Wd % (2 * fct) == 0) && (((H / 2 / fct) * (Wd / 2 / fct)) % 32 == 0);   // the low-res token count must also be a multiple of 32
         f32 t = ((const f32*)readfile(dir + "/t_" + sn + ".bin").data())[0];
-        if (ctx512.empty()) {
+        if (ctxt[kp].empty()) {
             auto hb = readfile(dir + "/ctx_" + sn + ".bin");
             auto idb = readfile(dir + "/ids_" + sn + ".bin");
             auto wb = readfile(dir + "/w_" + sn + ".bin");
@@ -423,10 +425,10 @@ int main(int argc, char** argv) {
             ctx512 = adapter((const f32*)hb.data(), S, (const int32_t*)idb.data(), (const f32*)wb.data(), L);
             fprintf(stderr, "animad: adapter S=%d L=%d %.2fs\n", S, L, now() - ta);
             if (test) { writefile(dir + "/ctx_adapter.bin", ctx512.data(), ctx512.size() * 4); return; }
-            std::vector<f32> ct((size_t)1024 * 512);
-            for (int i = 0; i < 512; i++) for (int c = 0; c < 1024; c++) ct[(size_t)c * 512 + i] = ctx512[(size_t)i * 1024 + c];
-            writefile(ph + "/st_ctx.raw", ct.data(), ct.size() * 4);
-        }
+            ctxt[kp].assign((size_t)1024 * 512, 0.f);
+            for (int i = 0; i < 512; i++) for (int c = 0; c < 1024; c++) ctxt[kp][(size_t)c * 512 + i] = ctx512[(size_t)i * 1024 + c];
+            writefile(ph + "/st_ctx.raw", ctxt[kp].data(), ctxt[kp].size() * 4);
+        } else if (cm > 1) writefile(ph + "/st_ctx.raw", ctxt[kp].data(), ctxt[kp].size() * 4);
         // timestep embedding
         std::vector<f32> tp(D), emb(D), lora(6144), tmp(D);
         for (int i = 0; i < D / 2; i++) { f32 a = t * expf(-logf(10000.f) * i / (D / 2)); tp[i] = cosf(a); tp[i + D / 2] = sinf(a); }
@@ -445,7 +447,7 @@ int main(int argc, char** argv) {
             xlow.assign((size_t)16 * Hl * Wl, 0.f);
             for (int c = 0; c < 16; c++) for (int y = 0; y < Hl; y++) for (int x = 0; x < Wl; x++) {
                 double sn = 0, sd = 0;
-                for (int a = 0; a < fct; a++) for (int b = 0; b < fct; b++) { size_t i = ((size_t)c * Hf + y * fct + a) * Wf + x * fct + b; sn += nfull[i]; sd += dhatf[i]; }
+                for (int a = 0; a < fct; a++) for (int b = 0; b < fct; b++) { size_t i = ((size_t)c * Hf + y * fct + a) * Wf + x * fct + b; sn += nfull[i]; if (t < 0.999f) sd += (xin[i] - t * nfull[i]) / (1 - t); }   // x0 estimate from the state itself: x = (1-t)*x0 + t*noise (holds for both CFG passes)
                 xlow[((size_t)c * Hl + y) * Wl + x] = (f32)((1 - t) * sd / (fct * fct) + t * sn / fct);   // noise mean * fct keeps unit variance
             }
             Wd = Wl; H = Hl; gw = Wd / 2; gh = H / 2; T = gh * gw;
@@ -498,7 +500,7 @@ int main(int argc, char** argv) {
         for (int gy = 0; gy < gh; gy++) for (int gx = 0; gx < gw; gx++) for (int a = 0; a < 2; a++) for (int b = 0; b < 2; b++) for (int c = 0; c < 16; c++)
             out[((size_t)c * H + gy * 2 + a) * Wd + gx * 2 + b] = y[(size_t)(gy * gw + gx) * 64 + (a * 2 + b) * 16 + c];
         if (lr) {
-            double tn = sig[n + 1], dt = t - tn;
+            double tn = sig[si + 1], dt = t - tn;
             std::vector<f32> dl((size_t)16 * H * Wd);   // x0 estimate (low-res) = x_t - t*v
             for (size_t i = 0; i < dl.size(); i++) dl[i] = xlow[i] - t * out[i];
             std::vector<f32> vf((size_t)16 * Hf * Wf);
@@ -516,10 +518,10 @@ int main(int argc, char** argv) {
             }
             out.swap(vf);
         }
-        if (const char* hm = getenv("ANIMAD_HOME")) if ((n < steps - 1 || getenv("ANIMA_PREVIEW_ALL")) && !getenv("ANIMA_NOPREVIEW")) {   // preview: the x0 estimate x - t*v (DiT-space latent [16][H][W]) for the app, written atomically
+        if (const char* hm = getenv("ANIMAD_HOME")) if ((kp == 0 && (si < steps - 1 || getenv("ANIMA_PREVIEW_ALL"))) && !getenv("ANIMA_NOPREVIEW")) {   // preview: the x0 estimate x - t*v (DiT-space latent [16][H][W]) for the app, written atomically
             std::vector<f32> xo((size_t)16 * Hf * Wf); for (size_t i = 0; i < xo.size(); i++) xo[i] = xfull[i] - t * out[i];
             const std::string pf = std::string(hm) + "/prev.bin", tmp = pf + ".tmp"; FILE* f = fopen(tmp.c_str(), "wb");
-            if (f) { int hdr[4] = {Hf, Wf, 16, n}; fwrite(hdr, 4, 4, f); fwrite(xo.data(), 4, xo.size(), f); fclose(f); rename(tmp.c_str(), pf.c_str()); }
+            if (f) { int hdr[4] = {Hf, Wf, 16, si}; fwrite(hdr, 4, 4, f); fwrite(xo.data(), 4, xo.size(), f); fclose(f); rename(tmp.c_str(), pf.c_str()); }
         }
         writefile(dir + "/out_" + sn + ".bin", out.data(), out.size() * 4);
         writefile(dir + "/out_" + sn + ".bin.done", "", 0);
@@ -593,9 +595,9 @@ int main(int argc, char** argv) {
                     std::string rd = dir + "/" + nm;
                     if (access((rd + "/start").c_str(), F_OK) || !access((rd + "/finished").c_str(), F_OK)) continue;
                     auto sb = readfile(rd + "/start");
-                    int st = atoi(std::string(sb.begin(), sb.end()).c_str());
+                    int st = 0, cmv = 1; sscanf(std::string(sb.begin(), sb.end()).c_str(), "%d %d", &st, &cmv);   // "start": steps [calls per step]
                     double tr = now();
-                    handle(rd, st > 0 ? st : 4, rd + "/vae");
+                    handle(rd, st > 0 ? st : 4, rd + "/vae", cmv == 2 ? 2 : 1);
                     writefile(rd + "/finished", "", 0);
                     fprintf(stderr, "animad: request %s done in %.1fs\n", nm.c_str(), now() - tr);
                     did = true;
@@ -605,7 +607,7 @@ int main(int argc, char** argv) {
             if (!access((dir + "/quit").c_str(), F_OK)) break;
         }
     } else {
-        handle(dir, steps, getenv("SD_VAE_DIR") ? getenv("SD_VAE_DIR") : "");
+        handle(dir, steps, getenv("SD_VAE_DIR") ? getenv("SD_VAE_DIR") : "", 1);
     }
     if (!vae.empty()) { fprintf(vae[0].in, "quit\n"); fflush(vae[0].in); }
     if (!te.empty()) { fprintf(te[0].in, "quit\n"); fflush(te[0].in); }

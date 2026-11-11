@@ -17,7 +17,7 @@ void power_max(void *);
 
 typedef uint16_t u16;
 #define T16 1024          /* halfwords per h16 tile */
-#define VT_TAB (7u << 20) /* tables at the top 1 MB of VTCM */
+#define VT_TAB 0x7B0000u   /* tables (about 260 KB) at the very top of the 8 MB VTCM: the attention may use everything below (up to 231 key slabs = 7392 tokens) */
 
 static u16 *g_et, *g_t2; static HVX_Vector *g_scr;   /* tables + per-worker gather scratch */
 

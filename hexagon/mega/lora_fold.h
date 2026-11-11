@@ -16,7 +16,9 @@
 #include <cmath>
 #include <functional>
 #include <thread>
-#include <unistd.h>
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#endif
 #include <vector>
 #include "blk_wlayout.h"
 
@@ -107,14 +109,41 @@ static int lora_source(int mb, int model_blocks, int lora_n) {
 // operator() gives the final delta (strength and scale included).
 struct Delta {
   int N = 0, K = 0, r = 0; float sc = 1;
-  std::vector<float> B, At;     // low rank: B [N][r], A transposed [K][r]
+  std::vector<float> B, At, A;  // low rank: B [N][r], A transposed [K][r] (per element), A [r][K] (per tile)
   std::vector<float> full;      // dense delta [N][K] (LoHa), already scaled
   std::vector<float> W1, W2; int n2 = 0, k1 = 0, k2 = 0;   // LoKr: kron(W1 [N/n2][k1], W2 [n2][k2]) * sc
   int kind = 0;                 // 0 low rank, 1 dense, 2 kron
+  // 32 x 32 block of the delta at (n0, k0): for every row the rank terms are added as contiguous vectors over k (what the CPU does well), instead of one dot product per element
+  inline void tile(int n0, int k0, float (&o)[32][32]) const {
+    if (kind != 0 || A.empty()) { for (int c = 0; c < 32; c++) for (int k = 0; k < 32; k++) o[c][k] = (*this)(n0 + c, k0 + k); return; }
+#if defined(__aarch64__)
+    // register blocking: 4 rows x 16 columns of accumulators (16 NEON registers); every loaded row piece of A serves 4 rows, every B value 16 columns
+    for (int c0 = 0; c0 < 32; c0 += 4) for (int kh = 0; kh < 2; kh++) {
+      float32x4_t acc[4][4]; for (int j = 0; j < 4; j++) for (int v = 0; v < 4; v++) acc[j][v] = vdupq_n_f32(0.f);
+      const float* bp = &B[(size_t)(n0 + c0) * r]; const float* ap = &A[k0 + kh * 16];
+      for (int i = 0; i < r; i++, ap += K) {
+        const float32x4_t a0 = vld1q_f32(ap), a1 = vld1q_f32(ap + 4), a2 = vld1q_f32(ap + 8), a3 = vld1q_f32(ap + 12);
+        for (int j = 0; j < 4; j++) { const float32x4_t b = vdupq_n_f32(bp[(size_t)j * r + i]); acc[j][0] = vfmaq_f32(acc[j][0], a0, b); acc[j][1] = vfmaq_f32(acc[j][1], a1, b); acc[j][2] = vfmaq_f32(acc[j][2], a2, b); acc[j][3] = vfmaq_f32(acc[j][3], a3, b); }
+      }
+      for (int j = 0; j < 4; j++) for (int v = 0; v < 4; v++) vst1q_f32(&o[c0 + j][kh * 16 + v * 4], vmulq_n_f32(acc[j][v], sc));
+    }
+#else
+    for (int c = 0; c < 32; c++) {
+      float acc[32]; for (int k = 0; k < 32; k++) acc[k] = 0.f;
+      const float* bn = &B[(size_t)(n0 + c) * r];
+      for (int i = 0; i < r; i++) { const float b = bn[i]; const float* ar = &A[(size_t)i * K + k0]; for (int k = 0; k < 32; k++) acc[k] += b * ar[k]; }
+      for (int k = 0; k < 32; k++) o[c][k] = sc * acc[k];
+    }
+#endif
+  }
   inline float operator()(int n, int k) const {
     if (kind == 1) return full[(size_t)n * K + k];
     if (kind == 2) return sc * W1[(size_t)(n / n2) * k1 + k / k2] * W2[(size_t)(n % n2) * k2 + k % k2];
-    const float* bn = &B[(size_t)n * r]; const float* ak = &At[(size_t)k * r]; float d = 0; for (int i = 0; i < r; i++) d += bn[i] * ak[i]; return sc * d;
+    const float* bn = &B[(size_t)n * r]; const float* ak = &At[(size_t)k * r];
+    float d0 = 0, d1 = 0, d2 = 0, d3 = 0; int i = 0;   // four independent sums: the compiler may vectorise them (one running sum cannot be reordered)
+    for (; i + 3 < r; i += 4) { d0 += bn[i] * ak[i]; d1 += bn[i + 1] * ak[i + 1]; d2 += bn[i + 2] * ak[i + 2]; d3 += bn[i + 3] * ak[i + 3]; }
+    for (; i < r; i++) d0 += bn[i] * ak[i];
+    return sc * ((d0 + d1) + (d2 + d3));
   }
 };
 static std::vector<float> mm(const std::vector<float>& a, int n, int r, const std::vector<float>& b, int k) {   // [n][r] @ [r][k]
@@ -137,6 +166,7 @@ static int lora_delta(const LoraFile& L, const std::vector<std::string>& bases, 
       d.sc = strength * (alpha > 0 ? alpha / d.r : 1.f);
       d.At.assign((size_t)K * d.r, 0.f);
       for (int i = 0; i < d.r; i++) for (int k = 0; k < K; k++) d.At[(size_t)k * d.r + i] = A[(size_t)i * K + k];
+      d.A = std::move(A);
       return 1;
     }
     if (L.has(bs + ".lokr_w1") || L.has(bs + ".lokr_w1_a")) {
@@ -172,6 +202,7 @@ static std::vector<std::string> lora_bases(int b, const std::string& us, const s
 }
 // adds block b of the LoRA to one block's weights (fp16 crouton tiles, or q8 tiles when q8) and to its adaLN modulation (fp16 [out][in] after the
 // tiles); returns the number of matrices changed (-1: shapes do not fit)
+static int g_fold_threads = 4;   // threads inside one block fold (megarun lowers it when it folds several blocks at once)
 static int lora_fold_block(const LoraFile& L, float strength, int b, uint8_t* w, bool q8 = false) {
   struct M { const char* name; uint32_t off; int K, N; };   // K = in features, N = out features (the file holds W^T [K][N] as tiles)
   static const M mats[10] = {{"self_attn_q_proj", W_SQ, 2048, 2048}, {"self_attn_k_proj", W_SK, 2048, 2048}, {"self_attn_v_proj", W_SV, 2048, 2048}, {"self_attn_output_proj", W_SO, 2048, 2048},
@@ -201,12 +232,35 @@ static int lora_fold_block(const LoraFile& L, float strength, int b, uint8_t* w,
       // fp16 tile's order; dequantise, add the delta, quantise again the same way (per-column max/127 as fp16, round to nearest even, clamp +-127)
       uint8_t* Wq = w + WQ(m.off);
       job = [&, Wq](int nb0, int nb1) {
-        float a[1024];
+        float a[1024], dt[32][32];
         for (int nb = nb0; nb < nb1; nb++) for (int kb = 0; kb < KB; kb++) {
+          delta.tile(nb * 32, kb * 32, dt);
           uint8_t* rec = Wq + ((size_t)nb * KB + kb) * 1152; __fp16* sv = (__fp16*)rec; uint8_t* q = rec + 128;
+#ifdef __aarch64__
+          static const bool scalar_only = getenv("LORA_SCALAR") != nullptr;
+          if (!scalar_only) {   // NEON: same arithmetic as below (fp32 mul/add, fp16 rounding, IEEE divide, round-to-nearest-even)
+            float dtT[16][64], ar[16][64], sfv[64], mxv[64] = {0};
+            for (int c = 0; c < 32; c++) for (int k = 0; k < 32; k++) dtT[k >> 1][c * 2 + (k & 1)] = dt[c][k];
+            for (int r = 0; r < 16; r++) for (int j = 0; j < 64; j += 4) {
+              int32x4_t qi = vsubq_s32(vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(vmovl_u8(vld1_u8(q + r * 64 + j))))), vdupq_n_s32(128));
+              float32x4_t av = vaddq_f32(vmulq_f32(vcvtq_f32_s32(qi), vcvt_f32_f16(vld1_f16((const float16_t*)sv + j))), vld1q_f32(&dtT[r][j]));
+              av = vcvt_f32_f16(vcvt_f16_f32(av)); vst1q_f32(&ar[r][j], av); vst1q_f32(&mxv[j], vmaxq_f32(vld1q_f32(&mxv[j]), vabsq_f32(av)));
+            }
+            for (int c = 0; c < 32; c++) {
+              float v = std::max(mxv[2 * c], mxv[2 * c + 1]) / 127.0f; __fp16 s = (__fp16)(v == 0 ? 1.0f : v);
+              sv[2 * c] = sv[2 * c + 1] = s; sfv[2 * c] = sfv[2 * c + 1] = (float)s;
+            }
+            for (int r = 0; r < 16; r++) for (int j = 0; j < 64; j += 4) {
+              int32x4_t qv = vcvtnq_s32_f32(vdivq_f32(vld1q_f32(&ar[r][j]), vld1q_f32(&sfv[j])));
+              qv = vaddq_s32(vmaxq_s32(vminq_s32(qv, vdupq_n_s32(127)), vdupq_n_s32(-127)), vdupq_n_s32(128));
+              vst1_lane_u32((uint32_t*)(q + r * 64 + j), vreinterpret_u32_u8(vmovn_u16(vcombine_u16(vmovn_u32(vreinterpretq_u32_s32(qv)), vdup_n_u16(0)))), 0);   // exactly 4 bytes
+            }
+            continue;
+          }
+#endif
           for (int r16 = 0; r16 < 16; r16++) for (int c = 0; c < 32; c++) for (int p = 0; p < 2; p++) {
             int i = (r16 * 32 + c) * 2 + p;
-            a[i] = (float)((int)q[i] - 128) * (float)sv[2 * c] + delta(nb * 32 + c, kb * 32 + r16 * 2 + p);
+            a[i] = (float)((int)q[i] - 128) * (float)sv[2 * c] + dt[c][r16 * 2 + p];
           }
           for (int c = 0; c < 32; c++) {
             float mx = 0; for (int r16 = 0; r16 < 16; r16++) for (int p = 0; p < 2; p++) mx = std::max(mx, std::fabs((float)(__fp16)a[(r16 * 32 + c) * 2 + p]));
@@ -219,7 +273,7 @@ static int lora_fold_block(const LoraFile& L, float strength, int b, uint8_t* w,
         }
       };
     }
-    const int nt = 4, NB = m.N / 32; std::vector<std::thread> th;
+    const int nt = g_fold_threads, NB = m.N / 32; std::vector<std::thread> th;
     for (int i = 0; i < nt; i++) th.emplace_back(job, NB * i / nt, NB * (i + 1) / nt);
     for (auto& x : th) x.join();
     done++;

@@ -11,6 +11,16 @@ static Layout make_layout(int ntok, int extra_slabs, bool rows) {   // hid 4096;
   L.total = off; return L;
 }
 
+// ------------------------------------------------------------------ prefix K/V file helpers (the prefix cache is read layer by layer instead of living in RAM)
+static void free_buf(Buf& b) { if (b.p) { unmap_buf(b); rpcmem_free(b.p); b.p = nullptr; b.mapped = false; } }
+static bool kv_write(int fd, off_t off, const uint8_t* p, size_t n) { size_t d = 0; while (d < n) { ssize_t r = pwrite(fd, p + d, n - d, off + d); if (r <= 0) return false; d += r; } return true; }
+static bool kv_read(int fd, off_t off, uint8_t* p, size_t n) {   // 4 parallel preads (8 MB chunks)
+  const size_t chunk = 8u << 20; std::atomic<size_t> next(0); std::atomic<bool> bad(false);
+  auto work = [&] { for (;;) { size_t o = next.fetch_add(chunk); if (o >= n) break; size_t len = std::min(chunk, n - o), d = 0; while (d < len) { ssize_t r = pread(fd, p + o + d, len - d, off + o + d); if (r <= 0) { bad = true; return; } d += r; } } };
+  std::vector<std::thread> th; for (int i = 0; i < 3; i++) th.emplace_back(work); work(); for (auto& t : th) t.join();
+  return !bad.load();
+}
+
 // ------------------------------------------------------------------ state
 static remote_handle64 g_h = 0;
 static Glue g_glue; static uint8_t* g_embd = nullptr; static size_t g_embd_len = 0; static std::string g_dir;
@@ -160,6 +170,7 @@ static bool load_edit(const std::vector<int>& ids, EditIn& e, bool need_vit = tr
     if (!vit_features(px, m.hc, m.wc, m.pooled, m.ds)) return false;
     if (j == 0 && getenv("QWEN_DUMP_VIT")) { FILE* g = fopen(getenv("QWEN_DUMP_VIT"), "wb"); fwrite(m.pooled.data(), 4, m.pooled.size(), g); for (int i = 0; i < 3; i++) fwrite(m.ds[i].data(), 4, m.ds[i].size(), g); fclose(g); }
   }
+  free_buf(g_blobV); g_V_ntok = -1;   // the ViT blob is not needed any more
   return true;
 }
 static void add_rows_x32(f32* X, int row0, int nrows, const f32* feat) {   // X x32 tiles [slab][128 cb][32][32]: rows row0.. += feat[r][4096]
@@ -169,6 +180,7 @@ static void add_rows_x32(f32* X, int row0, int nrows, const f32* feat) {   // X 
 
 // ------------------------------------------------------------------ text encoder (Qwen3-VL-8B, 36 layers) on the NPU
 static bool encode_text(const std::vector<int>& ids, int drop, std::vector<f32>& tx, const EditIn* ed = nullptr) {   // tx [T-drop][4096] = last layer output before the final norm
+  if (!g_blobTE.p) { g_blobTE = make_buf(g_LT.total, true); if (!g_blobTE.p) return false; memset(g_blobTE.p, 0, g_LT.total); }   // allocated for the text phase only
   const int T = (int)ids.size(); const int ntokT = (T + 31) / 32 * 32, ns = ntokT / 32; uint8_t* blob = g_blobTE.p; const Layout& L = g_LT;
   double t0 = now();
   std::vector<f32> emb((size_t)T * 4096);
@@ -207,6 +219,7 @@ static bool encode_text(const std::vector<int>& ids, int drop, std::vector<f32>&
   sync_inval(g_blobTE);
   std::vector<f32> rows((size_t)T * 4096); x32_to_rows((const f32*)(blob + L.meta[M_X]), T, 4096, rows.data());
   tx.assign(rows.begin() + (size_t)drop * 4096, rows.end());
+  free_buf(g_blobTE);
   fprintf(stderr, "te: %.2fs (%d tokens, %d kept)\n", now() - t0, T, T - drop);
   return true;
 }
@@ -260,7 +273,12 @@ static void tx_cache_save(uint64_t key, const std::vector<f32>& tx) {
 }
 static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, unsigned seed, int steps, const std::string& outz) {
   double tall = now(); std::vector<f32> tx;
-  const f32 SIG[5] = {1.0f, 0.95418f, 0.89508f, 0.704534f, 0.0f};
+  static const f32 SIG4[5] = {1.0f, 0.95418f, 0.89508f, 0.704534f, 0.0f}, SIG8[9] = {1.0f, 0.978453f, 0.95418f, 0.926626f, 0.89508f, 0.845148f, 0.704534f, 0.414568f, 0.0f};   // 4: with the Lightning LoRA, 8: the schedule shipped with plain Turbo
+  // sigma schedule: the 4-step (Lightning) or 8-step (plain Turbo) table, resampled to the number of steps asked for (QWEN_SCHED = the table of the LoRA in use; steps = table length gives it back exactly)
+  const char* sc = getenv("QWEN_SCHED"); const int sched = sc && atoi(sc) > 0 ? (atoi(sc) >= 8 ? 8 : 4) : (steps == 8 ? 8 : 4); const f32* tab = sched == 8 ? SIG8 : SIG4; const int tn = sched;
+  std::vector<f32> sigv(steps + 1);
+  for (int k = 0; k <= steps; k++) { double x = (double)k * tn / steps; int i0 = (int)x; if (i0 >= tn) { sigv[k] = tab[tn]; continue; } double fr = x - i0; sigv[k] = (f32)(tab[i0] * (1 - fr) + tab[i0 + 1] * fr); }
+  const f32* SIG = sigv.data();
   const int h = Hpx / 16, w = Wpx / 16, N = h * w;
   if (getenv("QWEN_TX")) { const int Tt0 = (int)ids.size() - drop; if (!readraw(getenv("QWEN_TX"), tx, (size_t)Tt0 * 4096)) { fprintf(stderr, "QWEN_TX unreadable\n"); return false; } }
   const uint64_t key = tx_key(ids, drop); const bool hit = !getenv("QWEN_TX") && tx_cache_load(key, tx);
@@ -274,8 +292,25 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
   const f32* Wimg = g_glue.f("img_in.weight"); const f32* Wout = g_glue.f("proj_out.weight");
   const int nimg = ed.on ? (int)ed.im.size() : 0; int Lp = Tt; int pst[3] = {0, 0, 0};   // pst[j]: first prefix row of image j
   for (int j = 0; j < nimg; j++) { const EditImg& m = ed.im[j]; pst[j] = m.k0 - drop + (Lp - Tt); if (m.k0 - drop < 0) { fprintf(stderr, "bad edit layout\n"); return false; } Lp += m.Nc - m.nm; }
+  // prefix K/V cache file (QWEN_CACHE): the prefix (text + condition photos) does not depend on the seed or the target size, so a repeat skips the whole prefill pass.
+  // The K/V of the 32 layers (0.5 MB per prefix token) stay on disk and are read one layer at a time while the DSP works: they used to be ~1.5-2.5 GB of RAM.
+  const int ntokP0 = (Lp + 31) / 32 * 32; const size_t kvPre = (size_t)ntokP0 * 4096 * 2; const off_t KVH = 16;
+  const uint64_t pkey = fnv(&Lp, 4, fnv("qwen-prefix-v1", 14, tx_key(ids, drop))); const char* cdir = getenv("QWEN_CACHE"); const std::string pfile = cdir && *cdir ? std::string(cdir) + "/prefix.cache" : std::string(), ptmp = pfile + ".tmp";
+  bool pre_hit = false, kvram = false; int kvfd = -1; std::vector<std::vector<uint8_t>> cK(NLAYER_DIT), cV(NLAYER_DIT);   // cK/cV: only when there is no room for the file
+  auto kvoff = [&](int layer, int vk) { return KVH + ((off_t)layer * 2 + vk) * (off_t)kvPre; };
+  if (!pfile.empty()) {
+    int fd = open(pfile.c_str(), O_RDONLY);
+    if (fd >= 0) { uint64_t k = 0; int l = 0, nt = 0; struct stat st; pre_hit = pread(fd, &k, 8, 0) == 8 && pread(fd, &l, 4, 8) == 4 && pread(fd, &nt, 4, 12) == 4 && k == pkey && l == Lp && nt == ntokP0 && fstat(fd, &st) == 0 && (size_t)st.st_size == (size_t)KVH + (size_t)NLAYER_DIT * 2 * kvPre;
+      if (pre_hit) kvfd = fd; else close(fd); }
+    if (!pre_hit) {
+      struct statvfs sv; const bool room = statvfs(cdir, &sv) == 0 && (double)sv.f_bavail * sv.f_frsize > (double)NLAYER_DIT * 2 * kvPre + (512 << 20);
+      if (room) { kvfd = open(ptmp.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600); if (kvfd >= 0) { if (!kv_write(kvfd, 0, (const uint8_t*)&pkey, 8) || !kv_write(kvfd, 8, (const uint8_t*)&Lp, 4) || !kv_write(kvfd, 12, (const uint8_t*)&ntokP0, 4)) { close(kvfd); kvfd = -1; } } }
+    }
+  }
+  if (kvfd < 0) kvram = true;   // no cache dir / disk full: the old behaviour, K/V in RAM (and no cache file)
+  if (pre_hit) fprintf(stderr, "prefix: cached\n");
   std::vector<f32> pre;
-  if (ed.on) {
+  if (ed.on && !pre_hit) {
     pre.assign((size_t)Lp * 4096, 0.f); int src = 0, dst = 0;   // src: row of tx, dst: row of pre
     for (int j = 0; j < nimg; j++) { const EditImg& m = ed.im[j]; const int tb = m.k0 - drop - src;
       memcpy(&pre[(size_t)dst * 4096], &tx[(size_t)src * 4096], (size_t)tb * 4096 * 4); dst += tb; src += tb + m.nm;
@@ -286,9 +321,12 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
   }
   const int nsP = (Lp + 31) / 32, ntokP = nsP * 32; double posAfter = Tt;
   const int nsI = N / 32;
-  if (g_P_ntok != ntokP) { if (g_blobP.p) { unmap_buf(g_blobP); rpcmem_free(g_blobP.p); } g_LP = make_layout(ntokP, 0, false); g_blobP = make_buf(g_LP.total, true); if (!g_blobP.p) return false; g_P_ntok = ntokP; }
+  g_LP = make_layout(ntokP, 0, false);
+  if (pre_hit) { free_buf(g_blobP); g_P_ntok = -1; }   // a cached prefix needs no prefill blob
+  else if (g_P_ntok != ntokP) { free_buf(g_blobP); g_blobP = make_buf(g_LP.total, true); if (!g_blobP.p) return false; g_P_ntok = ntokP; }
   if (g_D_ntok != N || g_D_extra != nsP) { if (g_blobD.p) { unmap_buf(g_blobD); rpcmem_free(g_blobD.p); } g_LD = make_layout(N, nsP, false); g_blobD = make_buf(g_LD.total, true); if (!g_blobD.p) return false; g_D_ntok = N; g_D_extra = nsP; }
-  memset(g_blobP.p, 0, g_LP.total); memset(g_blobD.p, 0, g_LD.total);
+  if (!pre_hit) memset(g_blobP.p, 0, g_LP.total);
+  memset(g_blobD.p, 0, g_LD.total);
   { std::vector<double> flat((size_t)std::max(Lp, N) * 3); double cur = 0; int i = 0;   // text rows advance (p, p, p); an image block freezes the frame axis at cur, lays h/w out centred, and cur += max(hc, wc)
     for (int j = 0; j < nimg; j++) { const EditImg& m = ed.im[j];
       for (; i < pst[j]; i++) { flat[i * 3] = flat[i * 3 + 1] = flat[i * 3 + 2] = cur; cur += 1; }
@@ -296,29 +334,18 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
       cur += std::max(m.hc, m.wc); }
     for (; i < Lp; i++) { flat[i * 3] = flat[i * 3 + 1] = flat[i * 3 + 2] = cur; cur += 1; }
     posAfter = cur;
-    rope_rows((const double(*)[3])flat.data(), Lp, ntokP, (f32*)(g_blobP.p + g_LP.meta[M_COS]), (f32*)(g_blobP.p + g_LP.meta[M_SIN]));
+    if (!pre_hit) rope_rows((const double(*)[3])flat.data(), Lp, ntokP, (f32*)(g_blobP.p + g_LP.meta[M_COS]), (f32*)(g_blobP.p + g_LP.meta[M_SIN]));
     for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) { const int i2 = y * w + x; flat[i2 * 3] = posAfter; flat[i2 * 3 + 1] = y - (h - h / 2); flat[i2 * 3 + 2] = x - (w - w / 2); }
     rope_rows((const double(*)[3])flat.data(), N, N, (f32*)(g_blobD.p + g_LD.meta[M_COS]), (f32*)(g_blobD.p + g_LD.meta[M_SIN])); }
   std::vector<f32> z((size_t)N * 64);   // tokens [N][64]
   if (getenv("QWEN_Z0")) { if (!readraw(getenv("QWEN_Z0"), z, z.size())) return false; }
   else { std::mt19937 gen(seed); std::normal_distribution<float> nd(0.f, 1.f); for (auto& a : z) a = nd(gen); }
   // text rows -> prefix blob
-  { std::vector<f32> pad((size_t)ntokP * 4096, 0.f); memcpy(pad.data(), ed.on ? pre.data() : tx.data(), (size_t)Lp * 4096 * 4); rows_to_x32(pad.data(), ntokP, 4096, (f32*)(g_blobP.p + g_LP.meta[M_X]), nsP); }
+  if (!pre_hit) { std::vector<f32> pad((size_t)ntokP * 4096, 0.f); memcpy(pad.data(), ed.on ? pre.data() : tx.data(), (size_t)Lp * 4096 * 4); rows_to_x32(pad.data(), ntokP, 4096, (f32*)(g_blobP.p + g_LP.meta[M_X]), nsP); }
+  std::vector<f32>().swap(pre);
   std::vector<f32> mod0, modv, nscale; time_mod(0.f, mod0, nullptr);
-  sync_clean(g_blobP);
-  const size_t kvOwnD = (size_t)N * 4096 * 2, kvPre = (size_t)ntokP * 4096 * 2;
-  std::vector<std::vector<uint8_t>> cK(NLAYER_DIT), cV(NLAYER_DIT);
-  // prefix K/V cache on disk (QWEN_CACHE): the prefix (text + condition photo) does not depend on the seed or the target size, so a repeat skips the whole prefill pass
-  const uint64_t pkey = fnv(&Lp, 4, fnv("qwen-prefix-v1", 14, key)); const char* cdir = getenv("QWEN_CACHE"); const std::string pfile = cdir && *cdir ? std::string(cdir) + "/prefix.cache" : std::string();
-  bool pre_hit = false;
-  if (!pfile.empty()) {
-    FILE* f = fopen(pfile.c_str(), "rb");
-    if (f) { uint64_t k = 0; int l = 0, nt = 0; pre_hit = fread(&k, 8, 1, f) == 1 && fread(&l, 4, 1, f) == 1 && fread(&nt, 4, 1, f) == 1 && k == pkey && l == Lp && nt == ntokP;
-      for (int i = 0; pre_hit && i < NLAYER_DIT; i++) { cK[i].resize(kvPre); cV[i].resize(kvPre); pre_hit = fread(cK[i].data(), 1, kvPre, f) == kvPre && fread(cV[i].data(), 1, kvPre, f) == kvPre; }
-      posix_fadvise(fileno(f), 0, 0, POSIX_FADV_DONTNEED); fclose(f); if (!pre_hit) for (int i = 0; i < NLAYER_DIT; i++) { cK[i].clear(); cV[i].clear(); } }
-    if (pre_hit) fprintf(stderr, "prefix: cached\n");
-  }
-  std::thread prefix_writer;
+  if (!pre_hit) sync_clean(g_blobP);
+  const size_t kvOwnD = (size_t)N * 4096 * 2;
   int metaP[M_NMETA], metaD[M_NMETA]; for (int i = 0; i < M_NMETA; i++) { metaP[i] = g_LP.meta[i]; metaD[i] = g_LD.meta[i]; }
   metaP[M_NW] = metaD[M_NW] = 3; metaP[M_NCB] = metaD[M_NCB] = 128; metaP[M_MODE] = metaD[M_MODE] = 40;
   metaP[M_NTOK] = ntokP; metaP[M_NVALID] = Lp; metaP[M_NPRE] = 0; metaP[M_CAUS] = ed.on ? 2 : 1;
@@ -326,6 +353,11 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
   metaD[M_NTOK] = N; metaD[M_NVALID] = N + Lp; metaD[M_NPRE] = nsP; metaD[M_CAUS] = 0; metaD[M_BA] = metaD[M_BB] = metaD[M_B2A] = metaD[M_B2B] = metaD[M_B3A] = metaD[M_B3B] = 0;
   std::vector<std::string> df; for (int k = 0; k < NLAYER_DIT; k++) { char p[512]; snprintf(p, sizeof p, "%s/dit/blk%02d.bin", g_dir.c_str(), k); df.push_back(p); }
   std::vector<f32> rows((size_t)N * 4096), v((size_t)N * 64);
+  // K/V of the next layer is read from the file by a helper thread while the DSP runs the current one (two staging buffers of one layer each)
+  std::vector<uint8_t> kvSt[2]; std::thread kvTh; int kvPendLayer = -1, kvPendSlot = 0, kvSeq = 0; bool kvOk[2] = {true, true};
+  auto kv_start = [&](int layer, int slot) { kvPendLayer = layer; kvPendSlot = slot; kvOk[slot] = true;
+    kvTh = std::thread([&, layer, slot] { kvOk[slot] = kv_read(kvfd, kvoff(layer, 0), kvSt[slot].data(), 2 * kvPre); posix_fadvise(kvfd, kvoff(layer, 0), 2 * kvPre, POSIX_FADV_DONTNEED); }); };
+  if (!kvram) { kvSt[0].resize(2 * kvPre); kvSt[1].resize(2 * kvPre); }
   for (int s = 0; s < steps; s++) {
     double ts = now(); const float sg = SIG[s], sgn = SIG[s + 1];
     time_mod(sg, modv, &nscale);
@@ -334,21 +366,36 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
     rows_to_x32(rows.data(), N, 4096, (f32*)(g_blobD.p + g_LD.meta[M_X]), nsI);
     sync_clean(g_blobD); double tA = now();
     bool ok = stream_files(df, g_te, [&](int k, Buf& b) {
+      uint8_t* dK = g_blobD.p + g_LD.meta[M_K] + kvOwnD; uint8_t* dV = g_blobD.p + g_LD.meta[M_V] + kvOwnD;
       if (s == 0 && !pre_hit) {
         metaP[M_FIRST] = k == 0; metaP[M_REL] = 0;
         if (call(g_LP, metaP, b, 0, g_blobP, mod0.data(), 18432)) return false;
         sync_inval(g_blobP);
-        cK[k].assign(g_blobP.p + g_LP.meta[M_K], g_blobP.p + g_LP.meta[M_K] + kvPre); cV[k].assign(g_blobP.p + g_LP.meta[M_V], g_blobP.p + g_LP.meta[M_V] + kvPre);
+        const uint8_t* sK = g_blobP.p + g_LP.meta[M_K]; const uint8_t* sV = g_blobP.p + g_LP.meta[M_V];
+        if (kvram) { cK[k].assign(sK, sK + kvPre); cV[k].assign(sV, sV + kvPre); memcpy(dK, cK[k].data(), kvPre); memcpy(dV, cV[k].data(), kvPre); }
+        else {
+          if (!kv_write(kvfd, kvoff(k, 0), sK, kvPre) || !kv_write(kvfd, kvoff(k, 1), sV, kvPre)) { fprintf(stderr, "prefix cache write failed\n"); return false; }
+          memcpy(dK, sK, kvPre); memcpy(dV, sV, kvPre);
+          sync_file_range(kvfd, kvoff(k, 0), 2 * kvPre, SYNC_FILE_RANGE_WRITE);   // start the write-back; older layers are dropped from the page cache below
+          if (k >= 2) { sync_file_range(kvfd, kvoff(k - 2, 0), 2 * kvPre, SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER); posix_fadvise(kvfd, kvoff(k - 2, 0), 2 * kvPre, POSIX_FADV_DONTNEED); }
+          if (k == NLAYER_DIT - 1 && steps > 1) kv_start(0, kvSeq++ & 1);   // layer 0 for the next step
+        }
+      } else if (kvram) { memcpy(dK, cK[k].data(), kvPre); memcpy(dV, cV[k].data(), kvPre); }
+      else {
+        if (kvPendLayer != k) { if (kvTh.joinable()) kvTh.join(); kv_start(k, kvSeq++ & 1); }   // not prefetched (first layer of a cached run)
+        kvTh.join(); kvPendLayer = -1; const int cur = kvPendSlot;
+        if (!kvOk[cur]) { fprintf(stderr, "prefix cache read failed\n"); return false; }
+        if (!(s == steps - 1 && k == NLAYER_DIT - 1)) kv_start((k + 1) % NLAYER_DIT, cur ^ 1);   // the next layer is read while this one runs on the DSP
+        memcpy(dK, kvSt[cur].data(), kvPre); memcpy(dV, kvSt[cur].data() + kvPre, kvPre);
       }
-      memcpy(g_blobD.p + g_LD.meta[M_K] + kvOwnD, cK[k].data(), kvPre); memcpy(g_blobD.p + g_LD.meta[M_V] + kvOwnD, cV[k].data(), kvPre); sync_clean(g_blobD);
+      sync_clean(g_blobD);
       metaD[M_FIRST] = k == 0; metaD[M_REL] = k == NLAYER_DIT - 1;
       return call(g_LD, metaD, b, 0, g_blobD, modv.data(), 18432) == 0; });
-    if (!ok) return false;
-    if (s == 0 && !pre_hit && !pfile.empty()) prefix_writer = std::thread([&] {   // written while the next steps run
-      const std::string tmp = pfile + ".tmp"; FILE* f = fopen(tmp.c_str(), "wb"); if (!f) return;
-      int l = Lp, nt = ntokP; bool good = fwrite(&pkey, 8, 1, f) == 1 && fwrite(&l, 4, 1, f) == 1 && fwrite(&nt, 4, 1, f) == 1;
-      for (int i = 0; good && i < NLAYER_DIT; i++) { good = fwrite(cK[i].data(), 1, kvPre, f) == kvPre && fwrite(cV[i].data(), 1, kvPre, f) == kvPre; if (i % 4 == 3) { fflush(f); fdatasync(fileno(f)); posix_fadvise(fileno(f), 0, 0, POSIX_FADV_DONTNEED); } }   // keep the page cache from growing by the whole file (low-memory kills)
-      fclose(f); if (good) rename(tmp.c_str(), pfile.c_str()); else remove(tmp.c_str()); });
+    if (!ok) { if (kvTh.joinable()) kvTh.join(); if (kvfd >= 0) { close(kvfd); if (!pre_hit) remove(ptmp.c_str()); } return false; }
+    if (s == 0 && !pre_hit) {
+      free_buf(g_blobP); g_P_ntok = -1;   // the prefill blob is done
+      if (!kvram) { for (int k = std::max(0, NLAYER_DIT - 2); k < NLAYER_DIT; k++) { sync_file_range(kvfd, kvoff(k, 0), 2 * kvPre, SYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER); posix_fadvise(kvfd, kvoff(k, 0), 2 * kvPre, POSIX_FADV_DONTNEED); } }
+    }
     sync_inval(g_blobD); double tB = now();
     x32_to_rows((const f32*)(g_blobD.p + g_LD.meta[M_X]), N, 4096, rows.data());
     par_for(N / 16 + 1, [&](int blk) { for (int t = blk * 16; t < std::min(N, blk * 16 + 16); t++) {
@@ -365,7 +412,8 @@ static bool generate(const std::vector<int>& ids, int drop, int Hpx, int Wpx, un
     printf("step %d %.0f\n", s, (now() - ts) * 1000); fflush(stdout);
   }
   const f32* mean = g_glue.f("vae.mean"); const f32* sd = g_glue.f("vae.std");
-  if (prefix_writer.joinable()) prefix_writer.join();
+  if (kvTh.joinable()) kvTh.join();
+  if (kvfd >= 0) { close(kvfd); if (!pre_hit && rename(ptmp.c_str(), pfile.c_str())) remove(ptmp.c_str()); }   // a finished cache file replaces the old one
   std::vector<f32> zo((size_t)64 * N);   // [64][h][w], de-normalised
   for (int t = 0; t < N; t++) for (int c = 0; c < 64; c++) zo[(size_t)c * N + t] = z[(size_t)t * 64 + c] * sd[c] + mean[c];
   FILE* f = fopen(outz.c_str(), "wb"); fwrite(zo.data(), 4, zo.size(), f); fclose(f);
@@ -387,15 +435,17 @@ int main(int argc, char** argv) {
     if (cmd == "load") {
       ss >> g_dir; double t0 = now();
       if (!g_glue.load(g_dir + "/glue.bin")) { printf("error glue\n"); continue; }
+      if (const char* ql = getenv("QWEN_LORA")) if (*ql) {   // a LoRA on the plain pack: slot overlays (blkNN.ovl) + the host layers it touches (glueL.bin overrides tensors of glue.bin)
+        g_ovl = ql; const std::string gl = g_ovl + "/glueL.bin"; if (access(gl.c_str(), R_OK) == 0 && !g_glue.load(gl)) { printf("error glueL\n"); continue; } }
       { int fd = open((g_dir + "/embd.q4k").c_str(), O_RDONLY); if (fd < 0) { printf("error embd\n"); continue; } struct stat st; fstat(fd, &st); g_embd_len = st.st_size; g_embd = (uint8_t*)mmap(nullptr, g_embd_len, PROT_READ, MAP_PRIVATE, fd, 0); close(fd); }
       g_te[0] = make_buf(TE_BUF); g_te[1] = make_buf(TE_BUF); g_all.push_back(&g_te[0]); g_all.push_back(&g_te[1]); if (!g_te[0].p || !g_te[1].p) { printf("error tebuf\n"); continue; }
-      g_LT = make_layout(MAXT, 0, true); g_blobTE = make_buf(g_LT.total, true); if (!g_blobTE.p) { printf("error teblob\n"); continue; } memset(g_blobTE.p, 0, g_LT.total);
+      g_LT = make_layout(MAXT, 0, true);
       printf("loaded %.1f\n", now() - t0); continue;
     }
     if (cmd == "gen") {   // gen IDS.i32 DROP H W SEED STEPS OUT.z
       std::string idsf, outz; int drop, H, W, steps; unsigned seed; ss >> idsf >> drop >> H >> W >> seed >> steps >> outz;
       std::vector<int> ids; { FILE* f = fopen(idsf.c_str(), "rb"); if (!f) { printf("error ids\n"); continue; } fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET); ids.resize(n / 4); if (fread(ids.data(), 4, ids.size(), f) != ids.size()) {} fclose(f); }
-      if (ids.size() <= (size_t)drop || (int)ids.size() > MAXT || H % 16 || W % 16 || ((H / 16) * (W / 16)) % 32 || (H / 16) * (W / 16) > 6144 || steps < 1 || steps > 4) { printf("error args\n"); continue; }
+      if (ids.size() <= (size_t)drop || (int)ids.size() > MAXT || H % 16 || W % 16 || ((H / 16) * (W / 16)) % 32 || (H / 16) * (W / 16) > 6144 || steps < 1 || steps > 50) { printf("error args\n"); continue; }
       if (!generate(ids, drop, H, W, seed, steps, outz)) printf("error gen\n");
     }
   }

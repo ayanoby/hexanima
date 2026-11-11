@@ -15,22 +15,23 @@ A 512x768 picture takes about **7 s** with the 2B models and **12 s** with the 2
 It can also run **MOSS-Image 5B** (OpenMOSS, Apache-2.0), a larger model that you prompt with plain sentences. Its text encoder (Qwen3.5-9B), the transformer and the decoder all run on the NPU:
 about 30 s for 512x768 and about 80 s for 1 Mpx; any size with sides that are multiples of 16 (up to 6144 patches). It is an optional ~14 GB download.
 
-And **Qwen-Image 2.1 Turbo** (Qwen team, with the 4-step Lightning adapter by LightX2V): it draws legible text inside pictures, follows long prompts, and **edits your photos by a prompt** ("make the sky a sunset"). The text encoder (Qwen3-VL-8B), its vision tower, the 7B transformer and the VAE all run on the NPU.
+And **Qwen-Image 2.1 Turbo** (Qwen team; with the 4-step Lightning LoRA by LightX2V or without it, 8 steps): it draws legible text inside pictures, follows long prompts, and **edits your photos by a prompt** ("make the sky a sunset"). The text encoder (Qwen3-VL-8B), its vision tower, the 7B transformer and the VAE all run on the NPU.
 About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below.
 And **Mage-Flow-Edit-Turbo** (Microsoft, MIT): a 4B model that draws and **edits photos by a prompt** in about 12 seconds a picture (a text encoder, a ViT, a 12-block transformer and the VAE, all on the NPU). The weights are about 8.7 GB (optional download) and are streamed from storage for every picture.
 
 ## Features
 
 - Fully offline after the models are downloaded; nothing leaves the phone.
-- Four MiaoMiao models (2B fp16 and 2.9B q8) with a one-tap model manager: resumable downloads, sha256 verification, delete to free space.
+- Base models only, speed from a LoRA file you pick: a **Turbo LoRA** row under every model (any compatible `.safetensors`, a strength slider, a check at once) and the **number of steps entered by hand** (the LoRA's own step count, usually 4 or 8). Anima, Qwen-Image 2.1 Turbo and MOSS-Image all work this way.
+- Anima: MiaoMiao models in 2B and 2.9B, base checkpoints with CFG and a negative prompt, or with a Turbo LoRA (Anima Turbo v1.1, TURBO V4 and others) for 4 steps; one-tap model manager with search, resumable downloads, sha256 verification, delete to free space.
 - Size picker with portrait / landscape / square presets (all multiples of 16) and custom sizes, seed, batch of several pictures, stop button.
 - History with favourites, trash, multi-select, share and save; settings are stored in the PNG, so any picture can be reopened with its prompt and seed.
 - Prompt tag suggestions (Danbooru tags), templates, quality-tag prefix (Anima models only; MOSS-Image takes plain sentences and gets no tags).
 - Photo editing with Qwen-Image or Mage-Flow: pick a photo, write what to change; the result keeps the photo's shape (Qwen reduces the photo to about 0.4 Mpx).
 - Live preview: after every step the picture-to-be shows on the main screen (the current x0 estimate of the latent turned into colours by a small fitted linear map, no VAE run, a few milliseconds).
 - Qwen-Image takes up to three pictures at once ("the girl from picture 1 stands in front of the cafe from picture 2"): add them under the photo, each is reduced so that all of them fit the attention (about 0.3 Mpx each for two, 0.2 Mpx for three).
-- Your own LoRA for MOSS-Image: pick a `.safetensors` file, the app checks it at once (layer names, shapes, rank, data type) and says why if it does not fit; a strength slider (0-2). The LoRA is folded with the built-in 4-step adapter on the phone (about 15 s the first time) and never leaves the device.
-- Your own LoRA for the Anima models too (kohya, diffusers/PEFT, LyCORIS LoKr and LoHa; 28 or 40 blocks): the app checks the file header, folds the LoRA into the block weights when the model loads (the first picture with a new LoRA takes 10-15 s longer, then it is cached) and keeps it as 8-bit blocks. The text-encoder part of a LoRA is not applied. The folding code is based on a pull request by GrimmDev-Glitch.
+- Your own LoRA for MOSS-Image: pick a `.safetensors` file, the app checks it at once (layer names, shapes, rank, data type) and says why if it does not fit; a strength slider (0-2). The LoRA is folded with the 4-step adapter (or replaces the Turbo slot) on the phone (about 15 s the first time) and never leaves the device.
+- Your own LoRA for the Anima models too (kohya, diffusers/PEFT, LyCORIS LoKr and LoHa; 28 or 40 blocks): the app checks the file header, folds the LoRA into the block weights when the model loads (the first picture with a new LoRA set takes about 12-13 s longer, then it is cached; a Turbo LoRA and a regular one fold together) and keeps it as 8-bit blocks. The text-encoder part of a LoRA is not applied. The folding code is based on a pull request by GrimmDev-Glitch.
 - Low-memory mode for the Anima models (on by default below ~9.5 GB of RAM, in Settings): the DiT blocks are streamed from storage through two buffers instead of being pinned in RAM; about 2.5 GB less RAM for the 2.9B models, +1 s per 512x768 picture on a 12 GB phone.
 - Live RAM meter, thermal / battery warnings, the model unloads itself when idle.
 - Light / dark / system themes, notifications, 13 languages (English, Russian, Chinese, Japanese, Korean, Spanish, Portuguese, German, French, Indonesian, Turkish, Vietnamese, Hindi).
@@ -61,7 +62,7 @@ short words usually come out right, longer or secondary text (shop-front boards,
 <p align="center"><sub>"neon sign that says OPEN LATE" (the sign is right, the boards are not) · "title at the top says THE LAST LIBRARY" (title right, subtitle garbled) · "board that says HEXANIMA" (right) · "the words GAME OVER in pixel font" (readable, with small glitches)</sub></p>
 
 **Your own LoRA.** Pick a `.safetensors` file made for MOSS-Image; the app checks it at once (layer names, shapes, rank, data type) and tells you why if it does not fit (a FLUX or SDXL LoRA, a wrong shape, a rank above 128, a text-encoder-only file...). A strength slider goes from 0 to 2.
-The LoRA is folded with the built-in 4-step adapter on the phone (about 15 s the first time for a new LoRA or strength, then cached) and never leaves the device. Left: without a LoRA, right: with a third-party style LoRA from Civitai (same prompt, seed and size; LoRAs stay under their authors' licenses).
+The LoRA is folded with the 4-step adapter (or replaces the Turbo slot) on the phone (about 15 s the first time for a new LoRA or strength, then cached) and never leaves the device. Left: without a LoRA, right: with a third-party style LoRA from Civitai (same prompt, seed and size; LoRAs stay under their authors' licenses).
 
 <p align="center"><img src="docs/screens/quality/moss-lora-compare.jpg" width="640" alt="Without and with a LoRA"></p>
 
@@ -143,7 +144,7 @@ Limits worth knowing: about 8.7 GB of storage, tested on a 12 GB phone only, pic
 
 MOSS-Image, Qwen-Image and Mage-Flow are separate downloads in the same manager (each lives in its own Hugging Face repository with its own `LICENSE` and `NOTICE.md`).
 
-Tips: the models are distilled for 4 steps and use no negative prompt; see **Info** in the app for the other notes.
+Tips: download a base model, pick a Turbo LoRA file under it and set the steps the LoRA was made for (usually 4 or 8); without a Turbo LoRA use more steps (Anima base also takes CFG and a negative prompt). See **Info** in the app for the other notes. Versions before 1.5.0 shipped merged Turbo checkpoints; they are replaced by base + LoRA and can be deleted in the manager.
 
 ## Disclaimer
 
@@ -151,7 +152,7 @@ Tips: the models are distilled for 4 steps and use no negative prompt; see **Inf
 "Anima" and "Cosmos" refer to third-party models, "NVIDIA" and "Qualcomm", "Snapdragon", "Hexagon" are trademarks of their respective owners.
 They are used only to describe what the software works with.
 The models (MiaoMiao Harem / 3D Harem / RealSkin by MIAOKA, based on Anima by CircleStone Labs and NVIDIA Cosmos) stay under their authors' licenses: non-commercial use only.
-The models are made with a turbo (distillation) LoRA merged in: Anima Turbo v1.1 Lora by somedoby for the 2B models and TURBO for ANIMA (V4-29B) by n_Arno for the 2.9B models (both on Civitai). See `THIRD_PARTY.md`.
+Turbo (distillation) LoRAs are separate files that you pick yourself (for example Anima Turbo v1.1 Lora by somedoby, TURBO for ANIMA (V4-29B) by n_Arno, Lightning by LightX2V); they stay under their authors' licenses. See `THIRD_PARTY.md`.
 MOSS-Image, Qwen3.5-9B, the rapid-moss 4-step adapter (darask0, on lodestones' 8-step DMD), the FLUX.2 small decoder (Black Forest Labs) and the Unsloth GGUF quantisations are all under the **Apache License 2.0**; the MOSS-Image pack holds converted copies (the changes are listed in its `NOTICE.md`, also shown in the app under Info -> Licenses).
 Built with Qwen. **Qwen-Image 2.1 Turbo and the Lightning v2-RL adapter (LightX2V; its repository declares no license of its own, so it is treated as a derivative of the Qwen Materials) are under the Qwen Research License Agreement: non-commercial use only**, no redistribution of the model under another name, and the licence text travels with the files. Qwen3-VL-8B (Qwen team) and the Unsloth GGUF quantisations are Apache-2.0. The Qwen-Image pack holds converted copies (changes in its `NOTICE.md`, also in the app under Info -> Licenses). Qwen is a trademark of its owner, used only to name the model.
 Mage-Flow-Edit-Turbo and Mage-VAE (Microsoft) are under the **MIT License**; the Qwen3-VL-4B text encoder and vision tower that ship with it are Apache-2.0. The Mage-Flow pack holds converted copies (changes in its `NOTICE.md`, also in the app under Info -> Licenses).

@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	저메모리 모드 (느림)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	모델 가중치를 RAM에 두지 않고 그림마다 저장소에서 읽습니다. RAM 8 GB 휴대폰에서 필요하며 12 GB에서는 필요 없습니다.
   ·  app %.1f GB	  ·  앱 %.1f GB
+Too large: at most 6144 patches (1536×1024)	너무 큼: 패치 최대 6144개 (1536×1024)
+Compatible: rank %d, %d of %d blocks	호환됨: 랭크 %d, 블록 %d/%d
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	이 LoRA는 다른 모델(FLUX, SDXL 등)용입니다. Anima에는 맞지 않습니다.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	이 파일은 Anima LoRA로 보이지 않습니다: 필요한 레이어(blocks.N.*)가 없습니다.
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	레이어 크기가 Anima와 맞지 않습니다(%s). 모델의 다른 버전용 LoRA일 가능성이 높습니다.
+The LoRA has blocks that Anima does not have (%s).	이 LoRA에는 Anima에 없는 블록이 있습니다(%s).
+All models	모든 모델
+Temperature  battery %.1f °C	온도  배터리 %.1f °C
+  ·  margin before throttling %d%%	  ·  스로틀링까지 여유 %d%%
+Picture %d  ·  %d×%d	이미지 %d  ·  %d×%d
++ Another picture (%d of %d)	+ 다른 이미지 추가 (%d/%d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	이미지: %d개. 프롬프트에서 "이미지 1", "이미지 2"처럼 가리키세요. 예: "이미지 1의 캐릭터가 이미지 2의 장면에 서 있다".
+A .safetensors file for Anima: it is checked as soon as you pick it	Anima용 .safetensors 파일: 선택하면 바로 확인합니다
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: 텍스트 인코더, DiT, VAE는 NPU에서 실행되며 가중치는 이미지마다 저장소에서 읽습니다
+Out of memory	메모리 부족
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	휴대폰 메모리가 부족해 앱이 종료되지 않도록 생성을 중단했습니다. 다른 앱을 닫거나 더 작은 크기(편집 시에는 더 작은 사진)를 선택한 뒤 다시 시도하세요.
+⏹ Stop	⏹ 중지
+Little free memory (%d MB): close other apps, or the generation may stop	여유 메모리가 적음 (%d MB): 다른 앱을 닫으세요. 그렇지 않으면 생성이 멈출 수 있습니다
+Stopped: out of memory	중지됨: 메모리 부족
+Loading the LoRA…	LoRA 불러오는 중…
+For editing the size is at most 1024×768	편집 시 크기는 최대 1024×768입니다
+The prompt is too long for this size: shorten it or pick a smaller size	이 크기에는 프롬프트가 너무 깁니다: 줄이거나 더 작은 크기를 선택하세요
+Generation failed: %s (log files/mage/mage.log)	생성 실패: %s (로그 files/mage/mage.log)
+Base model (no turbo)	기본 모델 (터보 없음)
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	스텝마다 네트워크를 두 번 실행합니다(CFG): 이미지 한 장이 터보 모델보다 10~15배 오래 걸립니다.
+Steps	스텝
+Negative prompt	네거티브 프롬프트
+Mage-Flow notices (changes made)	Mage-Flow 고지 사항 (변경 내용)
+LoRA for Anima	Anima용 LoRA
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo(Microsoft, 4B, MIT 라이선스)는 프롬프트로 이미지를 그리고 사진을 편집하며, 4스텝에 이미지당 약 12초가 걸립니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행되며 다운로드 크기는 약 8.7 GB입니다. 사진을 편집하려면 "사진 편집" 블록에서 사진을 고르고 바꿀 내용을 설명하세요.
+Mage-Flow sizes	Mage-Flow 크기
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	양쪽 변은 16의 배수이고 패치 수(너비/16 × 높이/16)는 32로 나누어떨어져야 합니다. 이미지 생성: 최대 6144 패치, 예: 1536×1024. 편집: 최대 3200 패치, 예: 1024×768 (사진도 계산에 포함되기 때문입니다).
+Today	오늘
+Yesterday	어제
+Menu	메뉴
+Prompt	프롬프트
+Pictures to edit	편집할 이미지
+Size	크기
+Swap	바꾸기
+Random	무작위
+Seed  (−1 = random)	Seed  (−1 = 무작위)
+Pictures per run	한 번에 생성할 장수
+Turbo LoRA strength	터보 LoRA 강도
+Picture 1  ·  %d×%d	이미지 1  ·  %d×%d
+Photo  ·  %d×%d	사진  ·  %d×%d
+Picture 1	이미지 1
+Photo	사진
+Replace	교체
+Picture %d	이미지 %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	프롬프트에서 이미지를 "이미지 1", "이미지 2"처럼 가리키세요. 예: "이미지 1의 캐릭터가 이미지 2의 장면에 서 있다".
+The prompt says what to change, e.g. "make the sky a sunset".	프롬프트에 바꿀 내용을 적으세요. 예: "하늘을 노을로 바꿔 줘".
+the file is larger than 2 GB	파일이 2 GB보다 큽니다
+Which sampler is this LoRA made for?	이 LoRA는 어떤 샘플러용으로 만들어졌나요?
+4 steps (like rapid-moss)	4스텝 (rapid-moss처럼)
+8 steps (like DMD, needs 8 step)	8스텝 (DMD처럼, 8 step 필요)
+8 steps need the MOSS 8 step add-on	8스텝에는 MOSS 8 step 추가 팩이 필요합니다
+4 steps (like Lightning)	4스텝 (Lightning처럼)
+8 steps (like plain Turbo)	8스텝 (일반 Turbo처럼)
+Steps (%d–%d, default %d)	스텝 (%d–%d, 기본 %d)
+Enter a number from %d to %d	%d에서 %d 사이의 숫자를 입력하세요
+Custom value…	직접 입력…
+Enter a number from 1 to 20	1에서 20 사이의 숫자를 입력하세요
+Model catalog	모델 카탈로그
+None	없음
+Pick a file…	파일 선택…
+Turbo LoRA	터보 LoRA
+~%d s	약 %d초
+4 steps · no CFG · a picture in seconds	4스텝 · CFG 없음 · 몇 초 만에 한 장
+20–30 steps · CFG and negative prompt	20–30스텝 · CFG와 네거티브 프롬프트
+plain-sentence prompts, text in pictures	일반 문장으로 설명, 이미지 속 글자
+photo editing, up to 3 pictures	사진 편집, 최대 3장
+4 steps · photo editing	4스텝 · 사진 편집
+Too large: at most 6912 patches (e.g. 1152×1536)	너무 큼: 패치 최대 6912개 (예: 1152×1536)
+Tokens: %d / %d	토큰: %d / %d
+  ·  negative: %d	  ·  네거티브: %d
+  ·  too long	  ·  너무 김
+Loaded on the NPU, generation starts at once	NPU에 로드됨, 생성이 바로 시작됩니다
+Unloaded · loads itself when you generate (~5 s)	언로드됨 · 생성할 때 자동으로 로드됩니다 (약 5초)
+Prompt too long: %d tokens, the limit is %d. Shorten it.	프롬프트가 너무 깁니다: %d토큰, 한도는 %d입니다. 줄여 주세요.
+Preparing the LoRA… (once for this set)	LoRA 준비 중… (이 조합에서 한 번만)
+Preparing the turbo LoRA…	터보 LoRA 준비 중…
+Black (AMOLED)	블랙 (AMOLED)
+Accent colour from the system	시스템 강조 색상
+Taken from the wallpaper (Android 12 and newer)	배경화면에서 가져옴 (Android 12 이상)
+Compatible: rank %d, %d of 32 blocks, %d host layers	호환됨: 랭크 %d, 블록 %d/32, 호스트 레이어 %d
+This LoRA is for another model. It does not fit Qwen-Image.	이 LoRA는 다른 모델용입니다. Qwen-Image에는 맞지 않습니다.
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	이 파일은 Qwen-Image LoRA로 보이지 않습니다: 필요한 레이어(transformer_blocks)가 없습니다.
+Layer sizes do not match Qwen-Image (%s).	레이어 크기가 Qwen-Image와 맞지 않습니다(%s).
+The rank is too large (%s). Up to 128 is supported.	랭크가 너무 큽니다(%s). 128까지 지원합니다.
+The gate/proj layers take rank up to 64 (%s).	gate/proj 레이어는 랭크 64까지 받습니다(%s).
+The LoRA has blocks that Qwen-Image does not have (%s).	이 LoRA에는 Qwen-Image에 없는 블록이 있습니다(%s).
+Search by name or author…	이름 또는 제작자로 검색…
+Installed	설치됨
+Fits this phone	이 휴대폰에서 실행 가능
+Models on the phone: %s GB  ·  free %.1f GB	휴대폰의 모델: %s GB  ·  여유 %.1f GB
+Old version	이전 버전
+%d of %d installed	%d/%d 설치됨
+Nothing found	찾을 수 없음
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	첫 Anima 모델은 공용 파일(%s GB)도 함께 받습니다: 텍스트 인코더와 VAE, 한 번만.
+partly	일부
+GB	GB
+Install MOSS-Image first	먼저 MOSS-Image를 설치하세요
+Steps and the Turbo LoRA	스텝과 터보 LoRA
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	기본 모델만 다운로드합니다. 속도는 별도의 터보 LoRA에서 나옵니다: 모델 아래 줄에서 그 파일(.safetensors)을 고르세요. 해당 모델용으로 만든 LoRA라면 무엇이든 됩니다(예: Qwen용 Lightning, MOSS-Image용 8스텝 DMD, Anima용 Turbo v1.1). 스텝 수는 "스텝" 블록에서 직접 정합니다: LoRA가 만들어진 값(보통 4 또는 8)을 쓰세요. 터보 LoRA가 없으면 스텝이 더 필요합니다(Anima는 CFG도 씁니다). LoRA가 기대하는 것보다 적으면 흐릿해지고, 많으면 시간만 더 듭니다. 터보 LoRA 강도에는 슬라이더가 있습니다.
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	네거티브 프롬프트 입력란은 CFG를 쓰는, 터보 LoRA 없는 Anima 기본 모델에서 표시됩니다. 터보 LoRA에서는 CFG가 꺼져 있어(스케일 1) 네거티브 프롬프트가 아무것도 바꾸지 않으므로 입력란이 숨겨집니다. 원하지 않는 것은 그냥 프롬프트에 쓰지 마세요.
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B(Apache-2.0)는 더 큰 두 번째 모델입니다: 태그가 아니라 일반 문장으로 이미지를 설명하세요. 텍스트 인코더, 트랜스포머, 디코더가 모두 NPU에서 실행됩니다. 저장 공간이 약 14 GB 필요하며 RAM 12 GB 휴대폰에서 테스트했습니다. 가중치는 이미지마다 저장소에서 읽습니다: 512×768은 약 30초, 1 Mpx는 약 80초. 미리 불러올 것은 없습니다. 4스텝 또는 8스텝을 쓰려면 터보 LoRA 파일(rapid-moss: 4스텝, lodestones의 8스텝 DMD: 8스텝)을 고르고 같은 스텝 수로 설정하세요.
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	어떤 크기든 됩니다: 양쪽 변은 16의 배수이며 최소 256, 패치는 최대 6144개(너비/16 × 높이/16), 예: 1536×1024. 터보 어댑터는 약 1 Mpx(1024×1024, 832×1216…)에서 학습되었지만 더 작은 크기도 동작합니다. 준비된 디코더가 없는 크기는 타일 단위로 디코딩되므로 색조가 약간 달라질 수 있습니다.
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Anima용으로 만든 자신의 .safetensors 파일을 고르세요(kohya, diffusers/PEFT, LoKr, LoHa 형식, 28 또는 40블록). 선택하면 바로 확인합니다. 강도 1.00은 제작자의 설정입니다. 터보 LoRA와 일반 LoRA는 함께 쓸 수 있으며 한 번에 가중치에 합쳐집니다. 합치기는 로드할 때 이루어집니다: 새 조합(또는 새 강도)의 첫 이미지는 약 12–13초 기다리며 상태에 "LoRA 준비 중…"이 표시됩니다. 합쳐진 가중치는 마지막 조합에 한해 8비트 블록(저장 공간 약 2 GB)으로 보관됩니다: 이전 조합으로 돌아가면 이 시간이 다시 걸립니다. LoRA의 텍스트 인코더 부분은 적용되지 않습니다.
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	MOSS-Image용으로 만든 자신의 .safetensors 파일을 고르세요(FLUX, SDXL 등 다른 모델의 LoRA는 맞지 않습니다). 선택하면 바로 확인하고, 맞지 않으면 앱이 이유를 알려 줍니다. 강도 1.00은 제작자의 설정입니다: 낮추면 약해지고 높이면 강해집니다. 새 LoRA나 새 강도로 만드는 첫 이미지는 준비에 약 15초가 걸립니다(임시 파일 약 300 MB). 슬롯은 랭크 128까지의 LoRA를 받으며, LoRA 하나가 터보 슬롯을 대체합니다. LoRA 사용은 제작자의 라이선스를 따릅니다.
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo(Qwen 팀)는 이미지 속에 읽기 쉬운 글자를 그리고 일반 문장으로 쓴 긴 프롬프트를 따릅니다. 4스텝을 쓰려면 모델 아래 줄에서 터보 LoRA 파일(예: LightX2V의 Lightning)을 고르세요. 준비는 몇 초 걸리며 작은 캐시(약 16 MB)에 보관됩니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행됩니다. 저장 공간이 약 14 GB 필요하며 RAM 12 GB 휴대폰을 권장합니다. 비상업적 용도로만 사용할 수 있습니다(Qwen Research License).

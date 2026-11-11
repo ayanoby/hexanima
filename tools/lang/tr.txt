@@ -242,3 +242,115 @@
 241	Düşük bellek modu (daha yavaş)
 242	Modelin ağırlıkları RAM'de kalmak yerine her resim için depolamadan okunur. 8 GB RAM'li telefonlarda gerekir, 12 GB'ta gerekmez.
 243	  ·  uygulama %.1f GB
+244	Çok büyük: en fazla 6144 yama (1536×1024)
+246	Uyumlu: rank %d, %d / %d blok
+247	Bu LoRA başka bir model için (FLUX, SDXL vb.). Anima'ya uymaz.
+248	Bu dosya bir Anima LoRA'sına benzemiyor: beklenen katmanlar (blocks.N.*) eksik.
+249	Katman boyutları Anima ile uyuşmuyor (%s). Muhtemelen modelin başka bir sürümü için bir LoRA.
+250	LoRA'da Anima'nın sahip olmadığı bloklar var (%s).
+251	Tüm modeller
+253	Sıcaklık  pil %.1f °C
+254	  ·  kısıtlamaya kalan pay %d%%
+255	Resim %d  ·  %d×%d
+256	+ Başka bir resim (%d / %d)
+257	Resimler: %d. Prompt'ta onlara şöyle atıf yapın: "resim 1", "resim 2", ör. "resim 1'deki karakter resim 2'deki sahnede duruyor".
+258	Anima için bir .safetensors dosyası: seçer seçmez kontrol edilir
+259	Mage-Flow-Edit: metin kodlayıcı, DiT ve VAE NPU'da çalışır; ağırlıklar her resim için depolamadan okunur
+260	Bellek yetersiz
+261	Telefonun belleği doldu, bu yüzden uygulama kapanmasın diye üretim durduruldu. Diğer uygulamaları kapatın veya daha küçük bir boyut (düzenleme için de daha küçük bir fotoğraf) seçip yeniden deneyin.
+262	⏹ Durdur
+271	Boş bellek az (%d MB): diğer uygulamaları kapatın, yoksa üretim durabilir
+272	Durduruldu: bellek yetersiz
+273	LoRA yükleniyor…
+274	Düzenleme için boyut en fazla 1024×768
+275	Prompt bu boyut için çok uzun: kısaltın veya daha küçük bir boyut seçin
+276	Üretim başarısız: %s (günlük files/mage/mage.log)
+279	Temel model (turbo yok)
+280	Adım başına iki ağ geçişi (CFG): bir resim turbo modellere göre 10–15 kat daha uzun sürer.
+281	Adımlar
+282	Negatif prompt
+283	Mage-Flow bildirimleri (yapılan değişiklikler)
+284	Anima için LoRA
+286	Mage-Flow-Edit
+287	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT lisansı) 4 adımda bir prompt ile resim çizer ve fotoğraf düzenler, resim başına yaklaşık 12 saniye. Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; indirme yaklaşık 8,7 GB. Bir fotoğrafı düzenlemek için "Fotoğraf düzenle" bloğunda seçin ve neyin değişeceğini yazın.
+288	Mage-Flow boyutları
+289	İki kenar da 16'nın katıdır ve yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünür. Resim için: en fazla 6144 yama, örneğin 1536×1024. Düzenleme için: en fazla 3200 yama, örneğin 1024×768, çünkü fotoğraf da hesaba katılır.
+290	Bugün
+291	Dün
+292	Menü
+293	Prompt
+294	Düzenlenecek resimler
+295	Boyut
+296	Değiştir
+297	Rastgele
+298	Seed  (−1 = rastgele)
+299	Çalıştırma başına resim
+300	Turbo LoRA gücü
+301	Resim 1  ·  %d×%d
+302	Fotoğraf  ·  %d×%d
+303	Resim 1
+304	Fotoğraf
+305	Değiştir
+306	Resim %d
+307	Prompt'ta resimlere şöyle atıf yapın: "resim 1", "resim 2", ör. "resim 1'deki karakter resim 2'deki sahnede duruyor".
+308	Prompt neyin değişeceğini söyler, ör. "gökyüzünü gün batımı yap".
+309	dosya 2 GB'tan büyük
+310	Bu LoRA hangi sampler için yapıldı?
+311	4 adım (rapid-moss gibi)
+312	8 adım (DMD gibi, 8 step gerekir)
+313	8 adım için MOSS 8 step eklentisi gerekir
+314	4 adım (Lightning gibi)
+315	8 adım (düz Turbo gibi)
+316	Adımlar (%d–%d, varsayılan %d)
+317	%d ile %d arasında bir sayı girin
+318	Özel değer…
+319	1 ile 20 arasında bir sayı girin
+320	Model kataloğu
+321	Yok
+322	Dosya seç…
+323	Turbo LoRA
+324	~%d sn
+325	4 adım · CFG yok · saniyeler içinde bir resim
+326	20–30 adım · CFG ve negatif prompt
+327	düz cümlelerle tarifler, resimde yazı
+328	fotoğraf düzenleme, en fazla 3 resim
+329	4 adım · fotoğraf düzenleme
+330	Çok büyük: en fazla 6912 yama (ör. 1152×1536)
+331	Token: %d / %d
+332	  ·  negatif: %d
+333	  ·  çok uzun
+334	NPU'ya yüklendi, üretim hemen başlar
+335	Boşaltıldı · üretim yaptığınızda kendiliğinden yüklenir (~5 sn)
+336	Prompt çok uzun: %d token, sınır %d. Kısaltın.
+337	LoRA hazırlanıyor… (bu set için bir kez)
+338	Turbo LoRA hazırlanıyor…
+339	Siyah (AMOLED)
+340	Sistemden vurgu rengi
+341	Duvar kağıdından alınır (Android 12 ve üzeri)
+342	Uyumlu: rank %d, %d / 32 blok, %d ana katman
+343	Bu LoRA başka bir model için. Qwen-Image'a uymaz.
+344	Bu dosya bir Qwen-Image LoRA'sına benzemiyor: beklenen katmanlar (transformer_blocks) eksik.
+345	Katman boyutları Qwen-Image ile uyuşmuyor (%s).
+346	Rank çok büyük (%s). 128'e kadar desteklenir.
+347	gate/proj katmanları 64'e kadar rank alır (%s).
+348	LoRA'da Qwen-Image'ın sahip olmadığı bloklar var (%s).
+349	Ada veya yazara göre ara…
+350	Yüklü
+351	Bu telefona uygun
+352	Telefondaki modeller: %s GB  ·  boş %.1f GB
+353	Eski sürüm
+354	%d / %d yüklü
+355	Hiçbir şey bulunamadı
+356	İlk Anima modeli ortak dosyaları da indirir (%s GB): metin kodlayıcı ve VAE, yalnızca bir kez.
+357	kısmen
+358	GB
+359	Önce MOSS-Image'ı yükleyin
+360	Adımlar ve Turbo LoRA
+361	Yalnızca temel modeller indirilir. Hız, ayrı bir Turbo LoRA'dan gelir: modelin altındaki satırda dosyasını (.safetensors) seçin; o model için yapılmış her LoRA olur, örneğin Qwen için Lightning, MOSS-Image için 8 adımlı DMD, Anima için Turbo v1.1. Adım sayısı "Adımlar" bloğunda elle ayarlanır: LoRA'nın yapıldığı sayıyı kullanın (genelde 4 veya 8). Turbo LoRA olmadan daha çok adım gerekir (Anima'da CFG de kullanılır). LoRA'nın beklediğinden az adım bulanık resim verir, fazlası yalnızca zaman harcar. Turbo LoRA gücünün bir kaydırıcısı vardır.
+362	Negatif prompt alanı, CFG kullanılan, Turbo LoRA'sız Anima temel modellerinde gösterilir. Turbo LoRA ile CFG kapalıdır (ölçek 1), negatif prompt hiçbir şeyi değiştirmez ve alan gizlenir. İstemediğiniz şeyleri prompt'a yazmamanız yeterli.
+363	MOSS-Image 5B (Apache-2.0) ikinci, daha büyük bir modeldir: resimleri etiketlerle değil, düz cümlelerle tarif edin. Metin kodlayıcı, transformer ve çözücünün hepsi NPU'da çalışır. Yaklaşık 14 GB depolama gerekir ve 12 GB RAM'li bir telefonda denenmiştir. Ağırlıklar her resim için depolamadan okunur: 512×768 için yaklaşık 30 sn, 1 Mpx için yaklaşık 80 sn. Önceden yüklenecek bir şey yok. 4 veya 8 adım için bir Turbo LoRA dosyası seçin (rapid-moss: 4 adım, lodestones'un 8 adımlı DMD'si: 8 adım) ve aynı adım sayısını ayarlayın.
+364	Her boyut olur: iki kenar da 16'nın katı, en az 256, en fazla 6144 yama (genişlik/16 × yükseklik/16), örneğin 1536×1024. Turbo adaptörler yaklaşık 1 Mpx'te (1024×1024, 832×1216…) eğitildi, ama daha küçük boyutlar da çalışır. Hazır çözücüsü olmayan boyutlar karolar halinde çözülür, bu yüzden ton hafifçe kayabilir.
+365	Anima için yapılmış kendi .safetensors dosyanızı seçin (kohya, diffusers/PEFT, LoKr ve LoHa biçimleri; 28 veya 40 blok). Seçer seçmez kontrol edilir. 1,00 gücü, yazarın ayarıdır. Bir Turbo LoRA ve sıradan bir LoRA birlikte kullanılabilir: tek geçişte ağırlıklara katılırlar. Katma işlemi yükleme sırasında olur: yeni bir setle (veya yeni bir güçle) ilk resim yaklaşık 12–13 sn bekler, durum "LoRA hazırlanıyor…" olur. Katılmış ağırlıklar yalnızca son set için 8 bitlik bloklar olarak (yaklaşık 2 GB depolama) saklanır: önceki sete dönmek bu saniyelere yeniden mal olur. LoRA'nın metin kodlayıcı kısmı uygulanmaz.
+366	MOSS-Image için yapılmış kendi .safetensors dosyanızı seçin (FLUX, SDXL ve diğer modellerin LoRA'ları uymaz). Seçer seçmez kontrol edilir; uymuyorsa uygulama nedenini söyler. 1,00 gücü yazarın ayarıdır: düşük daha zayıf, yüksek daha güçlüdür. Yeni bir LoRA veya güçle ilk resim, hazırlık için yaklaşık 15 sn harcar (yaklaşık 300 MB geçici dosya). Yuvalar 128'e kadar rank'lı bir LoRA alır; bir LoRA turbo yuvasının yerini alır. LoRA kullanımı yazarının lisansına tabidir.
+367	Qwen-Image-2.1-Turbo
+368	Qwen-Image 2.1 Turbo (Qwen ekibi) resimlerde okunaklı yazı çizer ve düz cümlelerle yazılmış uzun prompt'ları izler. 4 adım için modelin altındaki satırda bir Turbo LoRA dosyası seçin (örneğin LightX2V'nin Lightning'i); hazırlanması saniyeler sürer ve küçük bir önbellekte tutulur (yaklaşık 16 MB). Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; yaklaşık 14 GB depolama gerekir ve 12 GB RAM'li telefon önerilir. Yalnızca ticari olmayan kullanım (Qwen Research License).

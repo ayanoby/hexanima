@@ -1,6 +1,6 @@
 """Pack the ORIGINAL MOSS-Image-SFT transformer (bf16 safetensors, OpenMOSS-Team/MOSS-Image-SFT/transformer) + the rapid-moss LoRA into the same HMX q8 block files as export_moss.py
 (which reads the unsloth UD-Q5_K_XL GGUF). The GGUF holds the weights re-quantised to Q5_K/Q6_K (~4% error vs the original); from the original only the q8 g32 tiles add error (~0.5%).
-usage: python export_moss_orig.py TRANSFORMER_DIR LORA.safetensors OUTDIR     -> OUTDIR/dit/blk00..41.bin and OUTDIR/ref/{proj,ref0,ref1}.bin  (same names and sizes as the pack on the phone)"""
+usage: python export_moss_orig.py TRANSFORMER_DIR_OR_FILE LORA.safetensors OUTDIR     -> OUTDIR/dit/blk00..41.bin and OUTDIR/ref/{proj,ref0,ref1}.bin  (same names and sizes as the pack on the phone)"""
 import os, sys, json, types, torch
 sys.modules.setdefault("gguf", types.ModuleType("gguf"))   # moss_ref imports gguf for its GGUF reader class, which is not used here
 from safetensors import safe_open
@@ -9,11 +9,19 @@ from moss_ref import Lora
 from export_moss import pack_layer, pack_refiner, pack_proj
 
 class SW:
-    """name -> fp32 tensor [out, in] from the sharded bf16 safetensors (same tensor names as the GGUF)"""
+    """name -> fp32 tensor [out, in] from the sharded bf16 safetensors (same tensor names as the GGUF); D may also be a single .safetensors file (Civitai fine-tunes), where q/k/v sit
+    fused as layers.N.proj.qkv.weight [3*3072, 3072] (q, k, v stacked) and are split here"""
     def __init__(self, d):
-        idx = json.load(open(os.path.join(d, "diffusion_pytorch_model.safetensors.index.json")))["weight_map"]
-        self.d, self.m, self.f = d, idx, {}
+        if os.path.isfile(d):
+            self.d, self.f = os.path.dirname(d), {os.path.basename(d): safe_open(d, "pt")}
+            self.m = {k: os.path.basename(d) for k in self.f[os.path.basename(d)].keys()}
+        else:
+            idx = json.load(open(os.path.join(d, "diffusion_pytorch_model.safetensors.index.json")))["weight_map"]
+            self.d, self.m, self.f = d, idx, {}
     def __call__(self, name):
+        if name not in self.m and name.rsplit(".", 2)[-2] in ("q", "k", "v") and name.replace(".q.", ".qkv.").replace(".k.", ".qkv.").replace(".v.", ".qkv.") in self.m:
+            n = name[:name.rindex(".proj.") + 6] + "qkv.weight"; w = self(n); r = w.shape[0] // 3
+            return w[{"q": 0, "k": 1, "v": 2}[name.split(".")[-2]] * r:][:r]
         fn = self.m[name]
         if fn not in self.f: self.f[fn] = safe_open(os.path.join(self.d, fn), "pt")
         return self.f[fn].get_tensor(name).float()

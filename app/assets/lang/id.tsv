@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Mode hemat memori (lebih lambat)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Bobot model dibaca dari penyimpanan untuk setiap gambar, bukan disimpan di RAM. Diperlukan di ponsel dengan RAM 8 GB, tidak perlu di 12 GB.
   ·  app %.1f GB	  ·  aplikasi %.1f GB
+Too large: at most 6144 patches (1536×1024)	Terlalu besar: maksimal 6144 patch (1536×1024)
+Compatible: rank %d, %d of %d blocks	Kompatibel: rank %d, %d dari %d blok
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	LoRA ini untuk model lain (FLUX, SDXL, atau sejenisnya). Tidak cocok untuk Anima.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Berkas ini tampaknya bukan LoRA Anima: lapisan yang diharapkan (blocks.N.*) tidak ada.
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Ukuran lapisan tidak cocok dengan Anima (%s). Kemungkinan ini LoRA untuk versi model yang lain.
+The LoRA has blocks that Anima does not have (%s).	LoRA ini punya blok yang tidak dimiliki Anima (%s).
+All models	Semua model
+Temperature  battery %.1f °C	Suhu  baterai %.1f °C
+  ·  margin before throttling %d%%	  ·  batas sebelum throttling %d%%
+Picture %d  ·  %d×%d	Gambar %d  ·  %d×%d
++ Another picture (%d of %d)	+ Gambar lain (%d dari %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Gambar: %d. Rujuk gambar di prompt: "gambar 1", "gambar 2", mis. "karakter dari gambar 1 berdiri di adegan gambar 2".
+A .safetensors file for Anima: it is checked as soon as you pick it	Berkas .safetensors untuk Anima: diperiksa begitu Anda memilihnya
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: encoder teks, DiT, dan VAE berjalan di NPU; bobot dibaca dari penyimpanan untuk setiap gambar
+Out of memory	Kehabisan memori
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Memori ponsel habis, sehingga pembuatan dihentikan agar aplikasi tidak ditutup. Tutup aplikasi lain atau pilih ukuran yang lebih kecil (dan foto yang lebih kecil untuk mengedit), lalu coba lagi.
+⏹ Stop	⏹ Berhenti
+Little free memory (%d MB): close other apps, or the generation may stop	Memori kosong sedikit (%d MB): tutup aplikasi lain, atau pembuatan bisa berhenti
+Stopped: out of memory	Dihentikan: kehabisan memori
+Loading the LoRA…	Memuat LoRA…
+For editing the size is at most 1024×768	Untuk mengedit, ukuran maksimal 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	Prompt terlalu panjang untuk ukuran ini: persingkat atau pilih ukuran yang lebih kecil
+Generation failed: %s (log files/mage/mage.log)	Pembuatan gagal: %s (log files/mage/mage.log)
+Base model (no turbo)	Model dasar (tanpa turbo)
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Dua kali proses jaringan per langkah (CFG): satu gambar butuh 10–15 kali lebih lama daripada model turbo.
+Steps	Langkah
+Negative prompt	Prompt negatif
+Mage-Flow notices (changes made)	Pemberitahuan Mage-Flow (perubahan yang dibuat)
+LoRA for Anima	LoRA untuk Anima
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, lisensi MIT) menggambar dan mengedit foto lewat prompt dalam 4 langkah, sekitar 12 detik per gambar. Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; unduhannya sekitar 8,7 GB. Untuk mengedit foto, pilih di blok "Edit foto" dan jelaskan apa yang diubah.
+Mage-Flow sizes	Ukuran Mage-Flow
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Kedua sisi kelipatan 16 dan jumlah patch (lebar/16 × tinggi/16) habis dibagi 32. Untuk gambar: maksimal 6144 patch, misalnya 1536×1024. Untuk mengedit: maksimal 3200 patch, misalnya 1024×768, karena foto juga ikut dihitung.
+Today	Hari ini
+Yesterday	Kemarin
+Menu	Menu
+Prompt	Prompt
+Pictures to edit	Gambar untuk diedit
+Size	Ukuran
+Swap	Tukar
+Random	Acak
+Seed  (−1 = random)	Seed  (−1 = acak)
+Pictures per run	Gambar per proses
+Turbo LoRA strength	Kekuatan LoRA turbo
+Picture 1  ·  %d×%d	Gambar 1  ·  %d×%d
+Photo  ·  %d×%d	Foto  ·  %d×%d
+Picture 1	Gambar 1
+Photo	Foto
+Replace	Ganti
+Picture %d	Gambar %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Rujuk gambar di prompt: "gambar 1", "gambar 2", mis. "karakter dari gambar 1 berdiri di adegan gambar 2".
+The prompt says what to change, e.g. "make the sky a sunset".	Prompt menyebutkan apa yang diubah, mis. "ubah langit jadi senja".
+the file is larger than 2 GB	berkas lebih besar dari 2 GB
+Which sampler is this LoRA made for?	LoRA ini dibuat untuk sampler yang mana?
+4 steps (like rapid-moss)	4 langkah (seperti rapid-moss)
+8 steps (like DMD, needs 8 step)	8 langkah (seperti DMD, butuh 8 step)
+8 steps need the MOSS 8 step add-on	8 langkah butuh tambahan MOSS 8 step
+4 steps (like Lightning)	4 langkah (seperti Lightning)
+8 steps (like plain Turbo)	8 langkah (seperti Turbo biasa)
+Steps (%d–%d, default %d)	Langkah (%d–%d, bawaan %d)
+Enter a number from %d to %d	Masukkan angka dari %d sampai %d
+Custom value…	Nilai kustom…
+Enter a number from 1 to 20	Masukkan angka dari 1 sampai 20
+Model catalog	Katalog model
+None	Tidak ada
+Pick a file…	Pilih berkas…
+Turbo LoRA	LoRA turbo
+~%d s	~%d dtk
+4 steps · no CFG · a picture in seconds	4 langkah · tanpa CFG · satu gambar dalam hitungan detik
+20–30 steps · CFG and negative prompt	20–30 langkah · CFG dan prompt negatif
+plain-sentence prompts, text in pictures	deskripsi dengan kalimat biasa, teks di dalam gambar
+photo editing, up to 3 pictures	pengeditan foto, hingga 3 gambar
+4 steps · photo editing	4 langkah · pengeditan foto
+Too large: at most 6912 patches (e.g. 1152×1536)	Terlalu besar: maksimal 6912 patch (mis. 1152×1536)
+Tokens: %d / %d	Token: %d / %d
+  ·  negative: %d	  ·  negatif: %d
+  ·  too long	  ·  terlalu panjang
+Loaded on the NPU, generation starts at once	Dimuat di NPU, pembuatan langsung dimulai
+Unloaded · loads itself when you generate (~5 s)	Dibongkar · dimuat sendiri saat Anda membuat gambar (~5 dtk)
+Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt terlalu panjang: %d token, batasnya %d. Persingkat.
+Preparing the LoRA… (once for this set)	Menyiapkan LoRA… (sekali untuk set ini)
+Preparing the turbo LoRA…	Menyiapkan LoRA turbo…
+Black (AMOLED)	Hitam (AMOLED)
+Accent colour from the system	Warna aksen dari sistem
+Taken from the wallpaper (Android 12 and newer)	Diambil dari wallpaper (Android 12 ke atas)
+Compatible: rank %d, %d of 32 blocks, %d host layers	Kompatibel: rank %d, %d dari 32 blok, %d lapisan host
+This LoRA is for another model. It does not fit Qwen-Image.	LoRA ini untuk model lain. Tidak cocok untuk Qwen-Image.
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	Berkas ini tampaknya bukan LoRA Qwen-Image: lapisan yang diharapkan (transformer_blocks) tidak ada.
+Layer sizes do not match Qwen-Image (%s).	Ukuran lapisan tidak cocok dengan Qwen-Image (%s).
+The rank is too large (%s). Up to 128 is supported.	Rank terlalu besar (%s). Didukung hingga 128.
+The gate/proj layers take rank up to 64 (%s).	Lapisan gate/proj menerima rank hingga 64 (%s).
+The LoRA has blocks that Qwen-Image does not have (%s).	LoRA ini punya blok yang tidak dimiliki Qwen-Image (%s).
+Search by name or author…	Cari berdasarkan nama atau pembuat…
+Installed	Terpasang
+Fits this phone	Cocok untuk ponsel ini
+Models on the phone: %s GB  ·  free %.1f GB	Model di ponsel: %s GB  ·  kosong %.1f GB
+Old version	Versi lama
+%d of %d installed	%d dari %d terpasang
+Nothing found	Tidak ditemukan
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	Model Anima pertama juga mengunduh berkas bersama (%s GB): encoder teks dan VAE, hanya sekali.
+partly	sebagian
+GB	GB
+Install MOSS-Image first	Pasang MOSS-Image terlebih dahulu
+Steps and the Turbo LoRA	Langkah dan LoRA turbo
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	Hanya model dasar yang diunduh. Kecepatan datang dari LoRA turbo terpisah: pilih berkasnya (.safetensors) di baris di bawah model; LoRA apa pun yang dibuat untuk model itu bisa dipakai, misalnya Lightning untuk Qwen, DMD 8 langkah untuk MOSS-Image, Turbo v1.1 untuk Anima. Jumlah langkah diatur manual di blok "Langkah": pakai yang dirancang untuk LoRA (biasanya 4 atau 8). Tanpa LoRA turbo dibutuhkan lebih banyak langkah (pada Anima CFG juga dipakai). Langkah lebih sedikit dari yang diharapkan LoRA membuat gambar buram, lebih banyak hanya memakan waktu. Kekuatan LoRA turbo punya penggeser.
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	Kolom prompt negatif muncul untuk model dasar Anima tanpa LoRA turbo, di mana CFG dipakai. Dengan LoRA turbo CFG mati (skala 1), prompt negatif tidak mengubah apa pun dan kolomnya disembunyikan. Cukup jangan tulis hal yang tidak diinginkan di prompt.
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B (Apache-2.0) adalah model kedua yang lebih besar: deskripsikan gambar dengan kalimat biasa, bukan tag. Encoder teks, transformer, dan decoder semuanya berjalan di NPU. Butuh sekitar 14 GB penyimpanan dan diuji pada ponsel dengan RAM 12 GB. Bobotnya dibaca dari penyimpanan untuk setiap gambar: sekitar 30 dtk untuk 512×768, sekitar 80 dtk untuk 1 Mpx. Tidak ada yang perlu dimuat lebih dulu. Untuk 4 atau 8 langkah, pilih berkas LoRA turbo (rapid-moss: 4 langkah, DMD 8 langkah dari lodestones: 8 langkah) dan atur jumlah langkah yang sama.
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	Ukuran apa pun bisa: kedua sisi kelipatan 16, minimal 256, maksimal 6144 patch (lebar/16 × tinggi/16), misalnya 1536×1024. Adaptor turbo dilatih pada sekitar 1 Mpx (1024×1024, 832×1216…), tetapi ukuran lebih kecil juga bisa. Ukuran tanpa decoder siap pakai didekode per kotak, sehingga warna bisa sedikit bergeser.
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Pilih berkas .safetensors Anda sendiri yang dibuat untuk Anima (format kohya, diffusers/PEFT, LoKr, dan LoHa; 28 atau 40 blok). Berkas diperiksa begitu Anda memilihnya. Kekuatan 1,00 adalah pengaturan pembuatnya. LoRA turbo dan LoRA biasa bisa dipakai bersamaan: keduanya dilebur ke bobot dalam satu proses. Peleburan terjadi saat memuat: gambar pertama dengan set baru (atau kekuatan baru) menunggu sekitar 12–13 dtk, dengan status "Menyiapkan LoRA…". Bobot hasil peleburan disimpan sebagai blok 8-bit (sekitar 2 GB penyimpanan) hanya untuk set terakhir: kembali ke set sebelumnya memakan detik-detik itu lagi. Bagian encoder teks dari LoRA tidak diterapkan.
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	Pilih berkas .safetensors Anda sendiri yang dibuat untuk MOSS-Image (LoRA untuk FLUX, SDXL, dan model lain tidak cocok). Berkas diperiksa begitu Anda memilihnya, dan jika tidak cocok aplikasi menjelaskan alasannya. Kekuatan 1,00 adalah pengaturan pembuatnya: lebih rendah lebih lemah, lebih tinggi lebih kuat. Gambar pertama dengan LoRA atau kekuatan baru menghabiskan sekitar 15 dtk untuk menyiapkannya (berkas sementara sekitar 300 MB). Slot menerima LoRA dengan rank hingga 128; satu LoRA menggantikan slot turbo. Penggunaan LoRA tunduk pada lisensi pembuatnya.
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (tim Qwen) menggambar teks yang terbaca di dalam gambar dan mengikuti prompt panjang yang ditulis dengan kalimat biasa. Untuk 4 langkah, pilih berkas LoRA turbo (misalnya Lightning dari LightX2V) di baris di bawah model; penyiapannya hanya beberapa detik dan disimpan di cache kecil (sekitar 16 MB). Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; butuh sekitar 14 GB penyimpanan dan disarankan ponsel dengan RAM 12 GB. Hanya untuk penggunaan nonkomersial (Qwen Research License).

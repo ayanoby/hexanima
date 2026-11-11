@@ -3,6 +3,7 @@
 ## 1.5.1
 
 - Fixed: the live preview was missing in 1.5.0 (the four `preview_*.bin` files were left out of the build); it is back for all models.
+- All new screens and the Info texts are translated into the 11 other languages (112 strings each); 1.5.0 showed them in English.
 - MOSS-Image: the status line no longer sticks on "Preparing the text..." when the text was cached.
 
 ## 1.5.0

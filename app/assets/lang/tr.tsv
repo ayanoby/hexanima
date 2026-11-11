@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Düşük bellek modu (daha yavaş)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Modelin ağırlıkları RAM'de kalmak yerine her resim için depolamadan okunur. 8 GB RAM'li telefonlarda gerekir, 12 GB'ta gerekmez.
   ·  app %.1f GB	  ·  uygulama %.1f GB
+Too large: at most 6144 patches (1536×1024)	Çok büyük: en fazla 6144 yama (1536×1024)
+Compatible: rank %d, %d of %d blocks	Uyumlu: rank %d, %d / %d blok
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	Bu LoRA başka bir model için (FLUX, SDXL vb.). Anima'ya uymaz.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Bu dosya bir Anima LoRA'sına benzemiyor: beklenen katmanlar (blocks.N.*) eksik.
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Katman boyutları Anima ile uyuşmuyor (%s). Muhtemelen modelin başka bir sürümü için bir LoRA.
+The LoRA has blocks that Anima does not have (%s).	LoRA'da Anima'nın sahip olmadığı bloklar var (%s).
+All models	Tüm modeller
+Temperature  battery %.1f °C	Sıcaklık  pil %.1f °C
+  ·  margin before throttling %d%%	  ·  kısıtlamaya kalan pay %d%%
+Picture %d  ·  %d×%d	Resim %d  ·  %d×%d
++ Another picture (%d of %d)	+ Başka bir resim (%d / %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Resimler: %d. Prompt'ta onlara şöyle atıf yapın: "resim 1", "resim 2", ör. "resim 1'deki karakter resim 2'deki sahnede duruyor".
+A .safetensors file for Anima: it is checked as soon as you pick it	Anima için bir .safetensors dosyası: seçer seçmez kontrol edilir
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: metin kodlayıcı, DiT ve VAE NPU'da çalışır; ağırlıklar her resim için depolamadan okunur
+Out of memory	Bellek yetersiz
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Telefonun belleği doldu, bu yüzden uygulama kapanmasın diye üretim durduruldu. Diğer uygulamaları kapatın veya daha küçük bir boyut (düzenleme için de daha küçük bir fotoğraf) seçip yeniden deneyin.
+⏹ Stop	⏹ Durdur
+Little free memory (%d MB): close other apps, or the generation may stop	Boş bellek az (%d MB): diğer uygulamaları kapatın, yoksa üretim durabilir
+Stopped: out of memory	Durduruldu: bellek yetersiz
+Loading the LoRA…	LoRA yükleniyor…
+For editing the size is at most 1024×768	Düzenleme için boyut en fazla 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	Prompt bu boyut için çok uzun: kısaltın veya daha küçük bir boyut seçin
+Generation failed: %s (log files/mage/mage.log)	Üretim başarısız: %s (günlük files/mage/mage.log)
+Base model (no turbo)	Temel model (turbo yok)
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Adım başına iki ağ geçişi (CFG): bir resim turbo modellere göre 10–15 kat daha uzun sürer.
+Steps	Adımlar
+Negative prompt	Negatif prompt
+Mage-Flow notices (changes made)	Mage-Flow bildirimleri (yapılan değişiklikler)
+LoRA for Anima	Anima için LoRA
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT lisansı) 4 adımda bir prompt ile resim çizer ve fotoğraf düzenler, resim başına yaklaşık 12 saniye. Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; indirme yaklaşık 8,7 GB. Bir fotoğrafı düzenlemek için "Fotoğraf düzenle" bloğunda seçin ve neyin değişeceğini yazın.
+Mage-Flow sizes	Mage-Flow boyutları
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	İki kenar da 16'nın katıdır ve yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünür. Resim için: en fazla 6144 yama, örneğin 1536×1024. Düzenleme için: en fazla 3200 yama, örneğin 1024×768, çünkü fotoğraf da hesaba katılır.
+Today	Bugün
+Yesterday	Dün
+Menu	Menü
+Prompt	Prompt
+Pictures to edit	Düzenlenecek resimler
+Size	Boyut
+Swap	Değiştir
+Random	Rastgele
+Seed  (−1 = random)	Seed  (−1 = rastgele)
+Pictures per run	Çalıştırma başına resim
+Turbo LoRA strength	Turbo LoRA gücü
+Picture 1  ·  %d×%d	Resim 1  ·  %d×%d
+Photo  ·  %d×%d	Fotoğraf  ·  %d×%d
+Picture 1	Resim 1
+Photo	Fotoğraf
+Replace	Değiştir
+Picture %d	Resim %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Prompt'ta resimlere şöyle atıf yapın: "resim 1", "resim 2", ör. "resim 1'deki karakter resim 2'deki sahnede duruyor".
+The prompt says what to change, e.g. "make the sky a sunset".	Prompt neyin değişeceğini söyler, ör. "gökyüzünü gün batımı yap".
+the file is larger than 2 GB	dosya 2 GB'tan büyük
+Which sampler is this LoRA made for?	Bu LoRA hangi sampler için yapıldı?
+4 steps (like rapid-moss)	4 adım (rapid-moss gibi)
+8 steps (like DMD, needs 8 step)	8 adım (DMD gibi, 8 step gerekir)
+8 steps need the MOSS 8 step add-on	8 adım için MOSS 8 step eklentisi gerekir
+4 steps (like Lightning)	4 adım (Lightning gibi)
+8 steps (like plain Turbo)	8 adım (düz Turbo gibi)
+Steps (%d–%d, default %d)	Adımlar (%d–%d, varsayılan %d)
+Enter a number from %d to %d	%d ile %d arasında bir sayı girin
+Custom value…	Özel değer…
+Enter a number from 1 to 20	1 ile 20 arasında bir sayı girin
+Model catalog	Model kataloğu
+None	Yok
+Pick a file…	Dosya seç…
+Turbo LoRA	Turbo LoRA
+~%d s	~%d sn
+4 steps · no CFG · a picture in seconds	4 adım · CFG yok · saniyeler içinde bir resim
+20–30 steps · CFG and negative prompt	20–30 adım · CFG ve negatif prompt
+plain-sentence prompts, text in pictures	düz cümlelerle tarifler, resimde yazı
+photo editing, up to 3 pictures	fotoğraf düzenleme, en fazla 3 resim
+4 steps · photo editing	4 adım · fotoğraf düzenleme
+Too large: at most 6912 patches (e.g. 1152×1536)	Çok büyük: en fazla 6912 yama (ör. 1152×1536)
+Tokens: %d / %d	Token: %d / %d
+  ·  negative: %d	  ·  negatif: %d
+  ·  too long	  ·  çok uzun
+Loaded on the NPU, generation starts at once	NPU'ya yüklendi, üretim hemen başlar
+Unloaded · loads itself when you generate (~5 s)	Boşaltıldı · üretim yaptığınızda kendiliğinden yüklenir (~5 sn)
+Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt çok uzun: %d token, sınır %d. Kısaltın.
+Preparing the LoRA… (once for this set)	LoRA hazırlanıyor… (bu set için bir kez)
+Preparing the turbo LoRA…	Turbo LoRA hazırlanıyor…
+Black (AMOLED)	Siyah (AMOLED)
+Accent colour from the system	Sistemden vurgu rengi
+Taken from the wallpaper (Android 12 and newer)	Duvar kağıdından alınır (Android 12 ve üzeri)
+Compatible: rank %d, %d of 32 blocks, %d host layers	Uyumlu: rank %d, %d / 32 blok, %d ana katman
+This LoRA is for another model. It does not fit Qwen-Image.	Bu LoRA başka bir model için. Qwen-Image'a uymaz.
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	Bu dosya bir Qwen-Image LoRA'sına benzemiyor: beklenen katmanlar (transformer_blocks) eksik.
+Layer sizes do not match Qwen-Image (%s).	Katman boyutları Qwen-Image ile uyuşmuyor (%s).
+The rank is too large (%s). Up to 128 is supported.	Rank çok büyük (%s). 128'e kadar desteklenir.
+The gate/proj layers take rank up to 64 (%s).	gate/proj katmanları 64'e kadar rank alır (%s).
+The LoRA has blocks that Qwen-Image does not have (%s).	LoRA'da Qwen-Image'ın sahip olmadığı bloklar var (%s).
+Search by name or author…	Ada veya yazara göre ara…
+Installed	Yüklü
+Fits this phone	Bu telefona uygun
+Models on the phone: %s GB  ·  free %.1f GB	Telefondaki modeller: %s GB  ·  boş %.1f GB
+Old version	Eski sürüm
+%d of %d installed	%d / %d yüklü
+Nothing found	Hiçbir şey bulunamadı
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	İlk Anima modeli ortak dosyaları da indirir (%s GB): metin kodlayıcı ve VAE, yalnızca bir kez.
+partly	kısmen
+GB	GB
+Install MOSS-Image first	Önce MOSS-Image'ı yükleyin
+Steps and the Turbo LoRA	Adımlar ve Turbo LoRA
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	Yalnızca temel modeller indirilir. Hız, ayrı bir Turbo LoRA'dan gelir: modelin altındaki satırda dosyasını (.safetensors) seçin; o model için yapılmış her LoRA olur, örneğin Qwen için Lightning, MOSS-Image için 8 adımlı DMD, Anima için Turbo v1.1. Adım sayısı "Adımlar" bloğunda elle ayarlanır: LoRA'nın yapıldığı sayıyı kullanın (genelde 4 veya 8). Turbo LoRA olmadan daha çok adım gerekir (Anima'da CFG de kullanılır). LoRA'nın beklediğinden az adım bulanık resim verir, fazlası yalnızca zaman harcar. Turbo LoRA gücünün bir kaydırıcısı vardır.
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	Negatif prompt alanı, CFG kullanılan, Turbo LoRA'sız Anima temel modellerinde gösterilir. Turbo LoRA ile CFG kapalıdır (ölçek 1), negatif prompt hiçbir şeyi değiştirmez ve alan gizlenir. İstemediğiniz şeyleri prompt'a yazmamanız yeterli.
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B (Apache-2.0) ikinci, daha büyük bir modeldir: resimleri etiketlerle değil, düz cümlelerle tarif edin. Metin kodlayıcı, transformer ve çözücünün hepsi NPU'da çalışır. Yaklaşık 14 GB depolama gerekir ve 12 GB RAM'li bir telefonda denenmiştir. Ağırlıklar her resim için depolamadan okunur: 512×768 için yaklaşık 30 sn, 1 Mpx için yaklaşık 80 sn. Önceden yüklenecek bir şey yok. 4 veya 8 adım için bir Turbo LoRA dosyası seçin (rapid-moss: 4 adım, lodestones'un 8 adımlı DMD'si: 8 adım) ve aynı adım sayısını ayarlayın.
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	Her boyut olur: iki kenar da 16'nın katı, en az 256, en fazla 6144 yama (genişlik/16 × yükseklik/16), örneğin 1536×1024. Turbo adaptörler yaklaşık 1 Mpx'te (1024×1024, 832×1216…) eğitildi, ama daha küçük boyutlar da çalışır. Hazır çözücüsü olmayan boyutlar karolar halinde çözülür, bu yüzden ton hafifçe kayabilir.
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Anima için yapılmış kendi .safetensors dosyanızı seçin (kohya, diffusers/PEFT, LoKr ve LoHa biçimleri; 28 veya 40 blok). Seçer seçmez kontrol edilir. 1,00 gücü, yazarın ayarıdır. Bir Turbo LoRA ve sıradan bir LoRA birlikte kullanılabilir: tek geçişte ağırlıklara katılırlar. Katma işlemi yükleme sırasında olur: yeni bir setle (veya yeni bir güçle) ilk resim yaklaşık 12–13 sn bekler, durum "LoRA hazırlanıyor…" olur. Katılmış ağırlıklar yalnızca son set için 8 bitlik bloklar olarak (yaklaşık 2 GB depolama) saklanır: önceki sete dönmek bu saniyelere yeniden mal olur. LoRA'nın metin kodlayıcı kısmı uygulanmaz.
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	MOSS-Image için yapılmış kendi .safetensors dosyanızı seçin (FLUX, SDXL ve diğer modellerin LoRA'ları uymaz). Seçer seçmez kontrol edilir; uymuyorsa uygulama nedenini söyler. 1,00 gücü yazarın ayarıdır: düşük daha zayıf, yüksek daha güçlüdür. Yeni bir LoRA veya güçle ilk resim, hazırlık için yaklaşık 15 sn harcar (yaklaşık 300 MB geçici dosya). Yuvalar 128'e kadar rank'lı bir LoRA alır; bir LoRA turbo yuvasının yerini alır. LoRA kullanımı yazarının lisansına tabidir.
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (Qwen ekibi) resimlerde okunaklı yazı çizer ve düz cümlelerle yazılmış uzun prompt'ları izler. 4 adım için modelin altındaki satırda bir Turbo LoRA dosyası seçin (örneğin LightX2V'nin Lightning'i); hazırlanması saniyeler sürer ve küçük bir önbellekte tutulur (yaklaşık 16 MB). Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; yaklaşık 14 GB depolama gerekir ve 12 GB RAM'li telefon önerilir. Yalnızca ticari olmayan kullanım (Qwen Research License).

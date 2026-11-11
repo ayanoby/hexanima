@@ -242,3 +242,115 @@
 241	Chế độ tiết kiệm bộ nhớ (chậm hơn)
 242	Trọng số của model được đọc từ bộ nhớ cho mỗi ảnh thay vì giữ trong RAM. Cần cho điện thoại 8 GB RAM, không cần với 12 GB.
 243	  ·  ứng dụng %.1f GB
+244	Quá lớn: tối đa 6144 patch (1536×1024)
+246	Tương thích: rank %d, %d trên %d khối
+247	LoRA này dành cho mô hình khác (FLUX, SDXL hoặc tương tự). Nó không phù hợp với Anima.
+248	Tệp này không giống LoRA của Anima: thiếu các lớp cần có (blocks.N.*).
+249	Kích thước các lớp không khớp với Anima (%s). Có thể đây là LoRA cho phiên bản khác của mô hình.
+250	LoRA có các khối mà Anima không có (%s).
+251	Tất cả mô hình
+253	Nhiệt độ  pin %.1f °C
+254	  ·  còn cách mức giảm xung %d%%
+255	Ảnh %d  ·  %d×%d
+256	+ Thêm ảnh (%d trên %d)
+257	Số ảnh: %d. Hãy nhắc đến chúng trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật từ ảnh 1 đứng trong khung cảnh của ảnh 2".
+258	Tệp .safetensors cho Anima: được kiểm tra ngay khi bạn chọn
+259	Mage-Flow-Edit: bộ mã hóa văn bản, DiT và VAE chạy trên NPU; trọng số được đọc từ bộ nhớ cho mỗi ảnh
+260	Hết bộ nhớ
+261	Điện thoại hết bộ nhớ nên quá trình tạo ảnh đã bị dừng để ứng dụng không bị đóng. Hãy đóng ứng dụng khác hoặc chọn kích thước nhỏ hơn (và ảnh nhỏ hơn khi chỉnh sửa) rồi thử lại.
+262	⏹ Dừng
+271	Bộ nhớ trống ít (%d MB): hãy đóng ứng dụng khác, nếu không quá trình tạo có thể dừng
+272	Đã dừng: hết bộ nhớ
+273	Đang tải LoRA…
+274	Khi chỉnh sửa, kích thước tối đa là 1024×768
+275	Prompt quá dài cho kích thước này: hãy rút gọn hoặc chọn kích thước nhỏ hơn
+276	Tạo ảnh thất bại: %s (nhật ký files/mage/mage.log)
+279	Mô hình gốc (không turbo)
+280	Hai lượt chạy mạng mỗi bước (CFG): một ảnh mất lâu hơn 10–15 lần so với các mô hình turbo.
+281	Số bước
+282	Prompt phủ định
+283	Thông báo Mage-Flow (các thay đổi đã thực hiện)
+284	LoRA cho Anima
+286	Mage-Flow-Edit
+287	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh chụp bằng prompt trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh chụp, hãy chọn ảnh trong khối "Chỉnh sửa ảnh" và mô tả điều cần thay đổi.
+288	Kích thước Mage-Flow
+289	Cả hai cạnh là bội số của 16 và số patch (rộng/16 × cao/16) chia hết cho 32. Với ảnh tạo mới: tối đa 6144 patch, ví dụ 1536×1024. Với chỉnh sửa: tối đa 3200 patch, ví dụ 1024×768, vì ảnh chụp cũng tham gia vào phép tính.
+290	Hôm nay
+291	Hôm qua
+292	Menu
+293	Prompt
+294	Ảnh cần chỉnh sửa
+295	Kích thước
+296	Đổi chỗ
+297	Ngẫu nhiên
+298	Seed  (−1 = ngẫu nhiên)
+299	Số ảnh mỗi lần
+300	Cường độ LoRA turbo
+301	Ảnh 1  ·  %d×%d
+302	Ảnh chụp  ·  %d×%d
+303	Ảnh 1
+304	Ảnh chụp
+305	Thay thế
+306	Ảnh %d
+307	Hãy nhắc đến các ảnh trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật từ ảnh 1 đứng trong khung cảnh của ảnh 2".
+308	Prompt nói rõ điều cần thay đổi, ví dụ "đổi bầu trời thành hoàng hôn".
+309	tệp lớn hơn 2 GB
+310	LoRA này được làm cho sampler nào?
+311	4 bước (như rapid-moss)
+312	8 bước (như DMD, cần 8 step)
+313	8 bước cần phần bổ sung MOSS 8 step
+314	4 bước (như Lightning)
+315	8 bước (như Turbo thường)
+316	Số bước (%d–%d, mặc định %d)
+317	Nhập một số từ %d đến %d
+318	Giá trị tùy chọn…
+319	Nhập một số từ 1 đến 20
+320	Danh mục mô hình
+321	Không
+322	Chọn tệp…
+323	LoRA turbo
+324	~%d giây
+325	4 bước · không CFG · một ảnh trong vài giây
+326	20–30 bước · CFG và prompt phủ định
+327	mô tả bằng câu thông thường, chữ trong ảnh
+328	chỉnh sửa ảnh, tối đa 3 ảnh
+329	4 bước · chỉnh sửa ảnh
+330	Quá lớn: tối đa 6912 patch (ví dụ 1152×1536)
+331	Token: %d / %d
+332	  ·  phủ định: %d
+333	  ·  quá dài
+334	Đã tải lên NPU, việc tạo ảnh bắt đầu ngay
+335	Đã gỡ khỏi bộ nhớ · tự tải khi bạn tạo ảnh (~5 giây)
+336	Prompt quá dài: %d token, giới hạn là %d. Hãy rút gọn.
+337	Đang chuẩn bị LoRA… (một lần cho bộ này)
+338	Đang chuẩn bị LoRA turbo…
+339	Đen (AMOLED)
+340	Màu nhấn theo hệ thống
+341	Lấy từ hình nền (Android 12 trở lên)
+342	Tương thích: rank %d, %d trên 32 khối, %d lớp chủ
+343	LoRA này dành cho mô hình khác. Nó không phù hợp với Qwen-Image.
+344	Tệp này không giống LoRA của Qwen-Image: thiếu các lớp cần có (transformer_blocks).
+345	Kích thước các lớp không khớp với Qwen-Image (%s).
+346	Rank quá lớn (%s). Hỗ trợ đến 128.
+347	Các lớp gate/proj nhận rank đến 64 (%s).
+348	LoRA có các khối mà Qwen-Image không có (%s).
+349	Tìm theo tên hoặc tác giả…
+350	Đã cài
+351	Phù hợp với điện thoại này
+352	Mô hình trên điện thoại: %s GB  ·  còn trống %.1f GB
+353	Phiên bản cũ
+354	Đã cài %d trên %d
+355	Không tìm thấy gì
+356	Mô hình Anima đầu tiên cũng tải các tệp dùng chung (%s GB): bộ mã hóa văn bản và VAE, chỉ một lần.
+357	một phần
+358	GB
+359	Hãy cài MOSS-Image trước
+360	Số bước và LoRA turbo
+361	Chỉ tải các mô hình gốc. Tốc độ đến từ một LoRA turbo riêng: chọn tệp của nó (.safetensors) ở hàng dưới mô hình; mọi LoRA làm cho mô hình đó đều dùng được, ví dụ Lightning cho Qwen, DMD 8 bước cho MOSS-Image, Turbo v1.1 cho Anima. Số bước được đặt thủ công trong khối "Số bước": dùng đúng số mà LoRA được làm ra (thường là 4 hoặc 8). Không có LoRA turbo thì cần nhiều bước hơn (với Anima còn dùng CFG). Ít bước hơn LoRA mong đợi sẽ cho ảnh mờ, nhiều hơn chỉ tốn thời gian. Cường độ LoRA turbo có thanh trượt.
+362	Ô prompt phủ định hiển thị với các mô hình gốc Anima không có LoRA turbo, nơi CFG được dùng. Với LoRA turbo, CFG tắt (thang 1), prompt phủ định không thay đổi gì và ô này bị ẩn. Chỉ cần không viết điều không muốn vào prompt.
+363	MOSS-Image 5B (Apache-2.0) là mô hình thứ hai, lớn hơn: hãy mô tả ảnh bằng câu thông thường, không dùng thẻ. Bộ mã hóa văn bản, transformer và bộ giải mã đều chạy trên NPU. Cần khoảng 14 GB bộ nhớ và đã được thử trên điện thoại 12 GB RAM. Trọng số được đọc từ bộ nhớ cho mỗi ảnh: khoảng 30 giây cho 512×768, khoảng 80 giây cho 1 Mpx. Không có gì cần tải trước. Với 4 hoặc 8 bước, hãy chọn tệp LoRA turbo (rapid-moss: 4 bước, DMD 8 bước của lodestones: 8 bước) và đặt cùng số bước.
+364	Kích thước nào cũng được: cả hai cạnh là bội số của 16, tối thiểu 256, tối đa 6144 patch (rộng/16 × cao/16), ví dụ 1536×1024. Các adapter turbo được huấn luyện ở khoảng 1 Mpx (1024×1024, 832×1216…), nhưng kích thước nhỏ hơn cũng chạy được. Kích thước chưa có bộ giải mã sẵn sẽ được giải mã theo ô, nên tông màu có thể lệch nhẹ.
+365	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1,00 là thiết lập của tác giả. LoRA turbo và LoRA thường có thể dùng cùng nhau: chúng được gộp vào trọng số trong một lượt. Việc gộp diễn ra khi tải: ảnh đầu tiên với bộ mới (hoặc cường độ mới) chờ khoảng 12–13 giây, trạng thái "Đang chuẩn bị LoRA…". Trọng số đã gộp được giữ dưới dạng khối 8 bit (khoảng 2 GB bộ nhớ) chỉ cho bộ gần nhất: quay lại bộ trước đó sẽ mất lại những giây này. Phần bộ mã hóa văn bản của LoRA không được áp dụng.
+366	Chọn tệp .safetensors của riêng bạn được làm cho MOSS-Image (LoRA cho FLUX, SDXL và các mô hình khác không phù hợp). Tệp được kiểm tra ngay khi bạn chọn, và nếu không phù hợp, ứng dụng sẽ cho biết lý do. Cường độ 1,00 là thiết lập của tác giả: thấp hơn thì yếu hơn, cao hơn thì mạnh hơn. Ảnh đầu tiên với LoRA hoặc cường độ mới mất khoảng 15 giây để chuẩn bị (tệp tạm khoảng 300 MB). Các khe nhận LoRA có rank đến 128; một LoRA thay thế khe turbo. Việc sử dụng LoRA tuân theo giấy phép của tác giả.
+367	Qwen-Image-2.1-Turbo
+368	Qwen-Image 2.1 Turbo (nhóm Qwen) vẽ chữ đọc được trong ảnh và làm theo các prompt dài viết bằng câu thông thường. Với 4 bước, hãy chọn tệp LoRA turbo (ví dụ Lightning của LightX2V) ở hàng dưới mô hình; việc chuẩn bị mất vài giây và được giữ trong bộ nhớ đệm nhỏ (khoảng 16 MB). Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; cần khoảng 14 GB bộ nhớ và nên dùng điện thoại 12 GB RAM. Chỉ dùng phi thương mại (Qwen Research License).

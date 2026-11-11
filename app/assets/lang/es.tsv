@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Modo de poca memoria (más lento)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Los pesos del modelo se leen del almacenamiento para cada imagen en lugar de quedarse en la RAM. Hace falta en teléfonos con 8 GB de RAM, no en los de 12 GB.
   ·  app %.1f GB	  ·  app %.1f GB
+Too large: at most 6144 patches (1536×1024)	Demasiado grande: máximo 6144 parches (1536×1024)
+Compatible: rank %d, %d of %d blocks	Compatible: rango %d, %d de %d bloques
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	Esta LoRA es para otro modelo (FLUX, SDXL o similar). No sirve para Anima.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Este archivo no parece una LoRA de Anima: faltan las capas esperadas (blocks.N.*).
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Los tamaños de las capas no coinciden con Anima (%s). Probablemente es una LoRA para otra versión del modelo.
+The LoRA has blocks that Anima does not have (%s).	La LoRA tiene bloques que Anima no tiene (%s).
+All models	Todos los modelos
+Temperature  battery %.1f °C	Temperatura  batería %.1f °C
+  ·  margin before throttling %d%%	  ·  margen antes de la limitación %d%%
+Picture %d  ·  %d×%d	Imagen %d  ·  %d×%d
++ Another picture (%d of %d)	+ Otra imagen (%d de %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Imágenes: %d. Refiérete a ellas en el prompt: «imagen 1», «imagen 2», p. ej. «el personaje de la imagen 1 está en la escena de la imagen 2».
+A .safetensors file for Anima: it is checked as soon as you pick it	Un archivo .safetensors para Anima: se comprueba en cuanto lo eliges
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: el codificador de texto, el DiT y el VAE funcionan en la NPU; los pesos se leen del almacenamiento para cada imagen
+Out of memory	Sin memoria
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Al teléfono se le acabó la memoria, así que la generación se detuvo para que no se cierre la app. Cierra otras apps o elige un tamaño menor (y una foto más pequeña para editar) e inténtalo de nuevo.
+⏹ Stop	⏹ Detener
+Little free memory (%d MB): close other apps, or the generation may stop	Poca memoria libre (%d MB): cierra otras apps o la generación puede detenerse
+Stopped: out of memory	Detenido: sin memoria
+Loading the LoRA…	Cargando la LoRA…
+For editing the size is at most 1024×768	Para editar, el tamaño es como máximo 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	El prompt es demasiado largo para este tamaño: acórtalo o elige un tamaño menor
+Generation failed: %s (log files/mage/mage.log)	Error de generación: %s (registro files/mage/mage.log)
+Base model (no turbo)	Modelo base (sin turbo)
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Dos pasadas de red por paso (CFG): una imagen tarda de 10 a 15 veces más que con los modelos turbo.
+Steps	Pasos
+Negative prompt	Prompt negativo
+Mage-Flow notices (changes made)	Avisos de Mage-Flow (cambios realizados)
+LoRA for Anima	LoRA para Anima
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, licencia MIT) dibuja imágenes y edita fotos con un prompt en 4 pasos, unos 12 segundos por imagen. El codificador de texto, el ViT, el transformer y el VAE funcionan todos en la NPU; la descarga es de unos 8,7 GB. Para editar una foto, elígela en el bloque «Editar una foto» y describe qué cambiar.
+Mage-Flow sizes	Tamaños de Mage-Flow
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Ambos lados son múltiplos de 16 y el número de parches (ancho/16 × alto/16) es divisible por 32. Para una imagen: máximo 6144 parches, por ejemplo 1536×1024. Para editar: máximo 3200 parches, por ejemplo 1024×768, porque la foto también participa en el cálculo.
+Today	Hoy
+Yesterday	Ayer
+Menu	Menú
+Prompt	Prompt
+Pictures to edit	Imágenes para editar
+Size	Tamaño
+Swap	Intercambiar
+Random	Aleatorio
+Seed  (−1 = random)	Seed  (−1 = aleatorio)
+Pictures per run	Imágenes por ejecución
+Turbo LoRA strength	Fuerza de la LoRA turbo
+Picture 1  ·  %d×%d	Imagen 1  ·  %d×%d
+Photo  ·  %d×%d	Foto  ·  %d×%d
+Picture 1	Imagen 1
+Photo	Foto
+Replace	Reemplazar
+Picture %d	Imagen %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Refiérete a las imágenes en el prompt: «imagen 1», «imagen 2», p. ej. «el personaje de la imagen 1 está en la escena de la imagen 2».
+The prompt says what to change, e.g. "make the sky a sunset".	El prompt dice qué cambiar, p. ej. «pon el cielo al atardecer».
+the file is larger than 2 GB	el archivo pesa más de 2 GB
+Which sampler is this LoRA made for?	¿Para qué sampler está hecha esta LoRA?
+4 steps (like rapid-moss)	4 pasos (como rapid-moss)
+8 steps (like DMD, needs 8 step)	8 pasos (como DMD, necesita 8 step)
+8 steps need the MOSS 8 step add-on	8 pasos necesitan el complemento MOSS 8 step
+4 steps (like Lightning)	4 pasos (como Lightning)
+8 steps (like plain Turbo)	8 pasos (como Turbo simple)
+Steps (%d–%d, default %d)	Pasos (%d–%d, por defecto %d)
+Enter a number from %d to %d	Introduce un número de %d a %d
+Custom value…	Valor personalizado…
+Enter a number from 1 to 20	Introduce un número de 1 a 20
+Model catalog	Catálogo de modelos
+None	Ninguna
+Pick a file…	Elegir un archivo…
+Turbo LoRA	LoRA turbo
+~%d s	~%d s
+4 steps · no CFG · a picture in seconds	4 pasos · sin CFG · una imagen en segundos
+20–30 steps · CFG and negative prompt	20–30 pasos · CFG y prompt negativo
+plain-sentence prompts, text in pictures	descripciones en frases normales, texto en las imágenes
+photo editing, up to 3 pictures	edición de fotos, hasta 3 imágenes
+4 steps · photo editing	4 pasos · edición de fotos
+Too large: at most 6912 patches (e.g. 1152×1536)	Demasiado grande: máximo 6912 parches (p. ej. 1152×1536)
+Tokens: %d / %d	Tokens: %d / %d
+  ·  negative: %d	  ·  negativo: %d
+  ·  too long	  ·  demasiado largo
+Loaded on the NPU, generation starts at once	Cargado en la NPU, la generación empieza al instante
+Unloaded · loads itself when you generate (~5 s)	Descargado · se carga solo al generar (~5 s)
+Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt demasiado largo: %d tokens, el límite es %d. Acórtalo.
+Preparing the LoRA… (once for this set)	Preparando la LoRA… (una vez para este conjunto)
+Preparing the turbo LoRA…	Preparando la LoRA turbo…
+Black (AMOLED)	Negro (AMOLED)
+Accent colour from the system	Color de acento del sistema
+Taken from the wallpaper (Android 12 and newer)	Tomado del fondo de pantalla (Android 12 y posterior)
+Compatible: rank %d, %d of 32 blocks, %d host layers	Compatible: rango %d, %d de 32 bloques, %d capas del host
+This LoRA is for another model. It does not fit Qwen-Image.	Esta LoRA es para otro modelo. No sirve para Qwen-Image.
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	Este archivo no parece una LoRA de Qwen-Image: faltan las capas esperadas (transformer_blocks).
+Layer sizes do not match Qwen-Image (%s).	Los tamaños de las capas no coinciden con Qwen-Image (%s).
+The rank is too large (%s). Up to 128 is supported.	El rango es demasiado grande (%s). Se admite hasta 128.
+The gate/proj layers take rank up to 64 (%s).	Las capas gate/proj admiten un rango de hasta 64 (%s).
+The LoRA has blocks that Qwen-Image does not have (%s).	La LoRA tiene bloques que Qwen-Image no tiene (%s).
+Search by name or author…	Buscar por nombre o autor…
+Installed	Instalados
+Fits this phone	Cabe en este teléfono
+Models on the phone: %s GB  ·  free %.1f GB	Modelos en el teléfono: %s GB  ·  libres %.1f GB
+Old version	Versión antigua
+%d of %d installed	%d de %d instalados
+Nothing found	No se encontró nada
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	El primer modelo Anima también descarga los archivos comunes (%s GB): codificador de texto y VAE, una sola vez.
+partly	parcial
+GB	GB
+Install MOSS-Image first	Instala primero MOSS-Image
+Steps and the Turbo LoRA	Pasos y la LoRA turbo
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	Solo se descargan modelos base. La velocidad viene de una LoRA turbo aparte: elige su archivo (.safetensors) en la fila bajo el modelo; sirve cualquier LoRA hecha para ese modelo, por ejemplo Lightning para Qwen, DMD de 8 pasos para MOSS-Image, Turbo v1.1 para Anima. El número de pasos se fija a mano en el bloque «Pasos»: usa el que la LoRA espera (normalmente 4 u 8). Sin LoRA turbo hacen falta más pasos (en Anima además se usa CFG). Menos pasos de los que espera la LoRA dan una imagen borrosa; más solo cuestan tiempo. La fuerza de la LoRA turbo tiene un control deslizante.
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	El campo de prompt negativo se muestra en los modelos base de Anima sin LoRA turbo, donde se usa CFG. Con una LoRA turbo el CFG está apagado (escala 1), un prompt negativo no cambiaría nada y el campo se oculta. Simplemente no escribas en el prompt lo que no quieres.
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B (Apache-2.0) es un segundo modelo, más grande: describe las imágenes con frases normales, no con etiquetas. El codificador de texto, el transformer y el decodificador funcionan todos en la NPU. Necesita unos 14 GB de almacenamiento y se probó en un teléfono con 12 GB de RAM. Los pesos se leen del almacenamiento para cada imagen: unos 30 s para 512×768, unos 80 s para 1 Mpx. No hay nada que precargar. Para 4 u 8 pasos elige un archivo de LoRA turbo (rapid-moss: 4 pasos, el DMD de 8 pasos de lodestones: 8 pasos) y pon el mismo número de pasos.
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	Sirve cualquier tamaño: ambos lados son múltiplos de 16, como mínimo 256, como máximo 6144 parches (ancho/16 × alto/16), por ejemplo 1536×1024. Los adaptadores turbo se entrenaron con unos 1 Mpx (1024×1024, 832×1216…), pero también funcionan tamaños menores. Los tamaños sin decodificador preparado se decodifican por teselas, así que el tono puede variar un poco.
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Elige tu propio archivo .safetensors hecho para Anima (formatos kohya, diffusers/PEFT, LoKr y LoHa; 28 o 40 bloques). Se comprueba en cuanto lo eliges. La fuerza 1,00 es el ajuste del autor. Se pueden usar a la vez una LoRA turbo y una normal: se integran en los pesos en una sola pasada. Esto ocurre al cargar: la primera imagen con un conjunto nuevo (o una fuerza nueva) espera unos 12–13 s, con el estado «Preparando la LoRA…». Los pesos integrados se guardan como bloques de 8 bits (unos 2 GB de almacenamiento) solo para el último conjunto: volver a un conjunto anterior cuesta esos segundos otra vez. La parte de codificador de texto de una LoRA no se aplica.
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	Elige tu propio archivo .safetensors hecho para MOSS-Image (las LoRA para FLUX, SDXL y otros modelos no sirven). Se comprueba en cuanto lo eliges y, si no sirve, la app dice por qué. La fuerza 1,00 es el ajuste del autor: menos es más débil, más es más fuerte. La primera imagen con una LoRA o fuerza nueva tarda unos 15 s en prepararla (archivos temporales de unos 300 MB). Las ranuras admiten una LoRA de rango hasta 128; una LoRA sustituye la ranura turbo. El uso de una LoRA está sujeto a la licencia de su autor.
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (equipo Qwen) dibuja texto legible en las imágenes y sigue prompts largos escritos en frases normales. Para 4 pasos elige un archivo de LoRA turbo (por ejemplo Lightning de LightX2V) en la fila bajo el modelo; prepararla lleva segundos y se guarda en una caché pequeña (unos 16 MB). El codificador de texto, el ViT, el transformer y el VAE funcionan todos en la NPU; necesita unos 14 GB de almacenamiento y se recomienda un teléfono con 12 GB de RAM. Solo para uso no comercial (Qwen Research License).

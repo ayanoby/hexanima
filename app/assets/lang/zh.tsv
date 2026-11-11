@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	省内存模式（较慢）
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	模型权重不常驻内存，而是每张图都从存储中读取。内存 8 GB 的手机需要，12 GB 的不需要。
   ·  app %.1f GB	  ·  应用 %.1f GB
+Too large: at most 6144 patches (1536×1024)	尺寸过大：最多 6144 个图块（1536×1024）
+Compatible: rank %d, %d of %d blocks	兼容：秩 %d，%d / %d 个模块
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	这个 LoRA 适用于其他模型（FLUX、SDXL 等），不适用于 Anima。
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	此文件不像是 Anima 的 LoRA：缺少应有的层（blocks.N.*）。
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	层的尺寸与 Anima 不匹配（%s）。这可能是针对该模型其他版本的 LoRA。
+The LoRA has blocks that Anima does not have (%s).	该 LoRA 含有 Anima 没有的模块（%s）。
+All models	所有模型
+Temperature  battery %.1f °C	温度  电池 %.1f °C
+  ·  margin before throttling %d%%	  ·  距离降频还有 %d%%
+Picture %d  ·  %d×%d	图片 %d  ·  %d×%d
++ Another picture (%d of %d)	+ 再添加一张图片（%d / %d）
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	图片：%d 张。请在提示词中引用它们：“图片 1”“图片 2”，例如“图片 1 中的角色站在图片 2 的场景里”。
+A .safetensors file for Anima: it is checked as soon as you pick it	适用于 Anima 的 .safetensors 文件：选择后会立即检查
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit：文本编码器、DiT 和 VAE 在 NPU 上运行；每生成一张图片都会从存储中读取权重
+Out of memory	内存不足
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	手机内存不足，为避免应用被关闭，已停止生成。请关闭其他应用，或选择更小的尺寸（编辑时用更小的照片），然后重试。
+⏹ Stop	⏹ 停止
+Little free memory (%d MB): close other apps, or the generation may stop	可用内存很少（%d MB）：请关闭其他应用，否则生成可能会中断
+Stopped: out of memory	已停止：内存不足
+Loading the LoRA…	正在加载 LoRA…
+For editing the size is at most 1024×768	编辑时尺寸最大为 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	提示词对于这个尺寸太长：请缩短，或选择更小的尺寸
+Generation failed: %s (log files/mage/mage.log)	生成失败：%s（日志 files/mage/mage.log）
+Base model (no turbo)	基础模型（无 Turbo）
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	每一步要运行两次网络（CFG）：生成一张图片比 Turbo 模型慢 10–15 倍。
+Steps	步数
+Negative prompt	负面提示词
+Mage-Flow notices (changes made)	Mage-Flow 声明（所作更改）
+LoRA for Anima	Anima 的 LoRA
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft，4B，MIT 许可证）可根据提示词绘制图片并编辑照片，4 步完成，每张约 12 秒。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；下载约 8.7 GB。要编辑照片，请在“编辑照片”区域选择照片并描述要修改的内容。
+Mage-Flow sizes	Mage-Flow 的尺寸
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	两边都是 16 的倍数，图块数（宽/16 × 高/16）可被 32 整除。生成图片：最多 6144 个图块，例如 1536×1024。编辑：最多 3200 个图块，例如 1024×768，因为照片也参与计算。
+Today	今天
+Yesterday	昨天
+Menu	菜单
+Prompt	提示词
+Pictures to edit	要编辑的图片
+Size	尺寸
+Swap	互换
+Random	随机
+Seed  (−1 = random)	Seed  （−1 = 随机）
+Pictures per run	每次生成张数
+Turbo LoRA strength	Turbo LoRA 强度
+Picture 1  ·  %d×%d	图片 1  ·  %d×%d
+Photo  ·  %d×%d	照片  ·  %d×%d
+Picture 1	图片 1
+Photo	照片
+Replace	替换
+Picture %d	图片 %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	请在提示词中引用图片：“图片 1”“图片 2”，例如“图片 1 中的角色站在图片 2 的场景里”。
+The prompt says what to change, e.g. "make the sky a sunset".	提示词说明要修改什么，例如“把天空改成日落”。
+the file is larger than 2 GB	文件大于 2 GB
+Which sampler is this LoRA made for?	这个 LoRA 是为哪种采样器制作的？
+4 steps (like rapid-moss)	4 步（与 rapid-moss 相同）
+8 steps (like DMD, needs 8 step)	8 步（与 DMD 相同，需要 8 step）
+8 steps need the MOSS 8 step add-on	8 步需要 MOSS 8 step 附加包
+4 steps (like Lightning)	4 步（与 Lightning 相同）
+8 steps (like plain Turbo)	8 步（与普通 Turbo 相同）
+Steps (%d–%d, default %d)	步数（%d–%d，默认 %d）
+Enter a number from %d to %d	请输入 %d 到 %d 之间的数字
+Custom value…	自定义值…
+Enter a number from 1 to 20	请输入 1 到 20 之间的数字
+Model catalog	模型目录
+None	无
+Pick a file…	选择文件…
+Turbo LoRA	Turbo LoRA
+~%d s	约 %d 秒
+4 steps · no CFG · a picture in seconds	4 步 · 无 CFG · 几秒钟一张图
+20–30 steps · CFG and negative prompt	20–30 步 · CFG 与负面提示词
+plain-sentence prompts, text in pictures	用普通句子描述，图中可含文字
+photo editing, up to 3 pictures	照片编辑，最多 3 张图片
+4 steps · photo editing	4 步 · 照片编辑
+Too large: at most 6912 patches (e.g. 1152×1536)	尺寸过大：最多 6912 个图块（例如 1152×1536）
+Tokens: %d / %d	Token：%d / %d
+  ·  negative: %d	  ·  负面：%d
+  ·  too long	  ·  过长
+Loaded on the NPU, generation starts at once	已加载到 NPU，生成会立即开始
+Unloaded · loads itself when you generate (~5 s)	已卸载 · 生成时会自动加载（约 5 秒）
+Prompt too long: %d tokens, the limit is %d. Shorten it.	提示词过长：%d 个 token，上限为 %d。请缩短。
+Preparing the LoRA… (once for this set)	正在准备 LoRA…（此组合只需一次）
+Preparing the turbo LoRA…	正在准备 Turbo LoRA…
+Black (AMOLED)	黑色（AMOLED）
+Accent colour from the system	系统强调色
+Taken from the wallpaper (Android 12 and newer)	取自壁纸（Android 12 及更高版本）
+Compatible: rank %d, %d of 32 blocks, %d host layers	兼容：秩 %d，%d / 32 个模块，%d 个宿主层
+This LoRA is for another model. It does not fit Qwen-Image.	这个 LoRA 适用于其他模型，不适用于 Qwen-Image。
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	此文件不像是 Qwen-Image 的 LoRA：缺少应有的层（transformer_blocks）。
+Layer sizes do not match Qwen-Image (%s).	层的尺寸与 Qwen-Image 不匹配（%s）。
+The rank is too large (%s). Up to 128 is supported.	秩过大（%s）。最高支持 128。
+The gate/proj layers take rank up to 64 (%s).	gate/proj 层最高支持秩 64（%s）。
+The LoRA has blocks that Qwen-Image does not have (%s).	该 LoRA 含有 Qwen-Image 没有的模块（%s）。
+Search by name or author…	按名称或作者搜索…
+Installed	已安装
+Fits this phone	适合这部手机
+Models on the phone: %s GB  ·  free %.1f GB	手机上的模型：%s GB  ·  可用 %.1f GB
+Old version	旧版本
+%d of %d installed	已安装 %d / %d
+Nothing found	未找到
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	安装第一个 Anima 模型时还会下载共用文件（%s GB）：文本编码器和 VAE，只需一次。
+partly	部分
+GB	GB
+Install MOSS-Image first	请先安装 MOSS-Image
+Steps and the Turbo LoRA	步数与 Turbo LoRA
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	只下载基础模型。加速来自单独的 Turbo LoRA：在模型下方那一行选择它的文件（.safetensors）；任何为该模型制作的 LoRA 都可以，例如 Qwen 的 Lightning、MOSS-Image 的 8 步 DMD、Anima 的 Turbo v1.1。步数在“步数”区域手动设置：使用 LoRA 设计时的步数（通常是 4 或 8）。没有 Turbo LoRA 时需要更多步数（Anima 还会用到 CFG）。步数少于 LoRA 的预期会让图片模糊，多了只会浪费时间。Turbo LoRA 的强度有滑块可调。
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	负面提示词输入框只在没有 Turbo LoRA 的 Anima 基础模型上显示，此时会使用 CFG。使用 Turbo LoRA 时 CFG 关闭（缩放 1），负面提示词不会改变任何结果，因此该输入框会隐藏。不想要的内容直接不写进提示词即可。
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B（Apache-2.0）是第二个更大的模型：请用普通句子而不是标签来描述图片。文本编码器、Transformer 和解码器都在 NPU 上运行。需要约 14 GB 存储空间，已在 12 GB 内存的手机上测试。每生成一张图片都会从存储中读取权重：512×768 约 30 秒，1 Mpx 约 80 秒。无需预先加载。若要 4 步或 8 步，请选择 Turbo LoRA 文件（rapid-moss：4 步，lodestones 的 8 步 DMD：8 步），并设置相同的步数。
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	任何尺寸都可以：两边都是 16 的倍数，不小于 256，图块数最多 6144（宽/16 × 高/16），例如 1536×1024。Turbo 适配器是在约 1 Mpx（1024×1024、832×1216…）下训练的，但更小的尺寸也能用。没有现成解码器的尺寸会分块解码，因此色调可能略有偏移。
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	选择你自己的、为 Anima 制作的 .safetensors 文件（kohya、diffusers/PEFT、LoKr 和 LoHa 格式；28 或 40 个模块）。选择后会立即检查。强度 1.00 是作者的设定。Turbo LoRA 和普通 LoRA 可以同时使用：它们会一次性合并进权重。合并在加载时进行：使用新组合（或新强度）生成的第一张图片需要多等约 12–13 秒，状态显示“正在准备 LoRA…”。合并后的权重以 8 位模块保存（约 2 GB 存储空间），只保留最近一组：回到之前的组合会再次花费这些时间。LoRA 中文本编码器的部分不会被应用。
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	选择你自己的、为 MOSS-Image 制作的 .safetensors 文件（FLUX、SDXL 等其他模型的 LoRA 不适用）。选择后会立即检查，如果不适用，应用会说明原因。强度 1.00 是作者的设定：调低则更弱，调高则更强。使用新 LoRA 或新强度生成的第一张图片需要约 15 秒来准备（临时文件约 300 MB）。插槽支持秩最高 128 的 LoRA；一个 LoRA 会替换 Turbo 插槽。使用 LoRA 须遵守其作者的许可证。
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo（Qwen 团队）能在图片中绘制清晰可读的文字，并能理解用普通句子写成的长提示词。要使用 4 步，请在模型下方那一行选择 Turbo LoRA 文件（例如 LightX2V 的 Lightning）；准备只需几秒，并保存在小缓存中（约 16 MB）。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；需要约 14 GB 存储空间，建议使用 12 GB 内存的手机。仅限非商业用途（Qwen Research License）。

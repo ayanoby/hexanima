@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	省メモリモード（遅くなります）
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	モデルの重みは RAM に常駐させず、1 枚ごとにストレージから読み込みます。RAM 8 GB の端末で必要で、12 GB では不要です。
   ·  app %.1f GB	  ·  アプリ %.1f GB
+Too large: at most 6144 patches (1536×1024)	大きすぎます：パッチは最大6144個（1536×1024）
+Compatible: rank %d, %d of %d blocks	互換性あり：ランク %d、%d / %d ブロック
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	このLoRAは別のモデル（FLUX、SDXLなど）用です。Animaには合いません。
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	このファイルはAnimaのLoRAではないようです：必要なレイヤー（blocks.N.*）がありません。
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	レイヤーのサイズがAnimaと一致しません（%s）。モデルの別バージョン用のLoRAと思われます。
+The LoRA has blocks that Anima does not have (%s).	このLoRAにはAnimaにないブロックがあります（%s）。
+All models	すべてのモデル
+Temperature  battery %.1f °C	温度  バッテリー %.1f °C
+  ·  margin before throttling %d%%	  ·  サーマルスロットリングまで %d%%
+Picture %d  ·  %d×%d	画像 %d  ·  %d×%d
++ Another picture (%d of %d)	＋ 別の画像を追加（%d / %d）
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	画像：%d。プロンプトでは「画像1」「画像2」のように指定します。例：「画像1のキャラクターが画像2の場面に立っている」。
+A .safetensors file for Anima: it is checked as soon as you pick it	Anima用の .safetensors ファイル：選択するとすぐに確認されます
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit：テキストエンコーダー、DiT、VAEはNPUで動作し、重みは画像ごとにストレージから読み込まれます
+Out of memory	メモリ不足
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	スマートフォンのメモリが足りなくなったため、アプリが終了しないよう生成を停止しました。他のアプリを閉じるか、より小さいサイズ（編集では小さい写真）を選んで、もう一度お試しください。
+⏹ Stop	⏹ 停止
+Little free memory (%d MB): close other apps, or the generation may stop	空きメモリが少なくなっています（%d MB）：他のアプリを閉じてください。生成が止まる場合があります
+Stopped: out of memory	停止：メモリ不足
+Loading the LoRA…	LoRAを読み込み中…
+For editing the size is at most 1024×768	編集時のサイズは最大1024×768です
+The prompt is too long for this size: shorten it or pick a smaller size	このサイズにはプロンプトが長すぎます：短くするか、小さいサイズを選んでください
+Generation failed: %s (log files/mage/mage.log)	生成に失敗しました：%s（ログ files/mage/mage.log）
+Base model (no turbo)	ベースモデル（ターボなし）
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	1ステップにつきネットワークを2回実行します（CFG）：1枚の生成にターボモデルの10〜15倍の時間がかかります。
+Steps	ステップ数
+Negative prompt	ネガティブプロンプト
+Mage-Flow notices (changes made)	Mage-Flowの表示事項（変更点）
+LoRA for Anima	Anima用LoRA
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft、4B、MITライセンス）は、プロンプトで画像を描き、写真を編集します。4ステップで1枚あたり約12秒。テキストエンコーダー、ViT、トランスフォーマー、VAEはすべてNPUで動作し、ダウンロードは約8.7 GBです。写真を編集するには「写真を編集」ブロックで写真を選び、変更したい内容を書いてください。
+Mage-Flow sizes	Mage-Flowのサイズ
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	両辺は16の倍数で、パッチ数（幅/16 × 高さ/16）は32で割り切れる必要があります。画像生成：最大6144パッチ、例：1536×1024。編集：最大3200パッチ、例：1024×768（写真も計算に含まれるため）。
+Today	今日
+Yesterday	昨日
+Menu	メニュー
+Prompt	プロンプト
+Pictures to edit	編集する画像
+Size	サイズ
+Swap	入れ替え
+Random	ランダム
+Seed  (−1 = random)	Seed  （−1 = ランダム）
+Pictures per run	1回あたりの枚数
+Turbo LoRA strength	ターボLoRAの強さ
+Picture 1  ·  %d×%d	画像1  ·  %d×%d
+Photo  ·  %d×%d	写真  ·  %d×%d
+Picture 1	画像1
+Photo	写真
+Replace	置き換え
+Picture %d	画像%d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	プロンプトでは画像を「画像1」「画像2」のように指定します。例：「画像1のキャラクターが画像2の場面に立っている」。
+The prompt says what to change, e.g. "make the sky a sunset".	プロンプトで変更内容を書きます。例：「空を夕焼けにして」。
+the file is larger than 2 GB	ファイルが2 GBを超えています
+Which sampler is this LoRA made for?	このLoRAはどのサンプラー用ですか？
+4 steps (like rapid-moss)	4ステップ（rapid-mossと同じ）
+8 steps (like DMD, needs 8 step)	8ステップ（DMDと同じ、8 stepが必要）
+8 steps need the MOSS 8 step add-on	8ステップにはMOSS 8 stepの追加パックが必要です
+4 steps (like Lightning)	4ステップ（Lightningと同じ）
+8 steps (like plain Turbo)	8ステップ（通常のTurboと同じ）
+Steps (%d–%d, default %d)	ステップ数（%d〜%d、既定 %d）
+Enter a number from %d to %d	%d〜%dの数値を入力してください
+Custom value…	任意の値…
+Enter a number from 1 to 20	1〜20の数値を入力してください
+Model catalog	モデルカタログ
+None	なし
+Pick a file…	ファイルを選択…
+Turbo LoRA	ターボLoRA
+~%d s	約%d秒
+4 steps · no CFG · a picture in seconds	4ステップ · CFGなし · 数秒で1枚
+20–30 steps · CFG and negative prompt	20〜30ステップ · CFGとネガティブプロンプト
+plain-sentence prompts, text in pictures	普通の文章での記述、画像内の文字
+photo editing, up to 3 pictures	写真編集、最大3枚
+4 steps · photo editing	4ステップ · 写真編集
+Too large: at most 6912 patches (e.g. 1152×1536)	大きすぎます：パッチは最大6912個（例：1152×1536）
+Tokens: %d / %d	トークン：%d / %d
+  ·  negative: %d	  ·  ネガティブ：%d
+  ·  too long	  ·  長すぎます
+Loaded on the NPU, generation starts at once	NPUに読み込み済み、生成はすぐに始まります
+Unloaded · loads itself when you generate (~5 s)	読み込み解除済み · 生成時に自動で読み込まれます（約5秒）
+Prompt too long: %d tokens, the limit is %d. Shorten it.	プロンプトが長すぎます：%dトークン、上限は%dです。短くしてください。
+Preparing the LoRA… (once for this set)	LoRAを準備中…（このセットでは1回のみ）
+Preparing the turbo LoRA…	ターボLoRAを準備中…
+Black (AMOLED)	ブラック（AMOLED）
+Accent colour from the system	システムのアクセントカラー
+Taken from the wallpaper (Android 12 and newer)	壁紙から取得（Android 12以降）
+Compatible: rank %d, %d of 32 blocks, %d host layers	互換性あり：ランク %d、%d / 32 ブロック、ホストレイヤー %d
+This LoRA is for another model. It does not fit Qwen-Image.	このLoRAは別のモデル用です。Qwen-Imageには合いません。
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	このファイルはQwen-ImageのLoRAではないようです：必要なレイヤー（transformer_blocks）がありません。
+Layer sizes do not match Qwen-Image (%s).	レイヤーのサイズがQwen-Imageと一致しません（%s）。
+The rank is too large (%s). Up to 128 is supported.	ランクが大きすぎます（%s）。128まで対応しています。
+The gate/proj layers take rank up to 64 (%s).	gate/projレイヤーはランク64まで対応しています（%s）。
+The LoRA has blocks that Qwen-Image does not have (%s).	このLoRAにはQwen-Imageにないブロックがあります（%s）。
+Search by name or author…	名前または作者で検索…
+Installed	インストール済み
+Fits this phone	この端末で動作可
+Models on the phone: %s GB  ·  free %.1f GB	端末内のモデル：%s GB  ·  空き %.1f GB
+Old version	旧バージョン
+%d of %d installed	%d / %d インストール済み
+Nothing found	見つかりませんでした
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	最初のAnimaモデルでは共通ファイル（%s GB）も取得します：テキストエンコーダーとVAE、1回のみ。
+partly	一部
+GB	GB
+Install MOSS-Image first	先にMOSS-Imageをインストールしてください
+Steps and the Turbo LoRA	ステップ数とターボLoRA
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	ダウンロードするのはベースモデルのみです。高速化は別のターボLoRAで行います：モデルの下の行でそのファイル（.safetensors）を選んでください。そのモデル用のLoRAなら何でも使えます（例：Qwen用Lightning、MOSS-Image用8ステップDMD、Anima用Turbo v1.1）。ステップ数は「ステップ数」ブロックで手動設定します：LoRAが想定する数（通常4または8）にしてください。ターボLoRAなしではより多くのステップが必要です（AnimaではCFGも使います）。LoRAが想定するより少ないとぼやけた画像になり、多いと時間がかかるだけです。ターボLoRAの強さにはスライダーがあります。
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	ネガティブプロンプト欄は、CFGを使うターボLoRAなしのAnimaベースモデルで表示されます。ターボLoRAではCFGがオフ（スケール1）で、ネガティブプロンプトは何も変えないため、欄は非表示です。不要なものはプロンプトに書かないでください。
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B（Apache-2.0）は、より大きな2つ目のモデルです：タグではなく普通の文章で画像を説明してください。テキストエンコーダー、トランスフォーマー、デコーダーはすべてNPUで動作します。約14 GBのストレージが必要で、RAM 12 GBのスマートフォンで動作確認済みです。重みは画像ごとにストレージから読み込まれます：512×768で約30秒、1 Mpxで約80秒。事前に読み込む必要はありません。4または8ステップにするには、ターボLoRAファイル（rapid-moss：4ステップ、lodestonesの8ステップDMD：8ステップ）を選び、同じステップ数を設定してください。
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	どのサイズでも使えます：両辺は16の倍数で、256以上、パッチは最大6144個（幅/16 × 高さ/16）、例：1536×1024。ターボアダプターは約1 Mpx（1024×1024、832×1216など）で学習されていますが、小さいサイズでも動作します。用意されたデコーダーがないサイズはタイル単位でデコードされるため、色味がわずかにずれることがあります。
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Anima用の自分の .safetensors ファイルを選んでください（kohya、diffusers/PEFT、LoKr、LoHa形式、28または40ブロック）。選択するとすぐに確認されます。強さ1.00は作者の設定です。ターボLoRAと通常のLoRAは併用でき、1回の処理で重みに組み込まれます。組み込みは読み込み時に行われ、新しいセット（または新しい強さ）での最初の画像は約12〜13秒待ち、状態は「LoRAを準備中…」と表示されます。組み込み済みの重みは8ビットブロック（約2 GBのストレージ）として最後のセット分だけ保持されます：前のセットに戻ると、この待ち時間がもう一度かかります。LoRAのテキストエンコーダー部分は適用されません。
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	MOSS-Image用の自分の .safetensors ファイルを選んでください（FLUX、SDXLなど他のモデル用LoRAは使えません）。選択するとすぐに確認され、合わない場合はアプリが理由を表示します。強さ1.00は作者の設定です：低いと弱く、高いと強くなります。新しいLoRAまたは新しい強さでの最初の画像は、準備に約15秒かかります（一時ファイル約300 MB）。スロットはランク128までのLoRAを受け付け、LoRAを1つ使うとターボスロットが置き換わります。LoRAの利用は作者のライセンスに従います。
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo（Qwenチーム）は、画像内の読みやすい文字を描き、普通の文章で書かれた長いプロンプトに従います。4ステップにするには、モデルの下の行でターボLoRAファイル（例：LightX2VのLightning）を選んでください。準備は数秒で、小さなキャッシュ（約16 MB）に保持されます。テキストエンコーダー、ViT、トランスフォーマー、VAEはすべてNPUで動作します。約14 GBのストレージが必要で、RAM 12 GBのスマートフォンを推奨します。非商用利用のみ（Qwen Research License）。

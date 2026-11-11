@@ -242,3 +242,115 @@ MOSS-Image (OpenMOSS), Qwen3.5-9B (Qwen team), the rapid-moss adapter (darask0, 
 Low-memory mode (slower)	Chế độ tiết kiệm bộ nhớ (chậm hơn)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Trọng số của model được đọc từ bộ nhớ cho mỗi ảnh thay vì giữ trong RAM. Cần cho điện thoại 8 GB RAM, không cần với 12 GB.
   ·  app %.1f GB	  ·  ứng dụng %.1f GB
+Too large: at most 6144 patches (1536×1024)	Quá lớn: tối đa 6144 patch (1536×1024)
+Compatible: rank %d, %d of %d blocks	Tương thích: rank %d, %d trên %d khối
+This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	LoRA này dành cho mô hình khác (FLUX, SDXL hoặc tương tự). Nó không phù hợp với Anima.
+This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Tệp này không giống LoRA của Anima: thiếu các lớp cần có (blocks.N.*).
+Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Kích thước các lớp không khớp với Anima (%s). Có thể đây là LoRA cho phiên bản khác của mô hình.
+The LoRA has blocks that Anima does not have (%s).	LoRA có các khối mà Anima không có (%s).
+All models	Tất cả mô hình
+Temperature  battery %.1f °C	Nhiệt độ  pin %.1f °C
+  ·  margin before throttling %d%%	  ·  còn cách mức giảm xung %d%%
+Picture %d  ·  %d×%d	Ảnh %d  ·  %d×%d
++ Another picture (%d of %d)	+ Thêm ảnh (%d trên %d)
+Pictures: %d. Refer to them in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Số ảnh: %d. Hãy nhắc đến chúng trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật từ ảnh 1 đứng trong khung cảnh của ảnh 2".
+A .safetensors file for Anima: it is checked as soon as you pick it	Tệp .safetensors cho Anima: được kiểm tra ngay khi bạn chọn
+Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are streamed from storage for every picture	Mage-Flow-Edit: bộ mã hóa văn bản, DiT và VAE chạy trên NPU; trọng số được đọc từ bộ nhớ cho mỗi ảnh
+Out of memory	Hết bộ nhớ
+The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Điện thoại hết bộ nhớ nên quá trình tạo ảnh đã bị dừng để ứng dụng không bị đóng. Hãy đóng ứng dụng khác hoặc chọn kích thước nhỏ hơn (và ảnh nhỏ hơn khi chỉnh sửa) rồi thử lại.
+⏹ Stop	⏹ Dừng
+Little free memory (%d MB): close other apps, or the generation may stop	Bộ nhớ trống ít (%d MB): hãy đóng ứng dụng khác, nếu không quá trình tạo có thể dừng
+Stopped: out of memory	Đã dừng: hết bộ nhớ
+Loading the LoRA…	Đang tải LoRA…
+For editing the size is at most 1024×768	Khi chỉnh sửa, kích thước tối đa là 1024×768
+The prompt is too long for this size: shorten it or pick a smaller size	Prompt quá dài cho kích thước này: hãy rút gọn hoặc chọn kích thước nhỏ hơn
+Generation failed: %s (log files/mage/mage.log)	Tạo ảnh thất bại: %s (nhật ký files/mage/mage.log)
+Base model (no turbo)	Mô hình gốc (không turbo)
+Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Hai lượt chạy mạng mỗi bước (CFG): một ảnh mất lâu hơn 10–15 lần so với các mô hình turbo.
+Steps	Số bước
+Negative prompt	Prompt phủ định
+Mage-Flow notices (changes made)	Thông báo Mage-Flow (các thay đổi đã thực hiện)
+LoRA for Anima	LoRA cho Anima
+Mage-Flow-Edit	Mage-Flow-Edit
+Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh chụp bằng prompt trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh chụp, hãy chọn ảnh trong khối "Chỉnh sửa ảnh" và mô tả điều cần thay đổi.
+Mage-Flow sizes	Kích thước Mage-Flow
+Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. For a picture: at most 6144 patches, for example 1536×1024. For editing: at most 3200 patches, for example 1024×768, because the photo is part of the computation too.	Cả hai cạnh là bội số của 16 và số patch (rộng/16 × cao/16) chia hết cho 32. Với ảnh tạo mới: tối đa 6144 patch, ví dụ 1536×1024. Với chỉnh sửa: tối đa 3200 patch, ví dụ 1024×768, vì ảnh chụp cũng tham gia vào phép tính.
+Today	Hôm nay
+Yesterday	Hôm qua
+Menu	Menu
+Prompt	Prompt
+Pictures to edit	Ảnh cần chỉnh sửa
+Size	Kích thước
+Swap	Đổi chỗ
+Random	Ngẫu nhiên
+Seed  (−1 = random)	Seed  (−1 = ngẫu nhiên)
+Pictures per run	Số ảnh mỗi lần
+Turbo LoRA strength	Cường độ LoRA turbo
+Picture 1  ·  %d×%d	Ảnh 1  ·  %d×%d
+Photo  ·  %d×%d	Ảnh chụp  ·  %d×%d
+Picture 1	Ảnh 1
+Photo	Ảnh chụp
+Replace	Thay thế
+Picture %d	Ảnh %d
+Refer to the pictures in the prompt: "picture 1", "picture 2", e.g. "the character from picture 1 stands in the scene of picture 2".	Hãy nhắc đến các ảnh trong prompt: "ảnh 1", "ảnh 2", ví dụ "nhân vật từ ảnh 1 đứng trong khung cảnh của ảnh 2".
+The prompt says what to change, e.g. "make the sky a sunset".	Prompt nói rõ điều cần thay đổi, ví dụ "đổi bầu trời thành hoàng hôn".
+the file is larger than 2 GB	tệp lớn hơn 2 GB
+Which sampler is this LoRA made for?	LoRA này được làm cho sampler nào?
+4 steps (like rapid-moss)	4 bước (như rapid-moss)
+8 steps (like DMD, needs 8 step)	8 bước (như DMD, cần 8 step)
+8 steps need the MOSS 8 step add-on	8 bước cần phần bổ sung MOSS 8 step
+4 steps (like Lightning)	4 bước (như Lightning)
+8 steps (like plain Turbo)	8 bước (như Turbo thường)
+Steps (%d–%d, default %d)	Số bước (%d–%d, mặc định %d)
+Enter a number from %d to %d	Nhập một số từ %d đến %d
+Custom value…	Giá trị tùy chọn…
+Enter a number from 1 to 20	Nhập một số từ 1 đến 20
+Model catalog	Danh mục mô hình
+None	Không
+Pick a file…	Chọn tệp…
+Turbo LoRA	LoRA turbo
+~%d s	~%d giây
+4 steps · no CFG · a picture in seconds	4 bước · không CFG · một ảnh trong vài giây
+20–30 steps · CFG and negative prompt	20–30 bước · CFG và prompt phủ định
+plain-sentence prompts, text in pictures	mô tả bằng câu thông thường, chữ trong ảnh
+photo editing, up to 3 pictures	chỉnh sửa ảnh, tối đa 3 ảnh
+4 steps · photo editing	4 bước · chỉnh sửa ảnh
+Too large: at most 6912 patches (e.g. 1152×1536)	Quá lớn: tối đa 6912 patch (ví dụ 1152×1536)
+Tokens: %d / %d	Token: %d / %d
+  ·  negative: %d	  ·  phủ định: %d
+  ·  too long	  ·  quá dài
+Loaded on the NPU, generation starts at once	Đã tải lên NPU, việc tạo ảnh bắt đầu ngay
+Unloaded · loads itself when you generate (~5 s)	Đã gỡ khỏi bộ nhớ · tự tải khi bạn tạo ảnh (~5 giây)
+Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt quá dài: %d token, giới hạn là %d. Hãy rút gọn.
+Preparing the LoRA… (once for this set)	Đang chuẩn bị LoRA… (một lần cho bộ này)
+Preparing the turbo LoRA…	Đang chuẩn bị LoRA turbo…
+Black (AMOLED)	Đen (AMOLED)
+Accent colour from the system	Màu nhấn theo hệ thống
+Taken from the wallpaper (Android 12 and newer)	Lấy từ hình nền (Android 12 trở lên)
+Compatible: rank %d, %d of 32 blocks, %d host layers	Tương thích: rank %d, %d trên 32 khối, %d lớp chủ
+This LoRA is for another model. It does not fit Qwen-Image.	LoRA này dành cho mô hình khác. Nó không phù hợp với Qwen-Image.
+This file does not look like a Qwen-Image LoRA: the expected layers (transformer_blocks) are missing.	Tệp này không giống LoRA của Qwen-Image: thiếu các lớp cần có (transformer_blocks).
+Layer sizes do not match Qwen-Image (%s).	Kích thước các lớp không khớp với Qwen-Image (%s).
+The rank is too large (%s). Up to 128 is supported.	Rank quá lớn (%s). Hỗ trợ đến 128.
+The gate/proj layers take rank up to 64 (%s).	Các lớp gate/proj nhận rank đến 64 (%s).
+The LoRA has blocks that Qwen-Image does not have (%s).	LoRA có các khối mà Qwen-Image không có (%s).
+Search by name or author…	Tìm theo tên hoặc tác giả…
+Installed	Đã cài
+Fits this phone	Phù hợp với điện thoại này
+Models on the phone: %s GB  ·  free %.1f GB	Mô hình trên điện thoại: %s GB  ·  còn trống %.1f GB
+Old version	Phiên bản cũ
+%d of %d installed	Đã cài %d trên %d
+Nothing found	Không tìm thấy gì
+The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.	Mô hình Anima đầu tiên cũng tải các tệp dùng chung (%s GB): bộ mã hóa văn bản và VAE, chỉ một lần.
+partly	một phần
+GB	GB
+Install MOSS-Image first	Hãy cài MOSS-Image trước
+Steps and the Turbo LoRA	Số bước và LoRA turbo
+Only base models are downloaded. Speed comes from a separate Turbo LoRA: pick its file (.safetensors) in the row under the model; any LoRA made for that model works, for example Lightning for Qwen, 8-step DMD for MOSS-Image, Turbo v1.1 for Anima. The number of steps is set by hand in the Steps block: use what the LoRA was made for (usually 4 or 8). Without a Turbo LoRA more steps are needed (Anima also uses CFG). Fewer steps than the LoRA expects look blurry, more only cost time. The Turbo LoRA strength has a slider.	Chỉ tải các mô hình gốc. Tốc độ đến từ một LoRA turbo riêng: chọn tệp của nó (.safetensors) ở hàng dưới mô hình; mọi LoRA làm cho mô hình đó đều dùng được, ví dụ Lightning cho Qwen, DMD 8 bước cho MOSS-Image, Turbo v1.1 cho Anima. Số bước được đặt thủ công trong khối "Số bước": dùng đúng số mà LoRA được làm ra (thường là 4 hoặc 8). Không có LoRA turbo thì cần nhiều bước hơn (với Anima còn dùng CFG). Ít bước hơn LoRA mong đợi sẽ cho ảnh mờ, nhiều hơn chỉ tốn thời gian. Cường độ LoRA turbo có thanh trượt.
+The negative prompt field is shown for base Anima models without a Turbo LoRA, where CFG is used. With a Turbo LoRA CFG is off (scale 1), a negative prompt would change nothing and the field is hidden. Simply leave unwanted things out of the prompt.	Ô prompt phủ định hiển thị với các mô hình gốc Anima không có LoRA turbo, nơi CFG được dùng. Với LoRA turbo, CFG tắt (thang 1), prompt phủ định không thay đổi gì và ô này bị ẩn. Chỉ cần không viết điều không muốn vào prompt.
+MOSS-Image 5B (Apache-2.0) is a second, larger model: describe pictures in plain sentences, not tags. The text encoder, the transformer and the decoder all run on the NPU. It needs about 14 GB of storage and was tested on a phone with 12 GB of RAM. Its weights are streamed from storage for every picture: about 30 s for 512×768, about 80 s for 1 Mpx. There is nothing to preload. For 4 or 8 steps pick a Turbo LoRA file (rapid-moss: 4 steps, the 8-step DMD by lodestones: 8 steps) and set the same number of steps.	MOSS-Image 5B (Apache-2.0) là mô hình thứ hai, lớn hơn: hãy mô tả ảnh bằng câu thông thường, không dùng thẻ. Bộ mã hóa văn bản, transformer và bộ giải mã đều chạy trên NPU. Cần khoảng 14 GB bộ nhớ và đã được thử trên điện thoại 12 GB RAM. Trọng số được đọc từ bộ nhớ cho mỗi ảnh: khoảng 30 giây cho 512×768, khoảng 80 giây cho 1 Mpx. Không có gì cần tải trước. Với 4 hoặc 8 bước, hãy chọn tệp LoRA turbo (rapid-moss: 4 bước, DMD 8 bước của lodestones: 8 bước) và đặt cùng số bước.
+Any size works: both sides are multiples of 16, at least 256, at most 6144 patches (width/16 × height/16), for example 1536×1024. The turbo adapters were trained at about 1 Mpx (1024×1024, 832×1216…), but smaller sizes also work. Sizes without a ready decoder are decoded in tiles, so the tone can shift slightly.	Kích thước nào cũng được: cả hai cạnh là bội số của 16, tối thiểu 256, tối đa 6144 patch (rộng/16 × cao/16), ví dụ 1536×1024. Các adapter turbo được huấn luyện ở khoảng 1 Mpx (1024×1024, 832×1216…), nhưng kích thước nhỏ hơn cũng chạy được. Kích thước chưa có bộ giải mã sẵn sẽ được giải mã theo ô, nên tông màu có thể lệch nhẹ.
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. A Turbo LoRA and a regular LoRA can be used together: they are folded into the weights in one pass. Folding happens on load: the first picture with a new set (or a new strength) waits about 12-13 s, with the status "Preparing the LoRA…". The folded weights are kept as 8-bit blocks (about 2 GB of storage) for the last set only: going back to an earlier set takes those seconds again. The text-encoder part of a LoRA is not applied.	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1,00 là thiết lập của tác giả. LoRA turbo và LoRA thường có thể dùng cùng nhau: chúng được gộp vào trọng số trong một lượt. Việc gộp diễn ra khi tải: ảnh đầu tiên với bộ mới (hoặc cường độ mới) chờ khoảng 12–13 giây, trạng thái "Đang chuẩn bị LoRA…". Trọng số đã gộp được giữ dưới dạng khối 8 bit (khoảng 2 GB bộ nhớ) chỉ cho bộ gần nhất: quay lại bộ trước đó sẽ mất lại những giây này. Phần bộ mã hóa văn bản của LoRA không được áp dụng.
+Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	Chọn tệp .safetensors của riêng bạn được làm cho MOSS-Image (LoRA cho FLUX, SDXL và các mô hình khác không phù hợp). Tệp được kiểm tra ngay khi bạn chọn, và nếu không phù hợp, ứng dụng sẽ cho biết lý do. Cường độ 1,00 là thiết lập của tác giả: thấp hơn thì yếu hơn, cao hơn thì mạnh hơn. Ảnh đầu tiên với LoRA hoặc cường độ mới mất khoảng 15 giây để chuẩn bị (tệp tạm khoảng 300 MB). Các khe nhận LoRA có rank đến 128; một LoRA thay thế khe turbo. Việc sử dụng LoRA tuân theo giấy phép của tác giả.
+Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
+Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (nhóm Qwen) vẽ chữ đọc được trong ảnh và làm theo các prompt dài viết bằng câu thông thường. Với 4 bước, hãy chọn tệp LoRA turbo (ví dụ Lightning của LightX2V) ở hàng dưới mô hình; việc chuẩn bị mất vài giây và được giữ trong bộ nhớ đệm nhỏ (khoảng 16 MB). Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; cần khoảng 14 GB bộ nhớ và nên dùng điện thoại 12 GB RAM. Chỉ dùng phi thương mại (Qwen Research License).

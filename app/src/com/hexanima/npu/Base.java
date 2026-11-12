@@ -110,6 +110,21 @@ abstract class Base extends Activity {
         return b;
     }
 
+    /** "GitHub" row: the mark, the repository and the version; opens the project page */
+    View githubRow() {
+        LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(2), dp(12), dp(2), dp(12));
+        ImageView g = new ImageView(this); g.setImageResource(getResources().getIdentifier("ic_github", "drawable", getPackageName())); g.setImageTintList(ColorStateList.valueOf(TXT));
+        r.addView(g, new LinearLayout.LayoutParams(dp(28), dp(28)));
+        LinearLayout t = new LinearLayout(this); t.setOrientation(LinearLayout.VERTICAL); t.setPadding(dp(14), 0, 0, 0);
+        t.addView(text("GitHub", 15, TXT, true));
+        String v = ""; try { v = " · " + getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
+        TextView sub = text("ayanoby/hexanima" + v, 12, DIM, false); sub.setPadding(0, dp(2), 0, 0); t.addView(sub);
+        r.addView(t, new LinearLayout.LayoutParams(0, -2, 1));
+        r.addView(text("↗", 16, DIM, false));
+        r.setOnClickListener(x -> startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/ayanoby/hexanima"))));
+        return r;
+    }
+
     EditText field(String hint) {
         EditText e = new EditText(this); e.setHint(hint); e.setHintTextColor(DIM); e.setTextColor(TXT); e.setTextSize(15);
         e.setBackground(bg(FIELD, 12)); e.setPadding(dp(14), dp(10), dp(14), dp(10));
@@ -118,7 +133,7 @@ abstract class Base extends Activity {
 
     /** section caption above a group */
     TextView label(String s, int color) { TextView t = label(s); t.setTextColor(color); return t; }
-    TextView label(String s) { TextView t = text(s, 13, DIM, false); t.setPadding(0, dp(20), 0, dp(8)); return t; }
+    TextView label(String s) { TextView t = text(s, 13, DIM, false); t.setPadding(0, dp(14), 0, dp(6)); return t; }
 
     View divider() { View v = new View(this); v.setBackgroundColor(LINE); v.setLayoutParams(new LinearLayout.LayoutParams(-1, 1)); return v; }
 

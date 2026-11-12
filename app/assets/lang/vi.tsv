@@ -408,3 +408,20 @@ Remove	Gỡ
 Remove "%s" from the list?	Gỡ “%s” khỏi danh sách?
 Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Các tệp .safetensors của riêng bạn cho Anima (kohya, diffusers/PEFT, LoKr, LoHa): thêm bao nhiêu tùy ý, mỗi tệp có công tắc và cường độ riêng. Chúng được gộp vào mô hình khi tải, nên ảnh đầu tiên với bộ mới lâu hơn 10–15 giây.
 Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Đang bật: %d / %d. Bộ hoặc cường độ mới làm ảnh đầu tiên chậm hơn 10–15 giây.
+Rename	Đổi tên
+LoRA name	Tên LoRA
+Keep metadata in the picture	Lưu siêu dữ liệu trong ảnh
+The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery.	Prompt, seed và mô hình được ghi vào PNG để có thể khôi phục cài đặt từ đó. Khi tắt: tệp sạch (tiện trước khi chia sẻ); chi tiết vẫn được giữ trong thư viện của ứng dụng.
+  ·  negative: %d / %d	  ·  âm: %d / %d
+Presets ▾	Có sẵn ▾
+up to 0.5 MP	đến 0,5 MP
+≈ 1 MP	≈ 1 MP
+≈ 2 MP	≈ 2 MP
+3+ MP	3+ MP
+Any size	Mọi kích thước
+No sizes match these filters	Không có kích thước nào khớp bộ lọc
+MP	MP
+＋ Own Anima checkpoint (BF16/FP16/FP32)	＋ Checkpoint Anima của bạn (BF16/FP16/FP32)
+＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16/FP32)
+Model name	Tên mô hình
+Reset	Đặt lại

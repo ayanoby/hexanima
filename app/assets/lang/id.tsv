@@ -408,3 +408,20 @@ Remove	Hapus
 Remove "%s" from the list?	Hapus “%s” dari daftar?
 Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Berkas .safetensors Anda sendiri untuk Anima (kohya, diffusers/PEFT, LoKr, LoHa): tambahkan sebanyak yang dibutuhkan, masing-masing dengan sakelar dan kekuatannya sendiri. Berkas digabungkan ke model saat dimuat, sehingga gambar pertama dengan set baru lebih lama 10–15 detik.
 Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Aktif: %d dari %d. Set atau kekuatan baru membuat gambar pertama lebih lambat 10–15 detik.
+Rename	Ganti nama
+LoRA name	Nama LoRA
+Keep metadata in the picture	Simpan metadata di gambar
+The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery.	Prompt, seed, dan model ditulis ke dalam PNG agar pengaturan dapat dipulihkan darinya. Nonaktif: berkas tetap bersih (berguna sebelum dibagikan); detailnya tetap tersimpan di galeri aplikasi.
+  ·  negative: %d / %d	  ·  negatif: %d / %d
+Presets ▾	Preset ▾
+up to 0.5 MP	hingga 0,5 MP
+≈ 1 MP	≈ 1 MP
+≈ 2 MP	≈ 2 MP
+3+ MP	3+ MP
+Any size	Semua ukuran
+No sizes match these filters	Tidak ada ukuran yang cocok dengan filter ini
+MP	MP
+＋ Own Anima checkpoint (BF16/FP16/FP32)	＋ Checkpoint Anima sendiri (BF16/FP16/FP32)
+＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Checkpoint Anima sendiri (.safetensors, BF16/FP16/FP32)
+Model name	Nama model
+Reset	Atur ulang

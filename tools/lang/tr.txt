@@ -408,3 +408,20 @@
 407	“%s” listeden kaldırılsın mı?
 408	Anima için kendi .safetensors dosyalarınız (kohya, diffusers/PEFT, LoKr, LoHa): ihtiyacınız kadar ekleyin, her birinin kendi anahtarı ve gücü vardır. Model yüklenirken modele eklenirler, bu yüzden yeni bir setle ilk görsel 10–15 saniye daha uzun sürer.
 409	Etkin: %d / %d. Yeni bir set veya güç, ilk görseli 10–15 saniye yavaşlatır.
+410	Yeniden adlandır
+411	LoRA adı
+412	Metaverileri görselde sakla
+413	Prompt, seed ve model, ayarların geri yüklenebilmesi için PNG'nin içine yazılır. Kapalıyken: dosya temiz kalır (paylaşmadan önce işe yarar); ayrıntılar uygulamanın galerisinde saklanmaya devam eder.
+414	  ·  negatif: %d / %d
+415	Hazır ▾
+416	0,5 MP'ye kadar
+417	≈ 1 MP
+418	≈ 2 MP
+419	3+ MP
+420	Her boyut
+421	Bu filtrelere uyan boyut yok
+422	MP
+423	＋ Kendi Anima checkpoint'iniz (BF16/FP16/FP32)
+424	＋ Kendi Anima checkpoint'iniz (.safetensors, BF16/FP16/FP32)
+425	Model adı
+426	Sıfırla

@@ -89,7 +89,7 @@ public class Main extends Base {
     ImageButton dlBtn, shareBtn, favBtn, againBtn;
     MultiAutoCompleteTextView prompt;
     EditText seed, wEdit, hEdit;
-    TextView tokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
+    TextView tokView, negTokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
     final Runnable tokTick = this::updateTokens;
     LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal, samplerVal, schedVal;   // Anima base models: negative prompt, steps and CFG under the prompt
     LinearLayout aloraBox, aloraList; TextView aloraInfo;   // Anima: the LoRA library (AnimaLoras)
@@ -188,14 +188,15 @@ public class Main extends Base {
         LinearLayout ph = new LinearLayout(this); ph.setOrientation(LinearLayout.VERTICAL); ph.setGravity(Gravity.CENTER);
         phSize = text("", 14, DIM, false); phSize.setGravity(Gravity.CENTER); ph.addView(phSize, new LinearLayout.LayoutParams(-1, -2));
         placeholder = ph;
-        imgBox.addView(placeholder, new LinearLayout.LayoutParams(-1, dp(300)));
+        imgBox.addView(placeholder, new LinearLayout.LayoutParams(-1, -1));   // the picture area has a fixed size: the placeholder and the picture fill it (the picture is fitted inside)
         img = new ImageView(this);
-        img.setAdjustViewBounds(true);
+        img.setAdjustViewBounds(false);
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
         img.setVisibility(View.GONE);
         img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
-        imgBox.addView(img, new LinearLayout.LayoutParams(-1, -2));
-        LinearLayout.LayoutParams ibl = new LinearLayout.LayoutParams(-1, -2); ibl.topMargin = dp(12); root.addView(imgBox, ibl);
+        imgBox.addView(img, new LinearLayout.LayoutParams(-1, -1));
+        int boxH = getResources().getDisplayMetrics().widthPixels - dp(40);   // a square picture area
+        LinearLayout.LayoutParams ibl = new LinearLayout.LayoutParams(-1, boxH); ibl.topMargin = dp(8); root.addView(imgBox, ibl);
         LinearLayout resRow = new LinearLayout(this);
         resRow.setGravity(Gravity.CENTER_VERTICAL);
         saved = text("", 12, DIM, false);
@@ -214,12 +215,12 @@ public class Main extends Base {
         // prompt
         LinearLayout pl = new LinearLayout(this); pl.setGravity(Gravity.BOTTOM);
         pl.addView(label(L.s("Описание", "Prompt")), new LinearLayout.LayoutParams(0, -2, 1));
-        TextView tpl = text(L.s("Шаблоны", "Templates"), 13, TXT, false); tpl.setPadding(dp(8), dp(20), 0, dp(8)); tpl.setOnClickListener(v -> templates()); pl.addView(tpl);
+        TextView tpl = text(L.s("Шаблоны", "Templates"), 13, TXT, false); tpl.setPadding(dp(8), dp(14), 0, dp(6)); tpl.setOnClickListener(v -> templates()); pl.addView(tpl);
         root.addView(pl);
         prompt = new MultiAutoCompleteTextView(this);   // Danbooru tag suggestions while typing, comma separated
         prompt.setHint("1girl, smile, outdoors, cherry blossoms…");
         prompt.setHintTextColor(DIM); prompt.setTextColor(TXT); prompt.setTextSize(15);
-        prompt.setMinLines(3); prompt.setMaxLines(8);
+        prompt.setMinLines(3); prompt.setMaxLines(Integer.MAX_VALUE);   // grows down with the text
         prompt.setGravity(Gravity.TOP);
         prompt.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         prompt.setBackground(bg(FIELD, 12));
@@ -250,6 +251,7 @@ public class Main extends Base {
             public void afterTextChanged(android.text.Editable e) { prefs().edit().putString("base_neg", e.toString()).apply(); ui.removeCallbacks(tokTick); ui.postDelayed(tokTick, 350); }
         });
         baseBox.addView(negEdit, new LinearLayout.LayoutParams(-1, -2));
+        negTokView = text("", 12, DIM, false); negTokView.setGravity(Gravity.END); negTokView.setPadding(0, dp(6), 0, 0); baseBox.addView(negTokView, new LinearLayout.LayoutParams(-1, -2));   // the negative prompt has its own counter and limit
         root.addView(baseBox);
 
         // Qwen-Image / Mage-Flow: the photo to edit
@@ -272,30 +274,35 @@ public class Main extends Base {
         refreshEdit();
 
         // size: ratio segments, the exact size (tap = full list), swap
-        LinearLayout szh = new LinearLayout(this); szh.setGravity(Gravity.BOTTOM);
-        szh.addView(label(L.s("Размер", "Size")), new LinearLayout.LayoutParams(0, -2, 1));
-        sizeText = text("", 13, TXT, false); sizeText.setPadding(dp(8), dp(20), dp(8), dp(8)); sizeText.setOnClickListener(v -> pickSize()); szh.addView(sizeText);
-        TextView swap = text("⇄", 16, TXT, false); swap.setPadding(dp(8), dp(18), 0, dp(6)); swap.setContentDescription(L.s("Повернуть", "Swap"));
-        swap.setOnClickListener(v -> {
-            int w = resW, h = resH;
-            if (customRow.getVisibility() == View.VISIBLE) try { w = Integer.parseInt(wEdit.getText().toString().trim()); h = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
-            setRes(h, w);
-        });
-        szh.addView(swap);
-        root.addView(szh);
-        sizeChips = new LinearLayout(this); sizeChips.setBackground(bg(CARD, 12)); sizeChips.setPadding(dp(3), dp(3), dp(3), dp(3));
-        root.addView(sizeChips, new LinearLayout.LayoutParams(-1, dp(42)));
+        sizeText = text(L.s("Готовые ▾", "Presets ▾"), 13, TXT, true); sizeText.setGravity(Gravity.CENTER); sizeText.setPadding(dp(12), 0, dp(12), 0); sizeText.setBackground(bg(CARD, 12)); sizeText.setOnClickListener(v -> pickSize());   // the list of ready sizes: right end of the size row
+        sizeChips = null;   // the ratio segments are gone: the exact size below and the list of ready sizes are enough
         customRow = new LinearLayout(this);
         customRow.setGravity(Gravity.CENTER_VERTICAL);
-        customRow.setPadding(0, dp(8), 0, 0);
+        customRow.setPadding(0, dp(6), 0, 0);
         wEdit = field(L.s("ширина", "width")); hEdit = field(L.s("высота", "height"));
         wEdit.setInputType(InputType.TYPE_CLASS_NUMBER); hEdit.setInputType(InputType.TYPE_CLASS_NUMBER);
         customRow.addView(wEdit, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView times = text("×", 16, DIM, false); times.setGravity(Gravity.CENTER);
-        customRow.addView(times, new LinearLayout.LayoutParams(dp(32), -2));
+        TextView times = text("⇄", 18, TXT, false); times.setGravity(Gravity.CENTER); times.setContentDescription(L.s("Повернуть", "Swap"));   // swaps width and height
+        times.setOnClickListener(v -> {
+            int w = resW, h = resH;
+            try { w = Integer.parseInt(wEdit.getText().toString().trim()); h = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
+            setRes(h, w);
+        });
+        customRow.addView(times, new LinearLayout.LayoutParams(dp(48), dp(44)));
         customRow.addView(hEdit, new LinearLayout.LayoutParams(0, -2, 1));
-        customRow.setVisibility(View.GONE);
+        LinearLayout.LayoutParams stl = new LinearLayout.LayoutParams(dp(124), dp(44)); stl.leftMargin = dp(8); customRow.addView(sizeText, stl);   // the two fields share the rest; Presets gets more room
+        // the exact size is always editable; a size typed here is taken over (after a short pause) by the chips, the size label and the placeholder
+        final Runnable applyTyped = () -> {
+            try { int w = Integer.parseInt(wEdit.getText().toString().trim()), h = Integer.parseInt(hEdit.getText().toString().trim()); if (w >= 16 && h >= 16 && w <= 16384 && h <= 16384 && (w != resW || h != resH)) setRes(w, h); } catch (NumberFormatException ignored) { }
+        };
+        android.text.TextWatcher tw = new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence x, int a, int b, int c) { }
+            public void onTextChanged(CharSequence x, int a, int b, int c) { }
+            public void afterTextChanged(android.text.Editable e) { ui.removeCallbacks(applyTyped); ui.postDelayed(applyTyped, 700); }
+        };
+        wEdit.addTextChangedListener(tw); hEdit.addTextChangedListener(tw);
         root.addView(customRow);
+        { int at = root.indexOfChild(resRow) + 1; root.removeView(customRow); root.addView(customRow, at); }   // the size row sits right under the picture area
 
         // parameters: one row each, label on the left, the control on the right
         root.addView(label(L.s("Параметры", "Settings")));
@@ -609,6 +616,14 @@ public class Main extends Base {
             top.addView(sw);
             TextView nm = text(it.name.replaceAll("(?i)\\.safetensors$", ""), 14, it.on ? TXT : DIM, false); nm.setSingleLine(true); nm.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE); nm.setPadding(dp(10), 0, 0, 0);
             top.addView(nm, new LinearLayout.LayoutParams(0, -2, 1));
+            TextView pen = text("✎", 16, DIM, false); pen.setGravity(Gravity.CENTER); pen.setContentDescription(L.s("Переименовать", "Rename"));
+            pen.setOnClickListener(v -> {
+                if (busy) return;
+                final EditText e = new EditText(this); e.setText(it.name.replaceAll("(?i)\\.safetensors$", "")); e.setSingleLine(true); e.setSelectAllOnFocus(true); e.setTextColor(TXT);
+                builder().setTitle(L.s("Название LoRA", "LoRA name")).setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null)
+                    .setPositiveButton("OK", (d, w) -> { String n = e.getText().toString().trim(); if (!n.isEmpty()) { it.name = n; AnimaLoras.save(prefs(), ls); refreshAnimaLoras(); } }).show();
+            });
+            top.addView(pen, new LinearLayout.LayoutParams(dp(40), dp(36)));
             TextView del = text("✕", 16, DIM, false); del.setGravity(Gravity.CENTER); del.setContentDescription(L.s("Убрать", "Remove"));
             del.setOnClickListener(v -> { if (busy) return; builder().setMessage(L.f("Убрать «%s» из списка?", "Remove \"%s\" from the list?", it.name)).setNegativeButton(L.s("Отмена", "Cancel"), null)
                 .setPositiveButton(L.s("Убрать", "Remove"), (d, w) -> { ls.remove(it); AnimaLoras.file(getFilesDir(), it.id).delete(); AnimaLoras.save(prefs(), ls); refreshAnimaLoras(); }).show(); });
@@ -837,20 +852,18 @@ public class Main extends Base {
     static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
     static String sizeLabel(int w, int h) { int g = gcd(w, h); return w + "×" + h + "  ·  " + w / g + ":" + h / g; }
 
-    /** Size picker: the portrait sizes in the left column, their landscape twins in the right one, squares below, then "Custom". */
+    /** Size picker: the portrait sizes in the left column, their landscape twins in the right one, squares below; every group runs from the smallest to the largest picture. */
     void pickSize() {
         final AlertDialog[] dlg = new AlertDialog[1];
         LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(14), dp(14), dp(14), dp(10));
         java.util.List<int[]> por = new java.util.ArrayList<>(), lan = new java.util.ArrayList<>(), sq = new java.util.ArrayList<>();
         for (int[] z : sizeList()) (z[1] > z[0] ? por : z[0] > z[1] ? lan : sq).add(z);
+        java.util.Comparator<int[]> byArea = (x, y) -> { long ax = (long) x[0] * x[1], ay = (long) y[0] * y[1]; return ax != ay ? Long.compare(ax, ay) : Integer.compare(Math.abs(x[1] - x[0]), Math.abs(y[1] - y[0])); };
+        java.util.Collections.sort(por, byArea); java.util.Collections.sort(lan, byArea); java.util.Collections.sort(sq, byArea);
         box.addView(cols(text(L.s("Портрет", "Portrait"), 12, DIM, true), text(L.s("Альбом", "Landscape"), 12, DIM, true), true));
         for (int i = 0; i < Math.max(por.size(), lan.size()); i++) box.addView(cols(i < por.size() ? cell(por.get(i), dlg) : new View(this), i < lan.size() ? cell(lan.get(i), dlg) : new View(this), false));
         TextView sqh = text(L.s("Квадрат", "Square"), 12, DIM, true); sqh.setPadding(dp(4), dp(14), 0, dp(6)); box.addView(sqh);
         for (int i = 0; i < sq.size(); i += 2) box.addView(cols(cell(sq.get(i), dlg), i + 1 < sq.size() ? cell(sq.get(i + 1), dlg) : new View(this), false));
-        Button custom = button(L.s("Свой", "Custom"), FIELD, customOpen ? ACC : TXT);
-        custom.setOnClickListener(v -> { customOpen = true; setRes(resW, resH); dlg[0].dismiss(); });
-        LinearLayout.LayoutParams cl = new LinearLayout.LayoutParams(-1, dp(44)); cl.topMargin = dp(12);
-        box.addView(custom, cl);
         ScrollView sv = new ScrollView(this); sv.addView(box);
         dlg[0] = dialog(sv);
     }
@@ -865,7 +878,7 @@ public class Main extends Base {
     }
 
     TextView cell(int[] z, AlertDialog[] dlg) {
-        boolean on = !customOpen && z[0] == resW && z[1] == resH;
+        boolean on = z[0] == resW && z[1] == resH;
         TextView t = text(sizeLabel(z[0], z[1]), 14, on ? ON_ACC : TXT, on);
         t.setGravity(Gravity.CENTER); t.setPadding(dp(6), dp(12), dp(6), dp(12)); t.setBackground(bg(on ? ACC : FIELD, 14));
         t.setOnClickListener(v -> { customOpen = false; setRes(z[0], z[1]); dlg[0].dismiss(); });
@@ -924,10 +937,20 @@ public class Main extends Base {
     }
     String modelName() {   // the family name as in the model list: the 4/8 step variant is picked by the LoRA and the steps, it does not rename the model
         if (model.isEmpty()) return L.s("нет модели", "no model");
+        String al = store.alias(Models.aliasKey(model)); if (al != null) return al;   // a name the user gave
         if (isQwen()) return "Qwen-Image-2.1-Turbo";
         if (Moss.isRs(model)) return store.name(model);
         if (isMoss() && ids.contains(mossBase())) return store.name(mossBase()).replace(" (base)", "");
         return store.name(model);
+    }
+
+    /** a name of the user's own for a model (stored in model_names.json; an empty name or Reset brings the original back) */
+    void renameModel(final android.app.AlertDialog picker, final String key, String current, boolean hasAlias) {
+        final EditText e = new EditText(this); e.setText(current); e.setSingleLine(true); e.setSelectAllOnFocus(true); e.setTextColor(TXT);
+        android.app.AlertDialog.Builder b = builder().setTitle(L.s("Название модели", "Model name")).setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null)
+            .setPositiveButton("OK", (d, w) -> { store.setAlias(key, e.getText().toString()); picker.dismiss(); if (chipName != null) chipName.setText(modelName()); pickModel(); });
+        if (hasAlias) b.setNeutralButton(L.s("Сбросить", "Reset"), (d, w) -> { store.setAlias(key, null); picker.dismiss(); if (chipName != null) chipName.setText(modelName()); pickModel(); });
+        b.show();
     }
 
     void pickModel() {
@@ -948,13 +971,20 @@ public class Main extends Base {
                 final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() && (Moss.isRs(id0) ? model.equals(id0) : !Moss.isRs(model)) : id.equals(model);
                 LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL); row.setPadding(dp(14), dp(10), dp(14), dp(10));
                 { GradientDrawable rb = bg(CARD, 12); if (sel) rb.setStroke(dp(2), TXT); row.setBackground(rb); }
-                row.addView(text(qw ? "Qwen-Image-2.1-Turbo" : ms && Moss.isRs(id0) ? store.name(id0) : store.name(id).replace(" (base)", ""), 15, TXT, true));
+                final String akey = Models.aliasKey(id0), shown = qw ? "Qwen-Image-2.1-Turbo" : ms && Moss.isRs(id0) ? store.name(id0) : store.name(id).replace(" (base)", "");
+                LinearLayout trow = new LinearLayout(this); trow.setGravity(Gravity.CENTER_VERTICAL);
+                final String alias0 = store.alias(akey);
+                trow.addView(text(alias0 != null ? alias0 : shown, 15, TXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+                TextView pen = text("✎", 16, DIM, false); pen.setGravity(Gravity.CENTER); pen.setContentDescription(L.s("Переименовать", "Rename"));
+                pen.setOnClickListener(v -> renameModel(dlg[0], akey, alias0 != null ? alias0 : shown, alias0 != null));
+                trow.addView(pen, new LinearLayout.LayoutParams(dp(40), dp(32)));
+                row.addView(trow);
                 TextView cap = text(anima ? familyCaption(fam) : qw ? qwenCaption() : ms ? mossCaption() : modelCaption(id), 12, DIM, false); cap.setPadding(0, dp(3), 0, 0); row.addView(cap);
                 row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(Moss.isRs(id0) ? id0 : mossVariant()); } else if (!sel) setModel(id); });
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); col.addView(row, lp);
             }
         }
-        TextView own = text(L.s("＋ Свой чекпоинт Anima (BF16/FP16)", "＋ Own Anima checkpoint (BF16/FP16)"), 15, TXT, false); own.setPadding(dp(14), dp(14), dp(14), dp(4));
+        TextView own = text(L.s("＋ Свой чекпоинт Anima (BF16/FP16/FP32)", "＋ Own Anima checkpoint (BF16/FP16/FP32)"), 15, TXT, false); own.setPadding(dp(14), dp(14), dp(14), dp(4));
         own.setOnClickListener(v -> { dlg[0].dismiss(); AnimaConv.pick(this); }); col.addView(own);
         TextView cat = text(L.s("Каталог моделей", "Model catalog"), 15, TXT, false); cat.setPadding(dp(14), dp(14), dp(14), dp(14)); 
         cat.setOnClickListener(v -> { dlg[0].dismiss(); openModels(); }); col.addView(cat);
@@ -1092,8 +1122,7 @@ public class Main extends Base {
         resW = w; resH = h;
         boolean preset = false;
         for (int[] z : sizeList()) if (z[0] == w && z[1] == h) preset = true;
-        if (sizeText != null) sizeText.setText(w + "×" + h);
-        if (customRow != null) { customRow.setVisibility(customOpen || !preset ? View.VISIBLE : View.GONE); if (!wEdit.getText().toString().equals(String.valueOf(w)) || !hEdit.getText().toString().equals(String.valueOf(h))) { wEdit.setText(String.valueOf(w)); hEdit.setText(String.valueOf(h)); } }
+                if (customRow != null) { customRow.setVisibility(View.VISIBLE); if (!wEdit.getText().toString().equals(String.valueOf(w)) || !hEdit.getText().toString().equals(String.valueOf(h))) { wEdit.setText(String.valueOf(w)); hEdit.setText(String.valueOf(h)); } }
         if (chipName != null) chipName.setText(modelName());
         rebuildSizeChips(); updatePlaceholder(); updateChips();
         if (genBtn != null && !busy) genBtn.setText(genLabel());
@@ -1101,8 +1130,6 @@ public class Main extends Base {
 
     void updatePlaceholder() {
         if (placeholder == null || phSize == null) return;
-        int cw = getResources().getDisplayMetrics().widthPixels - dp(40); double r = Math.max(0.56, Math.min(0.75, (double) resH / Math.max(1, resW)));
-        ViewGroup.LayoutParams lp = placeholder.getLayoutParams(); if (lp != null) { lp.height = (int) (cw * r); placeholder.setLayoutParams(lp); }
         phSize.setText(resW + " × " + resH);
     }
 
@@ -1167,7 +1194,7 @@ public class Main extends Base {
     void updateTokens() {
         final int lim = tokLimit();
         if (tokView == null) return;
-        if (lim == 0) { tokOver = false; tokView.setVisibility(View.GONE); return; }
+        if (lim == 0) { tokOver = false; tokView.setVisibility(View.GONE); if (negTokView != null) negTokView.setVisibility(View.GONE); return; }
         final String pr = prompt.getText().toString().trim(), neg = base() ? negStr() : "";
         final String full = isAnima() ? Settings.prefix(this) + pr : pr; final boolean an = isAnima();
         new Thread(() -> {
@@ -1176,9 +1203,13 @@ public class Main extends Base {
             final int a = n, b = nn;
             ui.post(() -> {
                 if (tokLimit() != lim) return;
-                boolean over = a > lim || b > lim; tokOver = over;
-                String t = L.f("Токенов: %d / %d", "Tokens: %d / %d", a, lim) + (an && b > 0 ? L.f("  ·  негативный: %d", "  ·  negative: %d", b) : "");
-                tokView.setText(over ? t + L.s("  ·  слишком длинно", "  ·  too long") : t); tokView.setTextColor(over ? BAD : DIM); tokView.setVisibility(View.VISIBLE);
+                tokOver = a > lim || b > lim;
+                String t = L.f("Токенов: %d / %d", "Tokens: %d / %d", a, lim);
+                tokView.setText(a > lim ? t + L.s("  ·  слишком длинно", "  ·  too long") : t); tokView.setTextColor(a > lim ? BAD : DIM); tokView.setVisibility(View.VISIBLE);
+                if (negTokView != null) {
+                    String tn = L.f("Токенов: %d / %d", "Tokens: %d / %d", b, lim);
+                    negTokView.setText(b > lim ? tn + L.s("  ·  слишком длинно", "  ·  too long") : tn); negTokView.setTextColor(b > lim ? BAD : DIM);
+                }
             });
         }).start();
     }
@@ -1443,7 +1474,7 @@ public class Main extends Base {
         try {
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
             if (!AnimaLoras.names(prefs(), getFilesDir()).isEmpty()) meta.put("lora", AnimaLoras.names(prefs(), getFilesDir()));
-            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()); return null; }
     }
 
@@ -1492,7 +1523,7 @@ public class Main extends Base {
             byte[] png = Moss.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
             if (useLora) meta.put("lora", prefs().getString("moss_lora_name", "LoRA")).put("lora_strength", lstr);
-            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/moss/moss.log)", "Generation failed: %s (log files/moss/moss.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
@@ -1538,7 +1569,7 @@ public class Main extends Base {
             byte[] png = Mage.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
             if (edit) meta.put("edit", true);
-            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
@@ -1571,7 +1602,7 @@ public class Main extends Base {
             byte[] png = Moss.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
             if (lora) meta.put("lora", "pDMD " + STEPS + "-step");
-            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/h3/h3.log)", "Generation failed: %s (log files/h3/h3.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
@@ -1629,7 +1660,7 @@ public class Main extends Base {
             byte[] png = Qwen.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
             if (edit) meta.put("edit", true).put("pictures", 1 + extraBm.size());
-            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/qwen/qwen.log)", "Generation failed: %s (log files/qwen/qwen.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 

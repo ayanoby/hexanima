@@ -408,3 +408,20 @@
 407	¿Quitar «%s» de la lista?
 408	Tus propios archivos .safetensors para Anima (kohya, diffusers/PEFT, LoKr, LoHa): añade tantos como necesites, cada uno con su interruptor y su fuerza. Se fusionan con el modelo al cargarlo, así que la primera imagen con un conjunto nuevo tarda de 10 a 15 segundos más.
 409	Activas: %d de %d. Un conjunto o una fuerza nuevos hacen la primera imagen de 10 a 15 segundos más lenta.
+410	Renombrar
+411	Nombre de la LoRA
+412	Guardar metadatos en la imagen
+413	El prompt, la semilla y el modelo se escriben en el PNG para poder restaurar los ajustes a partir de él. Desactivado: el archivo queda limpio (útil antes de compartir); los detalles se conservan en la galería de la aplicación.
+414	  ·  negativo: %d / %d
+415	Tamaños ▾
+416	hasta 0,5 MP
+417	≈ 1 MP
+418	≈ 2 MP
+419	3+ MP
+420	Cualquier tamaño
+421	Ningún tamaño coincide con estos filtros
+422	MP
+423	＋ Checkpoint propio de Anima (BF16/FP16/FP32)
+424	＋ Checkpoint propio de Anima (.safetensors, BF16/FP16/FP32)
+425	Nombre del modelo
+426	Restablecer

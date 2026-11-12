@@ -408,3 +408,20 @@
 407	Hapus “%s” dari daftar?
 408	Berkas .safetensors Anda sendiri untuk Anima (kohya, diffusers/PEFT, LoKr, LoHa): tambahkan sebanyak yang dibutuhkan, masing-masing dengan sakelar dan kekuatannya sendiri. Berkas digabungkan ke model saat dimuat, sehingga gambar pertama dengan set baru lebih lama 10–15 detik.
 409	Aktif: %d dari %d. Set atau kekuatan baru membuat gambar pertama lebih lambat 10–15 detik.
+410	Ganti nama
+411	Nama LoRA
+412	Simpan metadata di gambar
+413	Prompt, seed, dan model ditulis ke dalam PNG agar pengaturan dapat dipulihkan darinya. Nonaktif: berkas tetap bersih (berguna sebelum dibagikan); detailnya tetap tersimpan di galeri aplikasi.
+414	  ·  negatif: %d / %d
+415	Preset ▾
+416	hingga 0,5 MP
+417	≈ 1 MP
+418	≈ 2 MP
+419	3+ MP
+420	Semua ukuran
+421	Tidak ada ukuran yang cocok dengan filter ini
+422	MP
+423	＋ Checkpoint Anima sendiri (BF16/FP16/FP32)
+424	＋ Checkpoint Anima sendiri (.safetensors, BF16/FP16/FP32)
+425	Nama model
+426	Atur ulang

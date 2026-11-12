@@ -1,5 +1,15 @@
 # Changes
 
+## 1.5.6
+
+- **Main screen layout:** the picture area is square and keeps its size whatever the resolution; the size row sits right under it (width ⇄ height, always editable, and a "Presets" button with the list of ready sizes, each group sorted from the smallest to the largest); the ratio segments and the "Size" caption are gone; the prompt field grows down with its text; the gaps between the blocks are smaller.
+- **Token counters:** the positive and the negative prompt each have their own "Tokens: N / 512" line under their own field (they are encoded separately, so the numbers are not added up).
+- **Anima LoRA list:** a pencil next to each LoRA renames it.
+- **Model picker:** a pencil next to every model renames it (your own name, kept in `model_names.json`; Reset brings the original back; the two variants of an Anima model share the name).
+- **Models screen:** the "Fits this phone" filter is gone; "Models on the phone" also counts the shared Anima files and the models converted on the phone; the catalog URL field (Source) opens right under the title; the own checkpoint button says BF16/FP16/FP32 and grows to two lines when needed.
+- **History:** selecting shows a ring in the corner of every picture (empty = not chosen, ticked = chosen) and an accent frame on the chosen ones; fixed the crash on Select, Select all; the right column of tiles no longer sticks out of the screen.
+- **Settings:** a "Keep metadata in the picture" switch (on by default; off = the PNG has no prompt/seed/model chunk, the app's gallery keeps its own copy) and a GitHub row (mark, repository, version).
+
 ## 1.5.5
 
 - **Anima: any number of LoRA files at once.** The LoRA row is now a library: add as many `.safetensors` files as you need, each with its own switch, strength (0 to 2) and remove button (`AnimaLoras.java`). All active ones are folded into the blocks in list order when the model loads (the native side already took a `file*strength|file*strength` list); a new set or strength restarts the server and the first picture takes 10-15 seconds longer. A single LoRA picked with an older version moves into the list. MOSS-Image keeps its single LoRA.

@@ -408,5 +408,22 @@
 "Remove",
 "Remove \"%s\" from the list?",
 "Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.",
-"Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower."
+"Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.",
+"Rename",
+"LoRA name",
+"Keep metadata in the picture",
+"The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery.",
+"  ·  negative: %d / %d",
+"Presets ▾",
+"up to 0.5 MP",
+"≈ 1 MP",
+"≈ 2 MP",
+"3+ MP",
+"Any size",
+"No sizes match these filters",
+"MP",
+"＋ Own Anima checkpoint (BF16/FP16/FP32)",
+"＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)",
+"Model name",
+"Reset"
 ]

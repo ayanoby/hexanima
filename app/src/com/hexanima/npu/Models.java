@@ -117,7 +117,16 @@ final class Models {
             default: return name;
         }
     }
-    String name(String id) { if (H3.is(id)) return niceName(id, ""); if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
+    // ---- names given by the user (a pencil in the model picker) -------------------------------------------------
+    /** the key an alias is stored under: both variants of an Anima model share one (the turbo id and id + "base") */
+    static String aliasKey(String id) { return Qwen.is(id) ? "qwen" : Moss.is(id) ? (Moss.isRs(id) ? id : "moss") : H3.is(id) || Mage.is(id) ? id : (id.endsWith("base") ? id.substring(0, id.length() - 4) : id); }
+    File aliasFile() { return new File(home, "model_names.json"); }
+    String alias(String key) { try { String v = new JSONObject(read(aliasFile())).optString(key, ""); return v.isEmpty() ? null : v; } catch (Exception e) { return null; } }
+    void setAlias(String key, String name) {
+        JSONObject j; try { j = new JSONObject(read(aliasFile())); } catch (Exception e) { j = new JSONObject(); }
+        try { if (name == null || name.trim().isEmpty()) j.remove(key); else j.put(key, name.trim()); try (FileWriter w = new FileWriter(aliasFile())) { w.write(j.toString()); } } catch (Exception ignored) { }
+    }
+    String name(String id) { String al = alias(aliasKey(id)); if (al != null && !Qwen.is8(id) && !Moss.is8(id)) return al + (!Qwen.is(id) && !Moss.is(id) && !H3.is(id) && !Mage.is(id) && id.endsWith("base") ? " (base)" : ""); if (H3.is(id)) return niceName(id, ""); if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
 
     /** seconds per picture at 512x768 (from the catalog at install time; models installed before that get the measured value of their size class) */
     int speed(String id) { if (H3.is(id)) return 110; if (Moss.isRs(id)) return speed(mossId()); if (Qwen.is8(id)) return 80; if (Moss.is8(id)) return 3 * speed(mossId()) / 2; try { int v = new JSONObject(read(new File(modelDir(id), "meta.json"))).optInt("speed", 0); if (v > 0) return v; } catch (Exception e) { } return id.contains("29") ? 12 : 7; }
@@ -198,6 +207,12 @@ final class Models {
         java.util.List<String> out = new java.util.ArrayList<>(); File[] ds = anima.listFiles();
         if (ds != null) for (File d : ds) if (d.getName().startsWith("m_") && (new File(d, CUSTOM).exists() || d.getName().startsWith("m_my")) && doneMark(d).exists()) out.add(d.getName().substring(2));   // models converted by an earlier build have no marker: their ids start with "my"
         java.util.Collections.sort(out); return out;
+    }
+    /** the shared Anima files (text encoder, VAE, embeddings, TAESD) that every Anima model needs; 0 while they are not installed */
+    long commonBytes() {
+        if (!commonInstalled()) return 0; long n = 0; File[] fs = anima.listFiles();
+        if (fs != null) for (File f : fs) if (f.isFile() && (f.getName().matches("te\\d+\\.bin") || f.getName().equals("te_embed.f16") || f.getName().equals("vae.bin"))) n += f.length();
+        return n + new File(sd, "taew2_1.safetensors").length();
     }
     long dirSize(File d) { long n = 0; File[] fs = d.listFiles(); if (fs != null) for (File f : fs) n += f.isDirectory() ? dirSize(f) : f.length(); return n; }
 

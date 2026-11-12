@@ -55,6 +55,8 @@ public class ModelsActivity extends Base {
         LinearLayout col = screen(L.s("Модели", "Models"), src);
         info = text("", 12, DIM, false); info.setPadding(dp(2), 0, 0, dp(10));
         col.addView(info);
+        url = field(L.s("Адрес каталога (…/resolve/main/)", "Catalog URL (…/resolve/main/)")); url.setText(prefBase()); url.setTextSize(13); url.setBackground(bg(CARD, 14)); url.setVisibility(View.GONE);   // opened by "Source": right under the title, above the search
+        LinearLayout.LayoutParams ul = new LinearLayout.LayoutParams(-1, -2); ul.bottomMargin = dp(10); col.addView(url, ul);
         search = field(L.s("Поиск по названию, автору…", "Search by name or author…")); search.setSingleLine(); search.setTextSize(14);
         search.addTextChangedListener(new android.text.TextWatcher() {
             public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
@@ -63,13 +65,12 @@ public class ModelsActivity extends Base {
         });
         col.addView(search, new LinearLayout.LayoutParams(-1, dp(46)));
         LinearLayout fr = new LinearLayout(this); fr.setPadding(0, dp(10), 0, dp(4));
-        fr.addView(filterChip(L.s("Установленные", "Installed"), true)); fr.addView(filterChip(L.s("Подходят телефону", "Fits this phone"), false));
+        fr.addView(filterChip(L.s("Установленные", "Installed"), true));
         col.addView(fr);
-        Button own = button(L.s("＋ Свой чекпоинт Anima (.safetensors, BF16/FP16)", "＋ Own Anima checkpoint (.safetensors, BF16/FP16)"), CARD, TXT); own.setTextSize(13);
+        Button own = button(L.s("＋ Свой чекпоинт Anima (.safetensors, BF16/FP16/FP32)", "＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)"), CARD, TXT); own.setTextSize(13);
         own.setOnClickListener(v -> AnimaConv.pick(this));
-        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-1, dp(42)); ol.topMargin = dp(6); ol.bottomMargin = dp(6); col.addView(own, ol);
-        url = field(L.s("Адрес каталога (…/resolve/main/)", "Catalog URL (…/resolve/main/)")); url.setText(prefBase()); url.setTextSize(12); url.setBackground(bg(CARD, 14)); url.setVisibility(View.GONE);
-        col.addView(url);
+        own.setMinHeight(dp(42)); own.setMinimumHeight(dp(42)); own.setPadding(dp(14), dp(8), dp(14), dp(8));
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-1, -2); ol.topMargin = dp(6); ol.bottomMargin = dp(6); col.addView(own, ol);   // the button grows to two lines when the text does not fit
         src.setOnClickListener(v -> { boolean show = url.getVisibility() != View.VISIBLE; url.setVisibility(show ? View.VISIBLE : View.GONE); if (!show) load(); });
         list = new LinearLayout(this); list.setOrientation(LinearLayout.VERTICAL);
         col.addView(list);
@@ -136,7 +137,7 @@ public class ModelsActivity extends Base {
         list.removeAllViews(); bars.clear(); msgs.clear();
         final String base = prefBase(), q = search.getText().toString().trim().toLowerCase();
         final boolean needCommonAnima = !store.commonInstalled();
-        long used = 0; for (Models.Item it : items) if (store.modelInstalled(it.id)) used += it.size;
+        long used = store.commonBytes(); for (Models.Item it : items) if (store.modelInstalled(it.id)) used += it.size; for (String id : store.customIds()) used += store.dirSize(store.modelDir(id));   // the catalog packs, the shared Anima files and the models converted on the phone
         info.setText(info.getText().toString().split("\n")[0] + "\n" + L.f("Моделей на телефоне: %s ГБ  ·  свободно %.1f ГБ", "Models on the phone: %s GB  ·  free %.1f GB", gb(used), getFilesDir().getUsableSpace() / 1e9));
         addCustom();
         List<Entry> all = entries(); java.util.LinkedHashMap<String, List<Entry>> fams = new java.util.LinkedHashMap<>();

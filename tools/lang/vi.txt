@@ -408,3 +408,20 @@
 407	Gỡ “%s” khỏi danh sách?
 408	Các tệp .safetensors của riêng bạn cho Anima (kohya, diffusers/PEFT, LoKr, LoHa): thêm bao nhiêu tùy ý, mỗi tệp có công tắc và cường độ riêng. Chúng được gộp vào mô hình khi tải, nên ảnh đầu tiên với bộ mới lâu hơn 10–15 giây.
 409	Đang bật: %d / %d. Bộ hoặc cường độ mới làm ảnh đầu tiên chậm hơn 10–15 giây.
+410	Đổi tên
+411	Tên LoRA
+412	Lưu siêu dữ liệu trong ảnh
+413	Prompt, seed và mô hình được ghi vào PNG để có thể khôi phục cài đặt từ đó. Khi tắt: tệp sạch (tiện trước khi chia sẻ); chi tiết vẫn được giữ trong thư viện của ứng dụng.
+414	  ·  âm: %d / %d
+415	Có sẵn ▾
+416	đến 0,5 MP
+417	≈ 1 MP
+418	≈ 2 MP
+419	3+ MP
+420	Mọi kích thước
+421	Không có kích thước nào khớp bộ lọc
+422	MP
+423	＋ Checkpoint Anima của bạn (BF16/FP16/FP32)
+424	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16/FP32)
+425	Tên mô hình
+426	Đặt lại

@@ -30,6 +30,8 @@ public class Settings extends Base {
     static final String[] SCHEDULERS = {"", "simple", "discrete", "karras", "exponential", "sgm_uniform", "bong_tangent"};
     static String sampler(Context c) { String v = prefs(c).getString("sampler", "euler"); return java.util.Arrays.asList(SAMPLERS).contains(v) ? v : "euler"; }
     static String scheduler(Context c) { String v = prefs(c).getString("scheduler", ""); return java.util.Arrays.asList(SCHEDULERS).contains(v) ? v : ""; }
+    /** write the prompt, seed, model... into the PNG itself (the app's gallery keeps its own copy either way) */
+    static boolean metaInPng(Context c) { return prefs(c).getBoolean("png_meta", true); }
     static boolean keepOn(Context c) { return prefs(c).getBoolean("keepon", true); }
     static String rawPrefix(Context c) { return prefs(c).getString("prefix", DEFAULT_PREFIX); }
     /** what goes before the prompt: trimmed, ending with a comma and a space; a single space when the user cleared it (anima.sh treats an empty PREFIX as "use the default") */
@@ -66,6 +68,8 @@ public class Settings extends Base {
 
         LinearLayout c3 = card(col);
         c3.addView(toggle(L.s("Не гасить экран при генерации", "Keep the screen on while generating"), "", keepOn(this), on -> p.edit().putBoolean("keepon", on).apply()));
+        c3.addView(toggle(L.s("Хранить метаданные в картинке", "Keep metadata in the picture"), L.s("Промпт, seed и модель записываются в PNG: по ним можно восстановить настройки. Если выключить, файл будет чистым (удобно перед публикацией); в галерее приложения подробности остаются.", "The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery."), metaInPng(this), on -> p.edit().putBoolean("png_meta", on).apply()));
+        LinearLayout c5 = card(col); c5.addView(githubRow());   // about: the project page
         if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", "")) || Mage.is(p.getString("model", "")) || H3.is(p.getString("model", ""))) return;
         TextView pl = text(L.s("Теги качества перед описанием (модели Anima)", "Quality tags before the prompt (Anima models)"), 15, TXT, true); pl.setPadding(dp(2), dp(14), 0, dp(6)); c3.addView(pl);
         prefixEdit = field("");

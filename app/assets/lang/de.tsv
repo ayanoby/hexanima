@@ -408,3 +408,20 @@ Remove	Entfernen
 Remove "%s" from the list?	„%s“ aus der Liste entfernen?
 Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Eigene .safetensors-Dateien für Anima (kohya, diffusers/PEFT, LoKr, LoHa): Füge so viele hinzu, wie du brauchst, jede mit eigenem Schalter und eigener Stärke. Sie werden beim Laden in das Modell eingerechnet, daher dauert das erste Bild mit einem neuen Satz 10–15 Sekunden länger.
 Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Aktiv: %d von %d. Ein neuer Satz oder eine neue Stärke macht das erste Bild 10–15 Sekunden langsamer.
+Rename	Umbenennen
+LoRA name	LoRA-Name
+Keep metadata in the picture	Metadaten im Bild speichern
+The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery.	Prompt, Seed und Modell werden ins PNG geschrieben, damit sich die Einstellungen daraus wiederherstellen lassen. Aus: Die Datei bleibt sauber (praktisch vor dem Teilen); die Details bleiben in der Galerie der App erhalten.
+  ·  negative: %d / %d	  ·  Negativ: %d / %d
+Presets ▾	Vorgaben ▾
+up to 0.5 MP	bis 0,5 MP
+≈ 1 MP	≈ 1 MP
+≈ 2 MP	≈ 2 MP
+3+ MP	3+ MP
+Any size	Jede Größe
+No sizes match these filters	Keine Größen für diese Filter
+MP	MP
+＋ Own Anima checkpoint (BF16/FP16/FP32)	＋ Eigener Anima-Checkpoint (BF16/FP16/FP32)
+＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Eigener Anima-Checkpoint (.safetensors, BF16/FP16/FP32)
+Model name	Modellname
+Reset	Zurücksetzen

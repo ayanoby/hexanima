@@ -408,3 +408,20 @@ Remove	제거
 Remove "%s" from the list?	'%s'을(를) 목록에서 제거할까요?
 Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Anima용 내 .safetensors 파일(kohya, diffusers/PEFT, LoKr, LoHa): 필요한 만큼 추가할 수 있고, 각각 자신의 스위치와 강도가 있습니다. 모델을 불러올 때 합쳐지므로 새 조합으로 만드는 첫 이미지는 10~15초 더 걸립니다.
 Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	켜짐: %d / %d. 새 조합이나 강도를 쓰면 첫 이미지가 10~15초 느려집니다.
+Rename	이름 바꾸기
+LoRA name	LoRA 이름
+Keep metadata in the picture	이미지에 메타데이터 저장
+The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery.	프롬프트, 시드, 모델이 PNG에 기록되어 거기서 설정을 복원할 수 있습니다. 끄면 파일이 깨끗하게 유지됩니다(공유 전에 편리). 자세한 정보는 앱 갤러리에 그대로 남습니다.
+  ·  negative: %d / %d	  ·  네거티브: %d / %d
+Presets ▾	프리셋 ▾
+up to 0.5 MP	0.5 MP까지
+≈ 1 MP	≈ 1 MP
+≈ 2 MP	≈ 2 MP
+3+ MP	3+ MP
+Any size	모든 크기
+No sizes match these filters	이 필터에 맞는 크기가 없습니다
+MP	MP
+＋ Own Anima checkpoint (BF16/FP16/FP32)	＋ 내 Anima 체크포인트(BF16/FP16/FP32)
+＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ 내 Anima 체크포인트(.safetensors, BF16/FP16/FP32)
+Model name	모델 이름
+Reset	초기화

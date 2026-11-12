@@ -39,7 +39,7 @@ public class History extends Base {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         Gallery.purgeOld(this);
-        cell = (getResources().getDisplayMetrics().widthPixels - dp(32)) / 3;
+        cell = (getResources().getDisplayMetrics().widthPixels - dp(40)) / 3;   // the screen padding is 20 dp on each side
         selBtn = button(L.s("Выбрать", "Select"), CARD, TXT); selBtn.setTextSize(13);
         selBtn.setOnClickListener(v -> setSelecting(!selecting));
         LinearLayout col = screen(L.s("История", "History"), selBtn);
@@ -72,7 +72,12 @@ public class History extends Base {
 
     void setSelecting(boolean on) { selecting = on; sel.clear(); selBtn.setText(on ? L.s("Готово", "Done") : L.s("Выбрать", "Select")); bar.setVisibility(on ? View.VISIBLE : View.GONE); fill(); }
 
-    void refreshSel() { updateBar(); for (int i = 0; i < grid.getChildCount(); i++) { LinearLayout row = (LinearLayout) grid.getChildAt(i); for (int j = 0; j < row.getChildCount(); j++) paintCell((FrameLayout) row.getChildAt(j)); } }
+    void refreshSel() { updateBar(); paintAll(grid); }
+    /** the grid is date headers, and under each one three columns of tiles: walk down to the tiles (the ones that carry their file as a tag) */
+    void paintAll(View v) {
+        if (v instanceof FrameLayout && v.getTag() instanceof File) { paintCell((FrameLayout) v); return; }
+        if (v instanceof android.view.ViewGroup) { android.view.ViewGroup g = (android.view.ViewGroup) v; for (int i = 0; i < g.getChildCount(); i++) paintAll(g.getChildAt(i)); }
+    }
 
     void updateBar() {
         count.setText(L.f("Выбрано: %d", "Selected: %d", sel.size()));
@@ -192,7 +197,7 @@ public class History extends Base {
         FrameLayout.LayoutParams sp = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.END); sp.setMargins(0, dp(4), dp(8), 0);
         fl.addView(star, sp);
         TextView chk = text("✓", 16, ON_ACC, true); chk.setGravity(Gravity.CENTER); chk.setBackground(bg(ACC, 12));
-        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.TOP | Gravity.START); cp.setMargins(dp(8), dp(8), 0, 0);
+        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(dp(26), dp(26), Gravity.TOP | Gravity.START); cp.setMargins(dp(8), dp(8), 0, 0);
         fl.addView(chk, cp);
         org.json.JSONObject mo = Gallery.meta(f); String mname = mo.optString("model", "");
         if (!mname.isEmpty()) {
@@ -222,8 +227,15 @@ public class History extends Base {
         File f = (File) fl.getTag();
         boolean s = sel.contains(f);
         fl.getChildAt(1).setVisibility(mode != Gallery.TRASH && Gallery.fav(f) ? View.VISIBLE : View.GONE);
-        fl.getChildAt(2).setVisibility(selecting && s ? View.VISIBLE : View.GONE);
-        fl.getChildAt(0).setAlpha(selecting && !s ? .55f : 1f);
+        // while selecting every picture shows a ring in its corner: empty = not chosen, filled with a tick = chosen; a chosen picture also gets an accent frame, the others are dimmed
+        TextView chk = (TextView) fl.getChildAt(2);
+        chk.setVisibility(selecting ? View.VISIBLE : View.GONE);
+        chk.setText(s ? "✓" : "");
+        android.graphics.drawable.GradientDrawable d = bg(s ? ACC : 0x66000000, 14); d.setStroke(dp(2), 0xFFFFFFFF); chk.setBackground(d);
+        fl.getChildAt(0).setAlpha(selecting && !s ? .45f : 1f);
+        android.graphics.drawable.GradientDrawable fg = null;
+        if (selecting && s) { fg = new android.graphics.drawable.GradientDrawable(); fg.setCornerRadius(dp(14)); fg.setStroke(dp(3), ACC); }
+        fl.setForeground(fg);
     }
 
     static Bitmap thumb(File f, int target) {

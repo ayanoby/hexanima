@@ -408,3 +408,20 @@
 407	„%s“ aus der Liste entfernen?
 408	Eigene .safetensors-Dateien für Anima (kohya, diffusers/PEFT, LoKr, LoHa): Füge so viele hinzu, wie du brauchst, jede mit eigenem Schalter und eigener Stärke. Sie werden beim Laden in das Modell eingerechnet, daher dauert das erste Bild mit einem neuen Satz 10–15 Sekunden länger.
 409	Aktiv: %d von %d. Ein neuer Satz oder eine neue Stärke macht das erste Bild 10–15 Sekunden langsamer.
+410	Umbenennen
+411	LoRA-Name
+412	Metadaten im Bild speichern
+413	Prompt, Seed und Modell werden ins PNG geschrieben, damit sich die Einstellungen daraus wiederherstellen lassen. Aus: Die Datei bleibt sauber (praktisch vor dem Teilen); die Details bleiben in der Galerie der App erhalten.
+414	  ·  Negativ: %d / %d
+415	Vorgaben ▾
+416	bis 0,5 MP
+417	≈ 1 MP
+418	≈ 2 MP
+419	3+ MP
+420	Jede Größe
+421	Keine Größen für diese Filter
+422	MP
+423	＋ Eigener Anima-Checkpoint (BF16/FP16/FP32)
+424	＋ Eigener Anima-Checkpoint (.safetensors, BF16/FP16/FP32)
+425	Modellname
+426	Zurücksetzen

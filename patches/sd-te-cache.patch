@@ -1,0 +1,25 @@
+--- a/src/conditioning/conditioner.hpp
++++ b/src/conditioning/conditioner.hpp
+@@ -1981,6 +1981,11 @@
+             }
+         }
+         if (te_cpu) {
++            // serve mode: the same tokens again (another sampler / scheduler / seed for one prompt) reuse the last results: the CPU encoder takes ~20 s for a long prompt
++            static std::vector<std::pair<std::decay_t<decltype(qwen_tokens)>, sd::Tensor<float>>> te_cache;
++            bool te_hit = false;
++            if (!std::getenv("SD_TE_NOCACHE")) for (auto& e : te_cache) if (e.first == qwen_tokens) { hidden_states = e.second; te_hit = true; LOG_INFO("text encoder: cached result"); break; }
++            if (!te_hit) {
+             hidden_states = llm->compute(n_threads,
+                                          input_ids,
+                                          sd::Tensor<float>(),
+@@ -1989,6 +1994,10 @@
+                                          false,
+                                          false);
+             GGML_ASSERT(!hidden_states.empty());
++            if (std::getenv("SD_TE_STAT")) { double q = 0; const float* hp = hidden_states.data(); for (int64_t i = 0; i < hidden_states.numel(); i++) q += (double)hp[i] * hp[i]; LOG_INFO("TE stat: S=%zu numel=%lld rms=%.4f h[0..3]=%.4f %.4f %.4f %.4f", qwen_tokens.size(), (long long)hidden_states.numel(), std::sqrt(q / std::max<int64_t>(hidden_states.numel(), 1)), hp[0], hp[1], hp[2], hp[3]); }
++            if (te_cache.size() >= 6) te_cache.erase(te_cache.begin());
++            te_cache.emplace_back(qwen_tokens, hidden_states);
++            }
+             if (te_dir && !te_extern) {
+                 FILE* f = fopen((std::string(te_dir) + "/qh_ref.bin").c_str(), "wb");
+                 if (f) { fwrite(hidden_states.data(), sizeof(float), (size_t)hidden_states.numel(), f); fclose(f); }

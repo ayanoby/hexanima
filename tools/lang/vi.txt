@@ -354,3 +354,52 @@
 366	Chọn tệp .safetensors của riêng bạn được làm cho MOSS-Image (LoRA cho FLUX, SDXL và các mô hình khác không phù hợp). Tệp được kiểm tra ngay khi bạn chọn, và nếu không phù hợp, ứng dụng sẽ cho biết lý do. Cường độ 1,00 là thiết lập của tác giả: thấp hơn thì yếu hơn, cao hơn thì mạnh hơn. Ảnh đầu tiên với LoRA hoặc cường độ mới mất khoảng 15 giây để chuẩn bị (tệp tạm khoảng 300 MB). Các khe nhận LoRA có rank đến 128; một LoRA thay thế khe turbo. Việc sử dụng LoRA tuân theo giấy phép của tác giả.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (nhóm Qwen) vẽ chữ đọc được trong ảnh và làm theo các prompt dài viết bằng câu thông thường. Với 4 bước, hãy chọn tệp LoRA turbo (ví dụ Lightning của LightX2V) ở hàng dưới mô hình; việc chuẩn bị mất vài giây và được giữ trong bộ nhớ đệm nhỏ (khoảng 16 MB). Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; cần khoảng 14 GB bộ nhớ và nên dùng điện thoại 12 GB RAM. Chỉ dùng phi thương mại (Qwen Research License).
+369	Không đủ dung lượng cho bản sao của tệp
+370	Đang sao chép tệp…
+371	Tệp không phù hợp: %s
+372	Thường (20 bước, CFG và prompt âm; có thể thêm LoRA Turbo dưới dạng tệp)
+373	Turbo đã được chưng cất sẵn (4 bước, không CFG)
+374	Tệp BF16 / FP16 / FP32, số khối: %d (%s). Cần %.1f GB trống, khoảng một phút.
+375	Nên chọn gì.\n• Thường (base): checkpoint không tăng tốc, đúng như tác giả đăng (trên Civitai: base, v1.x, v.v.). Chạy 20–30 bước với CFG 3–5 cho chất lượng tốt nhất; để chạy nhanh hơn, hãy thêm tệp LoRA Turbo trong phần cài đặt ảnh.\n• Turbo: tên hoặc mô tả của tác giả có turbo, 4 step hoặc distilled, nghĩa là phần tăng tốc đã được gộp sẵn vào trọng số. Chạy 4 bước không cần CFG và nhanh nhất.\nKhông chắc? Hãy chọn Thường: checkpoint Turbo cũng chạy được ở đó, chỉ là sẽ hiện thêm các ô phụ (CFG, prompt âm).
+376	Checkpoint Anima của bạn
+377	Chuyển đổi
+378	Cần các tệp cơ sở
+379	Mọi mô hình Anima đều cần các tệp chung: bộ mã hóa văn bản và VAE (khoảng %.1f GB). Tải ngay bây giờ và tiếp tục?
+380	Tệp cơ sở của Anima
+381	Đã có mô hình với tên này: hãy xóa nó hoặc dùng tên khác
+382	Không đủ dung lượng trống
+383	Đang chuyển đổi…
+384	Khối %s / %s
+385	Xong: đã thêm mô hình
+386	Thất bại: %s
+387	Sampler
+388	mặc định
+389	Scheduler
+390	＋ Checkpoint Anima của bạn (BF16/FP16)
+391	Không · 6 bước
+392	33B · 6 bước · ảnh từ 1 MP, vài phút mỗi ảnh
+393	Tạo ảnh thất bại: %s (nhật ký files/h3/h3.log)
+394	Trong hàng đợi: %d
+395	Nhập một số
+396	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16)
+397	Mô hình của bạn: chưa có. Nút “＋ Checkpoint Anima của bạn” ở trên chuyển đổi tệp .safetensors ngay trên điện thoại.
+398	Mô hình của bạn (%d)  %s
+399	%s · %d khối · %s GB trên điện thoại\nid: %s
+400	thường
+401	Xóa “%s”? Các tệp của mô hình sẽ bị xóa khỏi điện thoại (checkpoint gốc không bị động tới).
+402	Chiều rộng và chiều cao phải là bội số của 32
+403	Số token (%d) phải chia hết cho 32, ví dụ 512×512, 768×1024, 1024×1024
+404	Quá lớn: tối đa 4096 token (2048×2048)
+245	Prompt quá dài để cải thiện
+252	✨ Cải thiện
+263	↶ Hoàn tác
+264	Cải thiện prompt
+265	Mô hình Qwen3-4B để cải thiện prompt chưa được cài (thư mục files/llm: te/, tok_*.txt).
+266	Đang cải thiện prompt…
+267	Đang cải thiện prompt… (tối đa một phút)
+268	Đang cải thiện: %s
+269	Không thể cải thiện prompt (nhật ký files/llm/llm.log)
+270	Đã cải thiện prompt
+277	Cải thiện prompt trên NPU (chậm hơn)
+278	Mặc định Qwen3-4B chạy trên CPU: khoảng 5 token mỗi giây. Trên NPU khoảng 1,3 token mỗi giây, nhưng CPU vẫn rảnh.
+285	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1.00 là thiết lập của tác giả. LoRA được gộp vào trọng số mô hình khi mô hình tải, nên ảnh đầu tiên với LoRA mới (hoặc cường độ mới) lâu hơn 10–15 giây; các trọng số đã gộp được giữ dưới dạng khối 8 bit (khoảng 2 GB dung lượng cho LoRA gần nhất). Phần bộ mã hóa văn bản của LoRA không được áp dụng.

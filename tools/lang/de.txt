@@ -354,3 +354,52 @@
 366	Wähle deine eigene .safetensors-Datei, die für MOSS-Image gemacht ist (LoRAs für FLUX, SDXL und andere Modelle passen nicht). Sie wird gleich nach der Auswahl geprüft, und wenn sie nicht passt, sagt die App warum. Stärke 1,00 ist die Einstellung des Autors: niedriger ist schwächer, höher ist stärker. Das erste Bild mit einer neuen LoRA oder Stärke braucht etwa 15 s zur Vorbereitung (temporäre Dateien von etwa 300 MB). Die Slots nehmen eine LoRA bis Rang 128; eine LoRA ersetzt den Turbo-Slot. Die Nutzung einer LoRA unterliegt der Lizenz ihres Autors.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (Qwen-Team) zeichnet gut lesbaren Text in Bildern und folgt langen Prompts in normalen Sätzen. Für 4 Schritte wähle eine Turbo-LoRA-Datei (zum Beispiel Lightning von LightX2V) in der Zeile unter dem Modell; die Vorbereitung dauert Sekunden und wird in einem kleinen Cache gehalten (etwa 16 MB). Text-Encoder, ViT, Transformer und VAE laufen alle auf der NPU; es braucht etwa 14 GB Speicher, empfohlen wird ein Telefon mit 12 GB RAM. Nur für nichtkommerzielle Nutzung (Qwen Research License).
+369	Nicht genug Speicherplatz für eine Kopie der Datei
+370	Datei wird kopiert…
+371	Die Datei passt nicht: %s
+372	Normal (20 Schritte, CFG und negativer Prompt; eine Turbo-LoRA lässt sich als Datei hinzufügen)
+373	Bereits destilliertes Turbo (4 Schritte, ohne CFG)
+374	Eine BF16-/FP16-/FP32-Datei, Blöcke: %d (%s). Benötigt %.1f GB freien Speicher, etwa eine Minute.
+375	Was wählen?\n• Normal (Base): ein Checkpoint ohne Beschleunigung, so wie ihn der Autor veröffentlicht hat (auf Civitai: base, v1.x usw.). Läuft mit 20–30 Schritten und CFG 3–5 in bester Qualität; für mehr Tempo füge in den Bildeinstellungen eine Turbo-LoRA-Datei hinzu.\n• Turbo: Im Namen oder in der Beschreibung des Autors steht turbo, 4 step oder distilled, die Beschleunigung steckt also schon in den Gewichten. Läuft mit 4 Schritten ohne CFG und ist am schnellsten.\nUnsicher? Wähle Normal: Ein Turbo-Checkpoint funktioniert dort auch, du siehst nur zusätzliche Felder (CFG, negativer Prompt).
+376	Eigener Anima-Checkpoint
+377	Konvertieren
+378	Basisdateien werden benötigt
+379	Jedes Anima-Modell braucht die gemeinsamen Dateien: den Text-Encoder und das VAE (etwa %.1f GB). Jetzt herunterladen und weitermachen?
+380	Anima-Basisdateien
+381	Ein Modell mit diesem Namen gibt es schon: lösche es oder wähle einen anderen Namen
+382	Nicht genug freier Speicher
+383	Konvertierung läuft…
+384	Block %s von %s
+385	Fertig: das Modell wurde hinzugefügt
+386	Fehlgeschlagen: %s
+387	Sampler
+388	Standard
+389	Scheduler
+390	＋ Eigener Anima-Checkpoint (BF16/FP16)
+391	Keine · 6 Schritte
+392	33B · 6 Schritte · Bilder ab 1 MP, Minuten pro Bild
+393	Generierung fehlgeschlagen: %s (Log files/h3/h3.log)
+394	In der Warteschlange: %d
+395	Gib eine Zahl ein
+396	＋ Eigener Anima-Checkpoint (.safetensors, BF16/FP16)
+397	Eigene Modelle: noch keine. Die Schaltfläche „＋ Eigener Anima-Checkpoint“ oben konvertiert eine .safetensors-Datei direkt auf dem Handy.
+398	Eigene Modelle (%d)  %s
+399	%s · %d Blöcke · %s GB auf dem Handy\nid: %s
+400	normal
+401	„%s“ löschen? Die Modelldateien werden vom Handy entfernt (der ursprüngliche Checkpoint bleibt unberührt).
+402	Breite und Höhe müssen Vielfache von 32 sein
+403	Die Tokenzahl (%d) muss durch 32 teilbar sein, z. B. 512×512, 768×1024, 1024×1024
+404	Zu groß: höchstens 4096 Tokens (2048×2048)
+245	Der Prompt ist zu lang zum Verbessern
+252	✨ Verbessern
+263	↶ Rückgängig
+264	Prompt verbessern
+265	Das Modell Qwen3-4B zum Verbessern von Prompts ist nicht installiert (Ordner files/llm: te/, tok_*.txt).
+266	Prompt wird verbessert…
+267	Prompt wird verbessert… (bis zu einer Minute)
+268	Verbesserung: %s
+269	Der Prompt konnte nicht verbessert werden (Log files/llm/llm.log)
+270	Prompt verbessert
+277	Prompts auf der NPU verbessern (langsamer)
+278	Standardmäßig läuft Qwen3-4B auf der CPU: etwa 5 Tokens pro Sekunde. Auf der NPU sind es etwa 1,3 Tokens pro Sekunde, dafür bleibt die CPU frei.
+285	Wähle eine eigene .safetensors-Datei für Anima (Formate kohya, diffusers/PEFT, LoKr und LoHa; 28 oder 40 Blöcke). Sie wird sofort nach der Auswahl geprüft. Stärke 1.00 ist die Einstellung des Autors. Die LoRA wird beim Laden des Modells in dessen Gewichte eingerechnet, daher dauert das erste Bild mit einer neuen LoRA (oder neuer Stärke) 10–15 Sekunden länger; die eingerechneten Gewichte bleiben als 8-Bit-Blöcke erhalten (etwa 2 GB Speicher für die letzte LoRA). Der Text-Encoder-Teil einer LoRA wird nicht angewendet.

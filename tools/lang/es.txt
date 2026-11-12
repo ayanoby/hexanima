@@ -354,3 +354,52 @@
 366	Elige tu propio archivo .safetensors hecho para MOSS-Image (las LoRA para FLUX, SDXL y otros modelos no sirven). Se comprueba en cuanto lo eliges y, si no sirve, la app dice por qué. La fuerza 1,00 es el ajuste del autor: menos es más débil, más es más fuerte. La primera imagen con una LoRA o fuerza nueva tarda unos 15 s en prepararla (archivos temporales de unos 300 MB). Las ranuras admiten una LoRA de rango hasta 128; una LoRA sustituye la ranura turbo. El uso de una LoRA está sujeto a la licencia de su autor.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (equipo Qwen) dibuja texto legible en las imágenes y sigue prompts largos escritos en frases normales. Para 4 pasos elige un archivo de LoRA turbo (por ejemplo Lightning de LightX2V) en la fila bajo el modelo; prepararla lleva segundos y se guarda en una caché pequeña (unos 16 MB). El codificador de texto, el ViT, el transformer y el VAE funcionan todos en la NPU; necesita unos 14 GB de almacenamiento y se recomienda un teléfono con 12 GB de RAM. Solo para uso no comercial (Qwen Research License).
+369	No hay espacio suficiente para una copia del archivo
+370	Copiando el archivo…
+371	El archivo no sirve: %s
+372	Normal (20 pasos, CFG y prompt negativo; se puede añadir una LoRA Turbo como archivo)
+373	Turbo ya destilado (4 pasos, sin CFG)
+374	Un archivo BF16 / FP16 / FP32, bloques: %d (%s). Necesita %.1f GB libres, alrededor de un minuto.
+375	Qué elegir.\n• Normal (base): un checkpoint sin aceleración, tal como lo publicó el autor (en Civitai: base, v1.x, etc.). Funciona con 20–30 pasos y CFG 3–5 para la mejor calidad; para acelerarlo, añade un archivo LoRA Turbo en los ajustes de la imagen.\n• Turbo: el nombre o la descripción del autor dice turbo, 4 step o distilled, es decir, la aceleración ya está fusionada en los pesos. Funciona con 4 pasos sin CFG y es el más rápido.\n¿No estás seguro? Elige Normal: un checkpoint Turbo también funciona ahí, solo verás campos adicionales (CFG, prompt negativo).
+376	Checkpoint propio de Anima
+377	Convertir
+378	Se necesitan los archivos base
+379	Todos los modelos Anima necesitan los archivos comunes: el codificador de texto y el VAE (unos %.1f GB). ¿Descargarlos ahora y continuar?
+380	Archivos base de Anima
+381	Ya existe un modelo con este nombre: bórralo o usa otro nombre
+382	No hay suficiente espacio libre
+383	Convirtiendo…
+384	Bloque %s de %s
+385	Listo: el modelo se ha añadido
+386	Error: %s
+387	Sampler
+388	por defecto
+389	Scheduler
+390	＋ Checkpoint propio de Anima (BF16/FP16)
+391	Ninguna · 6 pasos
+392	33B · 6 pasos · imágenes desde 1 MP, minutos por imagen
+393	Falló la generación: %s (registro files/h3/h3.log)
+394	En la cola: %d
+395	Introduce un número
+396	＋ Checkpoint propio de Anima (.safetensors, BF16/FP16)
+397	Modelos propios: todavía ninguno. El botón «＋ Checkpoint propio de Anima» de arriba convierte un archivo .safetensors directamente en el teléfono.
+398	Modelos propios (%d)  %s
+399	%s · %d bloques · %s GB en el teléfono\nid: %s
+400	normal
+401	¿Eliminar «%s»? Los archivos del modelo se borran del teléfono (el checkpoint original no se toca).
+402	El ancho y el alto deben ser múltiplos de 32
+403	El número de tokens (%d) debe ser divisible por 32, por ejemplo 512×512, 768×1024, 1024×1024
+404	Demasiado grande: 4096 tokens como máximo (2048×2048)
+245	El prompt es demasiado largo para mejorarlo
+252	✨ Mejorar
+263	↶ Deshacer
+264	Mejora del prompt
+265	El modelo Qwen3-4B para mejorar prompts no está instalado (carpeta files/llm: te/, tok_*.txt).
+266	Mejorando el prompt…
+267	Mejorando el prompt… (hasta un minuto)
+268	Mejorando: %s
+269	No se pudo mejorar el prompt (registro files/llm/llm.log)
+270	Prompt mejorado
+277	Mejorar prompts en la NPU (más lento)
+278	De forma predeterminada Qwen3-4B se ejecuta en la CPU: unos 5 tokens por segundo. En la NPU son unos 1,3 tokens por segundo, pero la CPU queda libre.
+285	Elige tu propio archivo .safetensors hecho para Anima (formatos kohya, diffusers/PEFT, LoKr y LoHa; 28 o 40 bloques). Se comprueba en cuanto lo eliges. La fuerza 1.00 es el ajuste del autor. La LoRA se fusiona con los pesos del modelo al cargarlo, así que la primera imagen con una LoRA nueva (o una fuerza nueva) tarda de 10 a 15 segundos más; los pesos fusionados se guardan como bloques de 8 bits (unos 2 GB de almacenamiento para la última LoRA). La parte del codificador de texto de una LoRA no se aplica.

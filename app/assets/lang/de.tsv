@@ -243,12 +243,14 @@ Low-memory mode (slower)	Speicherschonmodus (langsamer)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Die Gewichte des Modells werden für jedes Bild vom Speicher gelesen, statt im RAM zu bleiben. Nötig bei Telefonen mit 8 GB RAM, bei 12 GB nicht.
   ·  app %.1f GB	  ·  App %.1f GB
 Too large: at most 6144 patches (1536×1024)	Zu groß: höchstens 6144 Patches (1536×1024)
+The prompt is too long to enhance	Der Prompt ist zu lang zum Verbessern
 Compatible: rank %d, %d of %d blocks	Kompatibel: Rang %d, %d von %d Blöcken
 This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	Diese LoRA ist für ein anderes Modell (FLUX, SDXL o. Ä.). Sie passt nicht zu Anima.
 This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Diese Datei sieht nicht wie eine Anima-LoRA aus: Die erwarteten Schichten (blocks.N.*) fehlen.
 Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Die Schichtgrößen passen nicht zu Anima (%s). Wahrscheinlich ist es eine LoRA für eine andere Version des Modells.
 The LoRA has blocks that Anima does not have (%s).	Die LoRA enthält Blöcke, die Anima nicht hat (%s).
 All models	Alle Modelle
+✨ Enhance	✨ Verbessern
 Temperature  battery %.1f °C	Temperatur  Akku %.1f °C
   ·  margin before throttling %d%%	  ·  Abstand bis zur Drosselung %d%%
 Picture %d  ·  %d×%d	Bild %d  ·  %d×%d
@@ -259,18 +261,29 @@ Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are stream
 Out of memory	Nicht genug Speicher
 The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Dem Telefon ging der Arbeitsspeicher aus, daher wurde die Generierung gestoppt, damit die App nicht beendet wird. Schließe andere Apps oder wähle eine kleinere Größe (und ein kleineres Foto zum Bearbeiten) und versuche es erneut.
 ⏹ Stop	⏹ Stopp
+↶ Undo	↶ Rückgängig
+Prompt enhancement	Prompt verbessern
+The Qwen3-4B model for enhancing prompts is not installed (folder files/llm: te/, tok_*.txt).	Das Modell Qwen3-4B zum Verbessern von Prompts ist nicht installiert (Ordner files/llm: te/, tok_*.txt).
+Enhancing the prompt…	Prompt wird verbessert…
+Enhancing the prompt… (up to a minute)	Prompt wird verbessert… (bis zu einer Minute)
+Enhancing: %s	Verbesserung: %s
+Could not enhance the prompt (log files/llm/llm.log)	Der Prompt konnte nicht verbessert werden (Log files/llm/llm.log)
+Prompt enhanced	Prompt verbessert
 Little free memory (%d MB): close other apps, or the generation may stop	Wenig freier Speicher (%d MB): Schließe andere Apps, sonst kann die Generierung stoppen
 Stopped: out of memory	Gestoppt: nicht genug Speicher
 Loading the LoRA…	LoRA wird geladen…
 For editing the size is at most 1024×768	Beim Bearbeiten ist die Größe auf 1024×768 begrenzt
 The prompt is too long for this size: shorten it or pick a smaller size	Der Prompt ist für diese Größe zu lang: Kürze ihn oder wähle eine kleinere Größe
 Generation failed: %s (log files/mage/mage.log)	Generierung fehlgeschlagen: %s (Log files/mage/mage.log)
+Enhance prompts on the NPU (slower)	Prompts auf der NPU verbessern (langsamer)
+By default Qwen3-4B runs on the CPU: about 5 tokens per second. On the NPU it is about 1.3 tokens per second, but the CPU stays free.	Standardmäßig läuft Qwen3-4B auf der CPU: etwa 5 Tokens pro Sekunde. Auf der NPU sind es etwa 1,3 Tokens pro Sekunde, dafür bleibt die CPU frei.
 Base model (no turbo)	Basismodell (ohne Turbo)
 Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Zwei Netzdurchläufe pro Schritt (CFG): Ein Bild dauert 10–15-mal länger als mit den Turbo-Modellen.
 Steps	Schritte
 Negative prompt	Negativer Prompt
 Mage-Flow notices (changes made)	Mage-Flow-Hinweise (vorgenommene Änderungen)
 LoRA for Anima	LoRA für Anima
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Wähle eine eigene .safetensors-Datei für Anima (Formate kohya, diffusers/PEFT, LoKr und LoHa; 28 oder 40 Blöcke). Sie wird sofort nach der Auswahl geprüft. Stärke 1.00 ist die Einstellung des Autors. Die LoRA wird beim Laden des Modells in dessen Gewichte eingerechnet, daher dauert das erste Bild mit einer neuen LoRA (oder neuer Stärke) 10–15 Sekunden länger; die eingerechneten Gewichte bleiben als 8-Bit-Blöcke erhalten (etwa 2 GB Speicher für die letzte LoRA). Der Text-Encoder-Teil einer LoRA wird nicht angewendet.
 Mage-Flow-Edit	Mage-Flow-Edit
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT-Lizenz) zeichnet Bilder und bearbeitet Fotos per Prompt in 4 Schritten, etwa 12 Sekunden pro Bild. Text-Encoder, ViT, Transformer und VAE laufen alle auf der NPU; der Download ist etwa 8,7 GB groß. Um ein Foto zu bearbeiten, wähle es im Block „Foto bearbeiten“ aus und beschreibe, was geändert werden soll.
 Mage-Flow sizes	Mage-Flow-Größen
@@ -354,3 +367,39 @@ Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and 
 Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	Wähle deine eigene .safetensors-Datei, die für MOSS-Image gemacht ist (LoRAs für FLUX, SDXL und andere Modelle passen nicht). Sie wird gleich nach der Auswahl geprüft, und wenn sie nicht passt, sagt die App warum. Stärke 1,00 ist die Einstellung des Autors: niedriger ist schwächer, höher ist stärker. Das erste Bild mit einer neuen LoRA oder Stärke braucht etwa 15 s zur Vorbereitung (temporäre Dateien von etwa 300 MB). Die Slots nehmen eine LoRA bis Rang 128; eine LoRA ersetzt den Turbo-Slot. Die Nutzung einer LoRA unterliegt der Lizenz ihres Autors.
 Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
 Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (Qwen-Team) zeichnet gut lesbaren Text in Bildern und folgt langen Prompts in normalen Sätzen. Für 4 Schritte wähle eine Turbo-LoRA-Datei (zum Beispiel Lightning von LightX2V) in der Zeile unter dem Modell; die Vorbereitung dauert Sekunden und wird in einem kleinen Cache gehalten (etwa 16 MB). Text-Encoder, ViT, Transformer und VAE laufen alle auf der NPU; es braucht etwa 14 GB Speicher, empfohlen wird ein Telefon mit 12 GB RAM. Nur für nichtkommerzielle Nutzung (Qwen Research License).
+Not enough space for a copy of the file	Nicht genug Speicherplatz für eine Kopie der Datei
+Copying the file…	Datei wird kopiert…
+The file does not fit: %s	Die Datei passt nicht: %s
+Regular (20 steps, CFG and negative prompt; a Turbo LoRA can be added as a file)	Normal (20 Schritte, CFG und negativer Prompt; eine Turbo-LoRA lässt sich als Datei hinzufügen)
+Already distilled Turbo (4 steps, no CFG)	Bereits destilliertes Turbo (4 Schritte, ohne CFG)
+A BF16 / FP16 / FP32 file, blocks: %d (%s). Needs %.1f GB of free space, about a minute.	Eine BF16-/FP16-/FP32-Datei, Blöcke: %d (%s). Benötigt %.1f GB freien Speicher, etwa eine Minute.
+What to pick.\n• Regular (base): a checkpoint without acceleration, as the author published it (on Civitai: base, v1.x and so on). It runs at 20-30 steps with CFG 3-5 for the best quality; add a Turbo LoRA file in the picture settings to speed it up.\n• Turbo: the author's name or description says turbo, 4 step or distilled, so the acceleration is already merged into the weights. It runs at 4 steps without CFG and is the fastest.\nNot sure? Pick Regular: a Turbo checkpoint works there too, you will just see extra fields (CFG, negative prompt).	Was wählen?\n• Normal (Base): ein Checkpoint ohne Beschleunigung, so wie ihn der Autor veröffentlicht hat (auf Civitai: base, v1.x usw.). Läuft mit 20–30 Schritten und CFG 3–5 in bester Qualität; für mehr Tempo füge in den Bildeinstellungen eine Turbo-LoRA-Datei hinzu.\n• Turbo: Im Namen oder in der Beschreibung des Autors steht turbo, 4 step oder distilled, die Beschleunigung steckt also schon in den Gewichten. Läuft mit 4 Schritten ohne CFG und ist am schnellsten.\nUnsicher? Wähle Normal: Ein Turbo-Checkpoint funktioniert dort auch, du siehst nur zusätzliche Felder (CFG, negativer Prompt).
+Own Anima checkpoint	Eigener Anima-Checkpoint
+Convert	Konvertieren
+Base files are needed	Basisdateien werden benötigt
+Every Anima model needs the common files: the text encoder and the VAE (about %.1f GB). Download them now and go on?	Jedes Anima-Modell braucht die gemeinsamen Dateien: den Text-Encoder und das VAE (etwa %.1f GB). Jetzt herunterladen und weitermachen?
+Anima base files	Anima-Basisdateien
+A model with this name exists: delete it or use another name	Ein Modell mit diesem Namen gibt es schon: lösche es oder wähle einen anderen Namen
+Not enough free space	Nicht genug freier Speicher
+Converting…	Konvertierung läuft…
+Block %s of %s	Block %s von %s
+Done: the model is added	Fertig: das Modell wurde hinzugefügt
+Failed: %s	Fehlgeschlagen: %s
+Sampler	Sampler
+default	Standard
+Scheduler	Scheduler
+＋ Own Anima checkpoint (BF16/FP16)	＋ Eigener Anima-Checkpoint (BF16/FP16)
+None · 6 steps	Keine · 6 Schritte
+33B · 6 steps · pictures from 1 MP, minutes per picture	33B · 6 Schritte · Bilder ab 1 MP, Minuten pro Bild
+Generation failed: %s (log files/h3/h3.log)	Generierung fehlgeschlagen: %s (Log files/h3/h3.log)
+In the queue: %d	In der Warteschlange: %d
+Enter a number	Gib eine Zahl ein
+＋ Own Anima checkpoint (.safetensors, BF16/FP16)	＋ Eigener Anima-Checkpoint (.safetensors, BF16/FP16)
+Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone.	Eigene Modelle: noch keine. Die Schaltfläche „＋ Eigener Anima-Checkpoint“ oben konvertiert eine .safetensors-Datei direkt auf dem Handy.
+Own models (%d)  %s	Eigene Modelle (%d)  %s
+%s · %d blocks · %s GB on the phone\nid: %s	%s · %d Blöcke · %s GB auf dem Handy\nid: %s
+regular	normal
+Delete "%s"? The model files are removed from the phone (the original checkpoint is not touched).	„%s“ löschen? Die Modelldateien werden vom Handy entfernt (der ursprüngliche Checkpoint bleibt unberührt).
+Width and height must be multiples of 32	Breite und Höhe müssen Vielfache von 32 sein
+Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Die Tokenzahl (%d) muss durch 32 teilbar sein, z. B. 512×512, 768×1024, 1024×1024
+Too large: at most 4096 tokens (2048×2048)	Zu groß: höchstens 4096 Tokens (2048×2048)

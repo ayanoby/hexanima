@@ -25,6 +25,11 @@ public class Settings extends Base {
     static int baseSteps(Context c) { return prefs(c).getInt("base_steps", 20); }
     static String baseCfg(Context c) { return prefs(c).getString("base_cfg", "4"); }
     static String baseNeg(Context c) { String n = prefs(c).getString("base_neg", DEFAULT_NEG).trim(); return n.isEmpty() ? DEFAULT_NEG : n; }   // an empty negative prompt would make sd.cpp skip the second pass
+    /** Anima sampler and scheduler (sd.cpp names); the scheduler "" = the model default */
+    static final String[] SAMPLERS = {"euler", "euler_a", "er_sde", "dpm++2m", "dpm++2mv2", "ipndm", "lcm"};
+    static final String[] SCHEDULERS = {"", "simple", "discrete", "karras", "exponential", "sgm_uniform", "bong_tangent"};
+    static String sampler(Context c) { String v = prefs(c).getString("sampler", "euler"); return java.util.Arrays.asList(SAMPLERS).contains(v) ? v : "euler"; }
+    static String scheduler(Context c) { String v = prefs(c).getString("scheduler", ""); return java.util.Arrays.asList(SCHEDULERS).contains(v) ? v : ""; }
     static boolean keepOn(Context c) { return prefs(c).getBoolean("keepon", true); }
     static String rawPrefix(Context c) { return prefs(c).getString("prefix", DEFAULT_PREFIX); }
     /** what goes before the prompt: trimmed, ending with a comma and a space; a single space when the user cleared it (anima.sh treats an empty PREFIX as "use the default") */

@@ -296,6 +296,9 @@ static Chain spawn_vae(const std::string& ph) {
     close(pin[0]); close(pout[1]);
     return {fdopen(pin[1], "w"), fdopen(pout[0], "r"), pid};
 }
+static int te_sm(const std::string& ph) {   // token count of the installed text-encoder contexts: the 512 ones are 224.0 MB per slice, the 128 ones 221.4 MB
+    static int sm = 0; if (!sm) { struct stat st; sm = (stat((ph + "/te0.bin").c_str(), &st) == 0 && st.st_size > 222500000) ? 512 : 128; } return sm;
+}
 static Chain spawn_te(const std::string& ph) {
     int pin[2], pout[2];
     if (pipe(pin) || pipe(pout)) die("pipe");
@@ -377,7 +380,7 @@ int main(int argc, char** argv) {
         if (!access((dir + "/qids.shape").c_str(), F_OK)) {
             double tt = now();
             auto ib = readfile(dir + "/qids.bin"); unlink((dir + "/qids.shape").c_str());
-            int S = (int)(ib.size() / 4); const int SM = 128;
+            int S = (int)(ib.size() / 4); const int SM = getenv("ANIMAD_TE_SM") ? atoi(getenv("ANIMAD_TE_SM")) : te_sm(ph);   // the graphs are static: 512 tokens (new packs) or 128 (old ones, by the size of te0.bin); ANIMAD_TE_SM=0 tests the CPU text encoder
             if (S > SM) { writefile(dir + "/qh.cpu", "", 0); fprintf(stderr, "animad: text S=%d > %d, CPU fallback\n", S, SM); }
             else {
                 std::vector<f32> in((size_t)SM * 1024);
@@ -422,7 +425,11 @@ int main(int argc, char** argv) {
             auto wb = readfile(dir + "/w_" + sn + ".bin");
             int S = (int)(hb.size() / 4 / 1024), L = (int)(idb.size() / 4);
             double ta = now();
-            ctx512 = adapter((const f32*)hb.data(), S, (const int32_t*)idb.data(), (const f32*)wb.data(), L);
+            // the LLM adapter takes ~3 s on the CPU: keep the last results by a hash of its inputs (same prompt again = another sampler / seed)
+            static std::vector<std::pair<uint64_t, std::vector<f32>>> adc;
+            uint64_t hk = 1469598103934665603ull; for (auto* bv : {&hb, &idb, &wb}) { for (unsigned char ch : *bv) hk = (hk ^ ch) * 1099511628211ull; hk = (hk ^ 0xff) * 1099511628211ull; }
+            bool adhit = false; for (auto& e : adc) if (e.first == hk) { ctx512 = e.second; adhit = true; break; }
+            if (!adhit) { ctx512 = adapter((const f32*)hb.data(), S, (const int32_t*)idb.data(), (const f32*)wb.data(), L); if (adc.size() >= 6) adc.erase(adc.begin()); adc.emplace_back(hk, ctx512); }
             fprintf(stderr, "animad: adapter S=%d L=%d %.2fs\n", S, L, now() - ta);
             if (test) { writefile(dir + "/ctx_adapter.bin", ctx512.data(), ctx512.size() * 4); return; }
             ctxt[kp].assign((size_t)1024 * 512, 0.f);
@@ -499,6 +506,8 @@ int main(int argc, char** argv) {
         linear(xr.data(), T, D, w("final_layer.linear.weight"), nullptr, y.data());
         for (int gy = 0; gy < gh; gy++) for (int gx = 0; gx < gw; gx++) for (int a = 0; a < 2; a++) for (int b = 0; b < 2; b++) for (int c = 0; c < 16; c++)
             out[((size_t)c * H + gy * 2 + a) * Wd + gx * 2 + b] = y[(size_t)(gy * gw + gx) * 64 + (a * 2 + b) * 16 + c];
+        if (getenv("ANIMAD_STAT")) { auto rms = [](const f32* p, size_t n) { double q = 0; for (size_t i = 0; i < n; i++) q += (double)p[i] * p[i]; return sqrt(q / std::max<size_t>(n, 1)); };
+                        fprintf(stderr, "animad: stat step %d: rms x %.3f, xtok %.3f, chain-out %.3f, v %.3f, ctx512 %.3f\n", n, rms(xin, (size_t)16 * H * Wd), rms(xtok.data(), xtok.size()), rms(xo, (size_t)T * D), rms(out.data(), out.size()), rms(ctx512.data(), ctx512.size())); }
         if (lr) {
             double tn = sig[si + 1], dt = t - tn;
             std::vector<f32> dl((size_t)16 * H * Wd);   // x0 estimate (low-res) = x_t - t*v

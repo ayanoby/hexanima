@@ -15,4 +15,9 @@ cd out && cp base.apk unsigned.apk && $BT/aapt add unsigned.apk classes.dex >/de
 $BT/zipalign -f 4 out/unsigned.apk out/aligned.apk
 $BT/apksigner sign --ks /sdk/debug.keystore --ks-pass pass:android --out hexanima.apk out/aligned.apk
 rm -rf out; ls -l hexanima.apk' || exit 1
+# the install must never cost the user's data: refuse without a device, and copy the in-app gallery (pictures + metadata) to /sdcard first
+adb get-state >/dev/null 2>&1 || { echo "no device: not installing"; exit 1; }
+if adb shell "su 0 sh -c 'test -d /data/data/com.hexanima.npu/files/gallery'" 2>/dev/null; then
+  adb shell "su 0 sh -c 'mkdir -p /sdcard/HexAnimaBackup && cp -r /data/data/com.hexanima.npu/files/gallery /sdcard/HexAnimaBackup/ 2>/dev/null; cp /data/data/com.hexanima.npu/shared_prefs/*.xml /sdcard/HexAnimaBackup/ 2>/dev/null; true'"
+fi
 adb install -r hexanima.apk

@@ -65,6 +65,9 @@ public class ModelsActivity extends Base {
         LinearLayout fr = new LinearLayout(this); fr.setPadding(0, dp(10), 0, dp(4));
         fr.addView(filterChip(L.s("Установленные", "Installed"), true)); fr.addView(filterChip(L.s("Подходят телефону", "Fits this phone"), false));
         col.addView(fr);
+        Button own = button(L.s("＋ Свой чекпоинт Anima (.safetensors, BF16/FP16)", "＋ Own Anima checkpoint (.safetensors, BF16/FP16)"), CARD, TXT); own.setTextSize(13);
+        own.setOnClickListener(v -> AnimaConv.pick(this));
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-1, dp(42)); ol.topMargin = dp(6); ol.bottomMargin = dp(6); col.addView(own, ol);
         url = field(L.s("Адрес каталога (…/resolve/main/)", "Catalog URL (…/resolve/main/)")); url.setText(prefBase()); url.setTextSize(12); url.setBackground(bg(CARD, 14)); url.setVisibility(View.GONE);
         col.addView(url);
         src.setOnClickListener(v -> { boolean show = url.getVisibility() != View.VISIBLE; url.setVisibility(show ? View.VISIBLE : View.GONE); if (!show) load(); });
@@ -76,6 +79,11 @@ public class ModelsActivity extends Base {
             + "\n" + L.f("Свободно %.1f ГБ", "Free %.1f GB", getFilesDir().getUsableSpace() / 1e9));
         if (downloading) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         load();
+    }
+
+    @Override protected void onActivityResult(int req, int res, Intent d) {
+        if (req == AnimaConv.REQ && res == RESULT_OK && d != null && d.getData() != null) new AnimaConv(this, store, prefBase(), () -> render()).start(d.getData());
+        else super.onActivityResult(req, res, d);
     }
 
     @Override protected void onResume() { super.onResume(); ui.post(tick); }
@@ -130,6 +138,7 @@ public class ModelsActivity extends Base {
         final boolean needCommonAnima = !store.commonInstalled();
         long used = 0; for (Models.Item it : items) if (store.modelInstalled(it.id)) used += it.size;
         info.setText(info.getText().toString().split("\n")[0] + "\n" + L.f("Моделей на телефоне: %s ГБ  ·  свободно %.1f ГБ", "Models on the phone: %s GB  ·  free %.1f GB", gb(used), getFilesDir().getUsableSpace() / 1e9));
+        addCustom();
         List<Entry> all = entries(); java.util.LinkedHashMap<String, List<Entry>> fams = new java.util.LinkedHashMap<>();
         for (String f : new String[]{"Anima", "Qwen-Image", "MOSS-Image", "Mage-Flow", "Legacy"}) fams.put(f, new ArrayList<>());
         for (Entry e : all) {
@@ -202,6 +211,31 @@ public class ModelsActivity extends Base {
         }
         c.setOnClickListener(v -> { if (!openE.remove(e.key)) openE.add(e.key); render(); });
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); list.addView(c, lp);
+    }
+
+    boolean customOpen = true; final java.util.Set<String> customE = new java.util.HashSet<>();
+    /** "Own models": the checkpoints converted on the phone, each expands to its details and a delete button */
+    void addCustom() {
+        final List<String> cs = store.customIds();
+        if (cs.isEmpty()) { TextView e = text(L.s("Свои модели: пока нет. Кнопка «＋ Свой чекпоинт Anima» выше сконвертирует файл .safetensors прямо на телефоне.", "Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone."), 12, DIM, false); e.setPadding(dp(4), dp(10), 0, dp(10)); list.addView(e); return; }
+        TextView h = text(L.f("Свои модели (%d)  %s", "Own models (%d)  %s", cs.size(), customOpen ? "▴" : "▾"), 15, TXT, true); h.setPadding(dp(4), dp(10), 0, dp(8));
+        h.setOnClickListener(v -> { customOpen = !customOpen; render(); }); list.addView(h);
+        if (!customOpen) return;
+        for (final String id : cs) {
+            LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setPadding(dp(16), dp(12), dp(16), dp(12)); c.setBackground(bg(CARD, 14));
+            final long sz = store.dirSize(store.modelDir(id)); final boolean open = customE.contains(id);
+            c.addView(text(store.name(id).replace(" (base)", "") + (open ? "" : "  ▾"), 15, TXT, true));
+            if (open) {
+                int blocks = 0; File[] fs = store.modelDir(id).listFiles(); if (fs != null) for (File f : fs) if (f.getName().matches("blk\\d+\\.bin")) blocks++;
+                TextView d = text(L.f("%s · блоков %d · %s ГБ на телефоне\nid: %s", "%s · %d blocks · %s GB on the phone\nid: %s", id.endsWith("base") ? L.s("обычная", "regular") : "Turbo", blocks, gb(sz), id), 12, DIM, false); d.setPadding(0, dp(6), 0, dp(8)); c.addView(d);
+                TextView del = text(L.s("Удалить", "Delete"), 14, BAD, true); del.setPadding(0, dp(4), 0, dp(2));
+                del.setOnClickListener(v -> builder().setMessage(L.f("Удалить «%s»? Файлы модели будут стёрты с телефона (оригинальный чекпоинт не затрагивается).", "Delete \"%s\"? The model files are removed from the phone (the original checkpoint is not touched).", store.name(id).replace(" (base)", "")))
+                    .setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton(L.s("Удалить", "Delete"), (dd, w) -> { store.delete(id); customE.remove(id); render(); }).show());
+                c.addView(del);
+            }
+            c.setOnClickListener(v -> { if (!customE.remove(id)) customE.add(id); render(); });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); list.addView(c, lp);
+        }
     }
 
     boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen && !it.mage) return true; return false; }

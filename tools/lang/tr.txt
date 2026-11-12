@@ -354,3 +354,52 @@
 366	MOSS-Image için yapılmış kendi .safetensors dosyanızı seçin (FLUX, SDXL ve diğer modellerin LoRA'ları uymaz). Seçer seçmez kontrol edilir; uymuyorsa uygulama nedenini söyler. 1,00 gücü yazarın ayarıdır: düşük daha zayıf, yüksek daha güçlüdür. Yeni bir LoRA veya güçle ilk resim, hazırlık için yaklaşık 15 sn harcar (yaklaşık 300 MB geçici dosya). Yuvalar 128'e kadar rank'lı bir LoRA alır; bir LoRA turbo yuvasının yerini alır. LoRA kullanımı yazarının lisansına tabidir.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (Qwen ekibi) resimlerde okunaklı yazı çizer ve düz cümlelerle yazılmış uzun prompt'ları izler. 4 adım için modelin altındaki satırda bir Turbo LoRA dosyası seçin (örneğin LightX2V'nin Lightning'i); hazırlanması saniyeler sürer ve küçük bir önbellekte tutulur (yaklaşık 16 MB). Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; yaklaşık 14 GB depolama gerekir ve 12 GB RAM'li telefon önerilir. Yalnızca ticari olmayan kullanım (Qwen Research License).
+369	Dosyanın kopyası için yeterli alan yok
+370	Dosya kopyalanıyor…
+371	Dosya uygun değil: %s
+372	Normal (20 adım, CFG ve negatif prompt; Turbo LoRA dosya olarak eklenebilir)
+373	Zaten damıtılmış Turbo (4 adım, CFG yok)
+374	BF16 / FP16 / FP32 dosyası, blok sayısı: %d (%s). %.1f GB boş alan gerekir, yaklaşık bir dakika.
+375	Ne seçmeli.\n• Normal (base): hızlandırma içermeyen, yazarın yayımladığı haliyle checkpoint (Civitai'de: base, v1.x vb.). En iyi kalite için 20–30 adım ve CFG 3–5 ile çalışır; hızlandırmak için görsel ayarlarında bir Turbo LoRA dosyası ekleyin.\n• Turbo: yazarın adında veya açıklamasında turbo, 4 step ya da distilled geçer, yani hızlandırma ağırlıklara zaten gömülüdür. CFG olmadan 4 adımda çalışır ve en hızlısıdır.\nEmin değil misiniz? Normal'i seçin: Turbo checkpoint orada da çalışır, yalnızca fazladan alanlar (CFG, negatif prompt) görürsünüz.
+376	Kendi Anima checkpoint'iniz
+377	Dönüştür
+378	Temel dosyalar gerekli
+379	Her Anima modeli ortak dosyalara ihtiyaç duyar: metin kodlayıcı ve VAE (yaklaşık %.1f GB). Şimdi indirip devam edilsin mi?
+380	Anima temel dosyaları
+381	Bu adda bir model zaten var: silin veya başka bir ad kullanın
+382	Yeterli boş alan yok
+383	Dönüştürülüyor…
+384	Blok %s / %s
+385	Bitti: model eklendi
+386	Başarısız: %s
+387	Sampler
+388	varsayılan
+389	Scheduler
+390	＋ Kendi Anima checkpoint'iniz (BF16/FP16)
+391	Yok · 6 adım
+392	33B · 6 adım · 1 MP'den başlayan görseller, görsel başına dakikalar
+393	Üretim başarısız: %s (günlük files/h3/h3.log)
+394	Kuyrukta: %d
+395	Bir sayı girin
+396	＋ Kendi Anima checkpoint'iniz (.safetensors, BF16/FP16)
+397	Kendi modelleriniz: henüz yok. Yukarıdaki “＋ Kendi Anima checkpoint'iniz” düğmesi bir .safetensors dosyasını doğrudan telefonda dönüştürür.
+398	Kendi modelleriniz (%d)  %s
+399	%s · %d blok · telefonda %s GB\nid: %s
+400	normal
+401	“%s” silinsin mi? Model dosyaları telefondan kaldırılır (özgün checkpoint'e dokunulmaz).
+402	Genişlik ve yükseklik 32'nin katı olmalı
+403	Token sayısı (%d) 32'ye bölünebilmeli, örneğin 512×512, 768×1024, 1024×1024
+404	Çok büyük: en fazla 4096 token (2048×2048)
+245	Prompt iyileştirmek için çok uzun
+252	✨ İyileştir
+263	↶ Geri al
+264	Prompt iyileştirme
+265	Prompt iyileştirmek için Qwen3-4B modeli kurulu değil (klasör files/llm: te/, tok_*.txt).
+266	Prompt iyileştiriliyor…
+267	Prompt iyileştiriliyor… (bir dakikaya kadar)
+268	İyileştirme: %s
+269	Prompt iyileştirilemedi (günlük files/llm/llm.log)
+270	Prompt iyileştirildi
+277	Promptları NPU'da iyileştir (daha yavaş)
+278	Varsayılan olarak Qwen3-4B CPU'da çalışır: saniyede yaklaşık 5 token. NPU'da saniyede yaklaşık 1,3 token olur, ama CPU boş kalır.
+285	Anima için hazırlanmış kendi .safetensors dosyanızı seçin (kohya, diffusers/PEFT, LoKr ve LoHa biçimleri; 28 veya 40 blok). Seçer seçmez denetlenir. 1.00 güç, yazarın ayarıdır. LoRA, model yüklenirken model ağırlıklarına eklenir; bu yüzden yeni bir LoRA (veya yeni güç) ile ilk görsel 10–15 saniye daha uzun sürer; eklenmiş ağırlıklar 8 bitlik bloklar olarak saklanır (son LoRA için yaklaşık 2 GB depolama). LoRA'nın metin kodlayıcı kısmı uygulanmaz.

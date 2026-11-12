@@ -64,7 +64,7 @@ OUT=${3:-/sdcard/Download/anima_$ID.png}
 mkdir -p $ROOT/$ID/vae && chmod -R 777 $ROOT/$ID && echo ${STEPS:-4} ${CFG:+2} > $ROOT/$ID/start   # CFG=<scale> (>1): two DiT passes per step, NEG=<negative prompt>
 V=${V:-1}   # the NPU VAE graph is 512x768; animad tiles larger latents through it
 if [ -z "$ANIMA_NOSERVE" ]; then
-  printf 'p=%s\ns=%s\nn=%s\no=%s\nd=%s\nw=%s\nh=%s\nv=%s\nc=%s\nnp=%s\n' "${PREFIX:-best quality, score_7, score_9, very aesthetic, ultra detailed, fair skin, high contrast, anime coloring, }$1" "${2:--1}" "${STEPS:-4}" "$OUT" "$ROOT/$ID" "${W:-512}" "${H:-768}" "$V" "${CFG:-1}" "${NEG:-worst quality, low quality, blurry, bad anatomy}" > $SQ/job.tmp
+  printf 'p=%s\ns=%s\nn=%s\no=%s\nd=%s\nw=%s\nh=%s\nv=%s\nc=%s\nnp=%s\nsm=%s\nsc=%s\n' "${PREFIX:-best quality, score_7, score_9, very aesthetic, ultra detailed, fair skin, high contrast, anime coloring, }$1" "${2:--1}" "${STEPS:-4}" "$OUT" "$ROOT/$ID" "${W:-512}" "${H:-768}" "$V" "${CFG:-1}" "${NEG:-worst quality, low quality, blurry, bad anatomy}" "${SAMPLER:-euler}" "${SCHED:-}" > $SQ/job.tmp
   mv $SQ/job.tmp $SQ/job
   while [ ! -f $ROOT/$ID/sd_done ] && [ ! -f $ROOT/$ID/sd_failed ] && [ ! -f $A/cancel ]; do sleep 0.05; done
 else
@@ -72,7 +72,7 @@ cd $S
 LD_LIBRARY_PATH=$LIBS ADSP_LIBRARY_PATH=${BIN:-$A} SD_NPU_DIR=$ROOT/$ID SD_NPU_MODE=extern SD_VAE_DIR=$ROOT/$ID/vae SD_VAE_MODE=extern SD_TE_DIR=$ROOT/$ID SD_TE_MODE=extern $SDCLI \
   --diffusion-model $DM --llm miaomiao3DHarem_animaLH3D10_txt.safetensors \
   -p "${PREFIX:-best quality, score_7, score_9, very aesthetic, ultra detailed, fair skin, high contrast, anime coloring, }$1" \
-  --sampling-method euler --cfg-scale 1 --steps ${STEPS:-4} -W ${W:-512} -H ${H:-768} ${VAEARG:---taesd taew2_1.safetensors} --mmap -t ${T:-4} -s ${2:--1} -o $OUT 2>&1 | grep -E "${LOGRE:-completed in|rror}"
+  --sampling-method ${SAMPLER:-euler} ${SCHED:+--scheduler $SCHED} --cfg-scale 1 --steps ${STEPS:-4} -W ${W:-512} -H ${H:-768} ${VAEARG:---taesd taew2_1.safetensors} --mmap -t ${T:-4} -s ${2:--1} -o $OUT 2>&1 | grep -E "${LOGRE:-completed in|rror}"
 fi
 while [ ! -f $ROOT/$ID/finished ] && [ ! -f $A/cancel ]; do sleep 0.1; done
 if [ -f $A/cancel ]; then rm -f $A/cancel; exit 1; fi   # the app stopped the server (Stop button): no picture

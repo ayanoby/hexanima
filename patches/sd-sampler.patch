@@ -1,0 +1,14 @@
+--- a/examples/cli/main.cpp
++++ b/examples/cli/main.cpp
+@@ -950,6 +950,11 @@
+                 gen_params.prompt = job["p"];
+                 gen_params.negative_prompt = job.count("np") ? job["np"] : std::string();   // CFG: negative prompt "np" and scale "c" (default 1 = off)
+                 gen_params.sample_params.guidance.txt_cfg = job.count("c") ? (float)atof(job["c"].c_str()) : 1.0f;
++                {   // sampler "sm" and scheduler "sc" per job (names as in --sampling-method / --scheduler); missing or unknown = the command line defaults
++                    static const sample_method_t def_sm = gen_params.sample_params.sample_method; static const scheduler_t def_sc = gen_params.sample_params.scheduler;
++                    sample_method_t sm = job.count("sm") ? str_to_sample_method(job["sm"].c_str()) : SAMPLE_METHOD_COUNT; scheduler_t sc = job.count("sc") ? str_to_scheduler(job["sc"].c_str()) : SCHEDULER_COUNT;
++                    gen_params.sample_params.sample_method = sm == SAMPLE_METHOD_COUNT ? def_sm : sm; gen_params.sample_params.scheduler = sc == SCHEDULER_COUNT ? def_sc : sc;
++                }
+                 if (job.count("s")) gen_params.seed = atoll(job["s"].c_str());
+                 if (job.count("n")) gen_params.sample_params.sample_steps = atoi(job["n"].c_str());
+                 if (job.count("w")) gen_params.width = atoi(job["w"].c_str());

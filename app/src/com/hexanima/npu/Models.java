@@ -41,6 +41,7 @@ final class Models {
     long commonSize;
     List<Item> catalog(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { return catalog5(get(base + "catalog7.json"), base); } catch (Exception e7) { }   // catalog7.json = catalog6 + the common files with the 512 token text encoder (1.5.4+; older apps expect 128 tokens)
         try { return catalog5(get(base + "catalog6.json"), base); } catch (Exception e6) { }   // catalog6.json = catalog5 + the MiaoMiao MOSS fine-tunes (older apps do not read it)
         try { return catalog5(get(base + "catalog5.json"), base); } catch (Exception e5) { }   // catalog5.json: packs + models with switchable modes (flattened here to one Item per mode)
         try { txt = get(base + "catalog4.json"); } catch (Exception e0) { try { txt = get(base + "catalog3.json"); } catch (Exception e) { try { txt = get(base + "catalog2.json"); } catch (Exception e2) { txt = get(base + "catalog.json"); } } }
@@ -191,6 +192,14 @@ final class Models {
         File[] fs = dir.listFiles(); if (fs != null) for (File f : fs) f.delete();
         dir.delete(); new File(sd, id + ".safetensors").delete();
     }
+
+    static final String CUSTOM = ".custom";   // marker in m_ID of a checkpoint converted on the phone
+    java.util.List<String> customIds() {
+        java.util.List<String> out = new java.util.ArrayList<>(); File[] ds = anima.listFiles();
+        if (ds != null) for (File d : ds) if (d.getName().startsWith("m_") && (new File(d, CUSTOM).exists() || d.getName().startsWith("m_my")) && doneMark(d).exists()) out.add(d.getName().substring(2));   // models converted by an earlier build have no marker: their ids start with "my"
+        java.util.Collections.sort(out); return out;
+    }
+    long dirSize(File d) { long n = 0; File[] fs = d.listFiles(); if (fs != null) for (File f : fs) n += f.isDirectory() ? dirSize(f) : f.length(); return n; }
 
     static void deleteTree(File f) { File[] fs = f.listFiles(); if (fs != null) for (File c : fs) deleteTree(c); f.delete(); }
 

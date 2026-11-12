@@ -243,12 +243,14 @@ Low-memory mode (slower)	저메모리 모드 (느림)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	모델 가중치를 RAM에 두지 않고 그림마다 저장소에서 읽습니다. RAM 8 GB 휴대폰에서 필요하며 12 GB에서는 필요 없습니다.
   ·  app %.1f GB	  ·  앱 %.1f GB
 Too large: at most 6144 patches (1536×1024)	너무 큼: 패치 최대 6144개 (1536×1024)
+The prompt is too long to enhance	프롬프트가 너무 길어 개선할 수 없습니다
 Compatible: rank %d, %d of %d blocks	호환됨: 랭크 %d, 블록 %d/%d
 This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	이 LoRA는 다른 모델(FLUX, SDXL 등)용입니다. Anima에는 맞지 않습니다.
 This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	이 파일은 Anima LoRA로 보이지 않습니다: 필요한 레이어(blocks.N.*)가 없습니다.
 Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	레이어 크기가 Anima와 맞지 않습니다(%s). 모델의 다른 버전용 LoRA일 가능성이 높습니다.
 The LoRA has blocks that Anima does not have (%s).	이 LoRA에는 Anima에 없는 블록이 있습니다(%s).
 All models	모든 모델
+✨ Enhance	✨ 개선
 Temperature  battery %.1f °C	온도  배터리 %.1f °C
   ·  margin before throttling %d%%	  ·  스로틀링까지 여유 %d%%
 Picture %d  ·  %d×%d	이미지 %d  ·  %d×%d
@@ -259,18 +261,29 @@ Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are stream
 Out of memory	메모리 부족
 The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	휴대폰 메모리가 부족해 앱이 종료되지 않도록 생성을 중단했습니다. 다른 앱을 닫거나 더 작은 크기(편집 시에는 더 작은 사진)를 선택한 뒤 다시 시도하세요.
 ⏹ Stop	⏹ 중지
+↶ Undo	↶ 되돌리기
+Prompt enhancement	프롬프트 개선
+The Qwen3-4B model for enhancing prompts is not installed (folder files/llm: te/, tok_*.txt).	프롬프트 개선용 Qwen3-4B 모델이 설치되어 있지 않습니다(폴더 files/llm: te/, tok_*.txt).
+Enhancing the prompt…	프롬프트를 개선하는 중…
+Enhancing the prompt… (up to a minute)	프롬프트를 개선하는 중… (최대 1분)
+Enhancing: %s	개선 중: %s
+Could not enhance the prompt (log files/llm/llm.log)	프롬프트를 개선하지 못했습니다(로그 files/llm/llm.log)
+Prompt enhanced	프롬프트를 개선했습니다
 Little free memory (%d MB): close other apps, or the generation may stop	여유 메모리가 적음 (%d MB): 다른 앱을 닫으세요. 그렇지 않으면 생성이 멈출 수 있습니다
 Stopped: out of memory	중지됨: 메모리 부족
 Loading the LoRA…	LoRA 불러오는 중…
 For editing the size is at most 1024×768	편집 시 크기는 최대 1024×768입니다
 The prompt is too long for this size: shorten it or pick a smaller size	이 크기에는 프롬프트가 너무 깁니다: 줄이거나 더 작은 크기를 선택하세요
 Generation failed: %s (log files/mage/mage.log)	생성 실패: %s (로그 files/mage/mage.log)
+Enhance prompts on the NPU (slower)	NPU에서 프롬프트 개선(더 느림)
+By default Qwen3-4B runs on the CPU: about 5 tokens per second. On the NPU it is about 1.3 tokens per second, but the CPU stays free.	기본적으로 Qwen3-4B는 CPU에서 실행되며 초당 약 5토큰입니다. NPU에서는 초당 약 1.3토큰이지만 CPU는 비어 있습니다.
 Base model (no turbo)	기본 모델 (터보 없음)
 Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	스텝마다 네트워크를 두 번 실행합니다(CFG): 이미지 한 장이 터보 모델보다 10~15배 오래 걸립니다.
 Steps	스텝
 Negative prompt	네거티브 프롬프트
 Mage-Flow notices (changes made)	Mage-Flow 고지 사항 (변경 내용)
 LoRA for Anima	Anima용 LoRA
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Anima용으로 만든 내 .safetensors 파일을 고르세요(kohya, diffusers/PEFT, LoKr, LoHa 형식, 28 또는 40블록). 고르는 즉시 검사됩니다. 강도 1.00은 작성자의 설정입니다. LoRA는 모델을 불러올 때 모델 가중치에 합쳐지므로, 새 LoRA(또는 새 강도)로 만드는 첫 이미지는 10~15초 더 걸립니다. 합쳐진 가중치는 8비트 블록으로 보관됩니다(마지막 LoRA 기준 약 2GB). LoRA의 텍스트 인코더 부분은 적용되지 않습니다.
 Mage-Flow-Edit	Mage-Flow-Edit
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo(Microsoft, 4B, MIT 라이선스)는 프롬프트로 이미지를 그리고 사진을 편집하며, 4스텝에 이미지당 약 12초가 걸립니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행되며 다운로드 크기는 약 8.7 GB입니다. 사진을 편집하려면 "사진 편집" 블록에서 사진을 고르고 바꿀 내용을 설명하세요.
 Mage-Flow sizes	Mage-Flow 크기
@@ -354,3 +367,39 @@ Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and 
 Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	MOSS-Image용으로 만든 자신의 .safetensors 파일을 고르세요(FLUX, SDXL 등 다른 모델의 LoRA는 맞지 않습니다). 선택하면 바로 확인하고, 맞지 않으면 앱이 이유를 알려 줍니다. 강도 1.00은 제작자의 설정입니다: 낮추면 약해지고 높이면 강해집니다. 새 LoRA나 새 강도로 만드는 첫 이미지는 준비에 약 15초가 걸립니다(임시 파일 약 300 MB). 슬롯은 랭크 128까지의 LoRA를 받으며, LoRA 하나가 터보 슬롯을 대체합니다. LoRA 사용은 제작자의 라이선스를 따릅니다.
 Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
 Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo(Qwen 팀)는 이미지 속에 읽기 쉬운 글자를 그리고 일반 문장으로 쓴 긴 프롬프트를 따릅니다. 4스텝을 쓰려면 모델 아래 줄에서 터보 LoRA 파일(예: LightX2V의 Lightning)을 고르세요. 준비는 몇 초 걸리며 작은 캐시(약 16 MB)에 보관됩니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행됩니다. 저장 공간이 약 14 GB 필요하며 RAM 12 GB 휴대폰을 권장합니다. 비상업적 용도로만 사용할 수 있습니다(Qwen Research License).
+Not enough space for a copy of the file	파일 사본을 저장할 공간이 부족합니다
+Copying the file…	파일을 복사하는 중…
+The file does not fit: %s	사용할 수 없는 파일입니다: %s
+Regular (20 steps, CFG and negative prompt; a Turbo LoRA can be added as a file)	일반(20단계, CFG와 네거티브 프롬프트, Turbo LoRA는 파일로 추가할 수 있음)
+Already distilled Turbo (4 steps, no CFG)	이미 증류된 Turbo(4단계, CFG 없음)
+A BF16 / FP16 / FP32 file, blocks: %d (%s). Needs %.1f GB of free space, about a minute.	BF16 / FP16 / FP32 파일, 블록 수: %d (%s). 여유 공간 %.1f GB가 필요하며 약 1분 걸립니다.
+What to pick.\n• Regular (base): a checkpoint without acceleration, as the author published it (on Civitai: base, v1.x and so on). It runs at 20-30 steps with CFG 3-5 for the best quality; add a Turbo LoRA file in the picture settings to speed it up.\n• Turbo: the author's name or description says turbo, 4 step or distilled, so the acceleration is already merged into the weights. It runs at 4 steps without CFG and is the fastest.\nNot sure? Pick Regular: a Turbo checkpoint works there too, you will just see extra fields (CFG, negative prompt).	무엇을 고를까요.\n• 일반(base): 가속이 없는 체크포인트로, 작성자가 올린 그대로입니다(Civitai에서는 base, v1.x 등). 20~30단계와 CFG 3~5로 최고 품질을 냅니다. 더 빠르게 하려면 이미지 설정에서 Turbo LoRA 파일을 추가하세요.\n• Turbo: 작성자의 이름이나 설명에 turbo, 4 step, distilled가 있는 것으로, 가속이 이미 가중치에 합쳐져 있습니다. CFG 없이 4단계로 동작하며 가장 빠릅니다.\n잘 모르겠다면 '일반'을 고르세요. Turbo 체크포인트도 거기서 동작하며, 추가 항목(CFG, 네거티브 프롬프트)만 더 보입니다.
+Own Anima checkpoint	내 Anima 체크포인트
+Convert	변환
+Base files are needed	기본 파일이 필요합니다
+Every Anima model needs the common files: the text encoder and the VAE (about %.1f GB). Download them now and go on?	모든 Anima 모델에는 공통 파일(텍스트 인코더와 VAE, 약 %.1f GB)이 필요합니다. 지금 다운로드하고 계속할까요?
+Anima base files	Anima 기본 파일
+A model with this name exists: delete it or use another name	같은 이름의 모델이 있습니다. 삭제하거나 다른 이름을 사용하세요
+Not enough free space	여유 공간이 부족합니다
+Converting…	변환 중…
+Block %s of %s	블록 %s / %s
+Done: the model is added	완료: 모델이 추가되었습니다
+Failed: %s	실패: %s
+Sampler	샘플러
+default	기본값
+Scheduler	스케줄러
+＋ Own Anima checkpoint (BF16/FP16)	＋ 내 Anima 체크포인트(BF16/FP16)
+None · 6 steps	없음 · 6단계
+33B · 6 steps · pictures from 1 MP, minutes per picture	33B · 6단계 · 1MP부터의 이미지, 이미지당 수 분
+Generation failed: %s (log files/h3/h3.log)	생성 실패: %s (로그 files/h3/h3.log)
+In the queue: %d	대기열: %d
+Enter a number	숫자를 입력하세요
+＋ Own Anima checkpoint (.safetensors, BF16/FP16)	＋ 내 Anima 체크포인트(.safetensors, BF16/FP16)
+Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone.	내 모델: 아직 없습니다. 위의 '＋ 내 Anima 체크포인트' 버튼으로 .safetensors 파일을 휴대폰에서 바로 변환할 수 있습니다.
+Own models (%d)  %s	내 모델 (%d)  %s
+%s · %d blocks · %s GB on the phone\nid: %s	%s · 블록 %d개 · 휴대폰에서 %s GB\nid: %s
+regular	일반
+Delete "%s"? The model files are removed from the phone (the original checkpoint is not touched).	'%s'을(를) 삭제할까요? 모델 파일이 휴대폰에서 지워집니다(원본 체크포인트는 그대로입니다).
+Width and height must be multiples of 32	너비와 높이는 32의 배수여야 합니다
+Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	토큰 수(%d)는 32로 나누어떨어져야 합니다(예: 512×512, 768×1024, 1024×1024)
+Too large: at most 4096 tokens (2048×2048)	너무 큽니다: 최대 4096 토큰(2048×2048)

@@ -91,7 +91,7 @@ public class Main extends Base {
     EditText seed, wEdit, hEdit;
     TextView tokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
     final Runnable tokTick = this::updateTokens;
-    LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal;   // Anima base models: negative prompt, steps and CFG under the prompt
+    LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal, samplerVal, schedVal;   // Anima base models: negative prompt, steps and CFG under the prompt
     LinearLayout loraBox; TextView loraName, loraInfo, strText; SeekBar strBar; Button loraPick, loraDrop;
     LinearLayout editBox; TextView editNote; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
     ProgressBar bar, ramBar;
@@ -306,6 +306,12 @@ public class Main extends Base {
         stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0))); stepsRow.addView(divider());
         pcard.addView(stepsRow);
         baseRow.addView(paramRow("CFG", stepper(cfgVal, 1))); baseRow.addView(divider());
+        samplerVal = text("", 15, TXT, false); samplerVal.setOnClickListener(v -> builder().setTitle(L.s("Сэмплер", "Sampler")).setSingleChoiceItems(Settings.SAMPLERS, java.util.Arrays.asList(Settings.SAMPLERS).indexOf(smp()), (d, i) -> { d.dismiss(); prefs().edit().putString("sampler", Settings.SAMPLERS[i]).apply(); refreshBaseUi(); }).show());
+        schedVal = text("", 15, TXT, false); schedVal.setOnClickListener(v -> { String[] sn = Settings.SCHEDULERS.clone(); sn[0] = L.s("по умолчанию", "default");
+            builder().setTitle(L.s("Шедулер", "Scheduler")).setSingleChoiceItems(sn, java.util.Arrays.asList(Settings.SCHEDULERS).indexOf(sch()), (d, i) -> { d.dismiss(); prefs().edit().putString("scheduler", Settings.SCHEDULERS[i]).apply(); refreshBaseUi(); }).show(); });
+        for (TextView t : new TextView[]{samplerVal, schedVal}) { t.setGravity(Gravity.END); t.setPadding(dp(12), dp(10), dp(4), dp(10)); }
+        baseRow.addView(paramRow(L.s("Сэмплер", "Sampler"), samplerVal)); baseRow.addView(divider());
+        baseRow.addView(paramRow(L.s("Шедулер", "Scheduler"), schedVal)); baseRow.addView(divider());
         pcard.addView(baseRow);
         LinearLayout sr = new LinearLayout(this); sr.setGravity(Gravity.CENTER_VERTICAL);
         seed = field("-1"); seed.setText("-1"); seed.setGravity(Gravity.END); seed.setBackground(null); seed.setPadding(0, 0, dp(4), 0);
@@ -455,6 +461,7 @@ public class Main extends Base {
     };
 
     @Override protected void onActivityResult(int req, int res, Intent d) {
+        if (req == AnimaConv.REQ && res == RESULT_OK && d != null && d.getData() != null) { new AnimaConv(this, store, prefs().getString("base", DEFAULT_BASE), () -> refreshModels()).start(d.getData()); return; }
         if (req == 9 && res == RESULT_OK && d != null && d.getData() != null) { importLora(d.getData()); return; }
         if (req == 10 && res == RESULT_OK && d != null && d.getData() != null) { importEdit(d.getData()); return; }
         if (req == 14 && res == RESULT_OK && d != null && d.getData() != null) { if (isAnima()) importTurboAnima(d.getData()); else if (isQwen()) importTurboQwen(d.getData()); else importTurbo(d.getData()); return; }
@@ -795,6 +802,13 @@ public class Main extends Base {
     boolean isMoss() { return Moss.is(model); }
     boolean isMage() { return Mage.is(model); }
     boolean isH3() { return H3.is(model); }
+    /** CFG of the picture: the base models keep theirs (base_cfg, 4), the turbo ones have their own (turbo_cfg, 1 = no second pass) */
+    // the picture settings live in prefs() (the "lab" file in lab mode), not in Settings.prefs(): read them from the same place they are written
+    String smp() { String v = prefs().getString("sampler", "euler"); return java.util.Arrays.asList(Settings.SAMPLERS).contains(v) ? v : "euler"; }
+    String sch() { String v = prefs().getString("scheduler", ""); return java.util.Arrays.asList(Settings.SCHEDULERS).contains(v) ? v : ""; }
+    String negStr() { String n = prefs().getString("base_neg", Settings.DEFAULT_NEG).trim(); return n.isEmpty() ? Settings.DEFAULT_NEG : n; }
+    String cfgKey() { return base() ? "base_cfg" : "turbo_cfg"; }
+    String cfgStr() { return prefs().getString(cfgKey(), base() ? "4" : "1"); }
     boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3(); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
     java.util.List<int[]> sizeList() { return isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
@@ -808,7 +822,9 @@ public class Main extends Base {
     }
     void refreshBaseUi() {
         if (stepsVal != null) { int st = steps(); stepsVal.setText(String.valueOf(st)); stepsVal.setTextColor(st == stepsDef() ? TXT : WARN); }   // an orange number: not the recipe of the model
-        if (cfgVal != null) cfgVal.setText(Settings.baseCfg(this));
+        if (cfgVal != null) cfgVal.setText(cfgStr());
+        if (samplerVal != null) samplerVal.setText(smp() + "  ▾");
+        if (schedVal != null) { String sc = sch(); schedVal.setText((sc.isEmpty() ? L.s("по умолчанию", "default") : sc) + "  ▾"); }
         updateChips();
         if (genBtn != null && !busy) genBtn.setText(genLabel());
     }
@@ -819,16 +835,16 @@ public class Main extends Base {
         }).show();
     }
     void pickBaseCfg() {
-        final String cur = Settings.baseCfg(this);
-        final String[] opts = new String[Settings.BASE_CFG.length + 1]; System.arraycopy(Settings.BASE_CFG, 0, opts, 0, Settings.BASE_CFG.length); opts[opts.length - 1] = L.s("Своё значение…", "Custom value…");
-        int ci = java.util.Arrays.asList(Settings.BASE_CFG).indexOf(cur); if (ci < 0) ci = opts.length - 1;
+        final String cur = cfgStr(); final String[] cfgs = base() ? Settings.BASE_CFG : new String[]{"1", "2", "3", "4"}; final String ck = cfgKey();
+        final String[] opts = new String[cfgs.length + 1]; System.arraycopy(cfgs, 0, opts, 0, cfgs.length); opts[opts.length - 1] = L.s("Своё значение…", "Custom value…");
+        int ci = java.util.Arrays.asList(cfgs).indexOf(cur); if (ci < 0) ci = opts.length - 1;
         builder().setTitle("CFG").setSingleChoiceItems(opts, ci, (d, i) -> {
             d.dismiss();
-            if (i < Settings.BASE_CFG.length) { prefs().edit().putString("base_cfg", Settings.BASE_CFG[i]).apply(); refreshBaseUi(); return; }
+            if (i < cfgs.length) { prefs().edit().putString(ck, cfgs[i]).apply(); refreshBaseUi(); return; }
             final EditText e = new EditText(this); e.setText(cur); e.setSelectAllOnFocus(true); e.setTextColor(TXT); e.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             builder().setTitle("CFG (1–20)").setView(e).setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton("OK", (dd, w) -> {
                 try { float v = Float.parseFloat(e.getText().toString().trim().replace(',', '.')); if (v < 1 || v > 20) throw new NumberFormatException();
-                    prefs().edit().putString("base_cfg", String.valueOf(Math.round(v * 100) / 100f).replaceAll("\\.0$", "")).apply(); refreshBaseUi(); }
+                    prefs().edit().putString(ck, String.valueOf(Math.round(v * 100) / 100f).replaceAll("\\.0$", "")).apply(); refreshBaseUi(); }
                 catch (NumberFormatException x) { Toast.makeText(this, L.s("Введите число от 1 до 20", "Enter a number from 1 to 20"), Toast.LENGTH_SHORT).show(); }
             }).show();
         }).show();
@@ -865,6 +881,8 @@ public class Main extends Base {
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); col.addView(row, lp);
             }
         }
+        TextView own = text(L.s("＋ Свой чекпоинт Anima (BF16/FP16)", "＋ Own Anima checkpoint (BF16/FP16)"), 15, TXT, false); own.setPadding(dp(14), dp(14), dp(14), dp(4));
+        own.setOnClickListener(v -> { dlg[0].dismiss(); AnimaConv.pick(this); }); col.addView(own);
         TextView cat = text(L.s("Каталог моделей", "Model catalog"), 15, TXT, false); cat.setPadding(dp(14), dp(14), dp(14), dp(14)); 
         cat.setOnClickListener(v -> { dlg[0].dismiss(); openModels(); }); col.addView(cat);
         android.widget.ScrollView sv = new android.widget.ScrollView(this); sv.addView(col);
@@ -1077,7 +1095,7 @@ public class Main extends Base {
         final int lim = tokLimit();
         if (tokView == null) return;
         if (lim == 0) { tokOver = false; tokView.setVisibility(View.GONE); return; }
-        final String pr = prompt.getText().toString().trim(), neg = base() ? Settings.baseNeg(this) : "";
+        final String pr = prompt.getText().toString().trim(), neg = base() ? negStr() : "";
         final String full = isAnima() ? Settings.prefix(this) + pr : pr; final boolean an = isAnima();
         new Thread(() -> {
             int n = 0, nn = 0;
@@ -1245,7 +1263,7 @@ public class Main extends Base {
         final String pr = prompt.getText().toString().trim();
         if (pr.isEmpty()) { Toast.makeText(this, L.s("Введите описание", "Enter a prompt"), Toast.LENGTH_SHORT).show(); return; }
         if (tokLimit() > 0) {   // counted here again (the counter on screen may be a keystroke behind)
-            int n; try { n = tokCount(isAnima() ? Settings.prefix(this) + pr : pr); if (base()) n = Math.max(n, tokCount(Settings.baseNeg(this))); } catch (Exception e) { n = 0; }
+            int n; try { n = tokCount(isAnima() ? Settings.prefix(this) + pr : pr); if (base()) n = Math.max(n, tokCount(negStr())); } catch (Exception e) { n = 0; }
             if (n > tokLimit()) { updateTokens(); Toast.makeText(this, L.f("Слишком длинный промпт: %d токенов, максимум %d. Сократите описание.", "Prompt too long: %d tokens, the limit is %d. Shorten it.", n, tokLimit()), Toast.LENGTH_LONG).show(); return; }
         }
         String sd = seed.getText().toString().trim();
@@ -1341,7 +1359,7 @@ public class Main extends Base {
             }
         });
         poll.start();
-        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + steps() + (base() ? " CFG=" + Settings.baseCfg(this) + " NEG=" + q(Settings.baseNeg(this)) : "") + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
+        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + steps() + " SAMPLER=" + smp() + (sch().isEmpty() ? "" : " SCHED=" + sch()) + (base() || !cfgStr().equals("1") ? " CFG=" + cfgStr() + " NEG=" + q(negStr()) : "") + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
         done[0] = true;
         try { poll.join(); } catch (InterruptedException ignored) { }
         if (cancelled) return null;
@@ -1606,16 +1624,16 @@ public class Main extends Base {
         if (kind == 0) {
             setSteps(steps() + dir); return;
         } else if (kind == 1) {
-            float v; try { v = Float.parseFloat(Settings.baseCfg(this)); } catch (NumberFormatException e) { v = 4; }
+            float v; try { v = Float.parseFloat(cfgStr()); } catch (NumberFormatException e) { v = base() ? 4 : 1; }
             v = Math.max(1, Math.min(20, Math.round((v + 0.5f * dir) * 2) / 2f));
-            prefs().edit().putString("base_cfg", v == (int) v ? String.valueOf((int) v) : String.valueOf(v)).apply();
+            prefs().edit().putString(cfgKey(), v == (int) v ? String.valueOf((int) v) : String.valueOf(v)).apply();
         } else {
             setCount(count + dir); return;
         }
         refreshBaseUi();
     }
     void updateChips() {
-        if (baseRow != null) baseRow.setVisibility(base() ? View.VISIBLE : View.GONE);
+        if (baseRow != null) baseRow.setVisibility(isAnima() ? View.VISIBLE : View.GONE);
         if (stepsRow != null) stepsRow.setVisibility(model.isEmpty() ? View.GONE : View.VISIBLE);
         if (countVal != null) countVal.setText(String.valueOf(count));
     }

@@ -243,12 +243,14 @@ Low-memory mode (slower)	省内存模式（较慢）
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	模型权重不常驻内存，而是每张图都从存储中读取。内存 8 GB 的手机需要，12 GB 的不需要。
   ·  app %.1f GB	  ·  应用 %.1f GB
 Too large: at most 6144 patches (1536×1024)	尺寸过大：最多 6144 个图块（1536×1024）
+The prompt is too long to enhance	提示词太长，无法优化
 Compatible: rank %d, %d of %d blocks	兼容：秩 %d，%d / %d 个模块
 This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	这个 LoRA 适用于其他模型（FLUX、SDXL 等），不适用于 Anima。
 This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	此文件不像是 Anima 的 LoRA：缺少应有的层（blocks.N.*）。
 Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	层的尺寸与 Anima 不匹配（%s）。这可能是针对该模型其他版本的 LoRA。
 The LoRA has blocks that Anima does not have (%s).	该 LoRA 含有 Anima 没有的模块（%s）。
 All models	所有模型
+✨ Enhance	✨ 优化
 Temperature  battery %.1f °C	温度  电池 %.1f °C
   ·  margin before throttling %d%%	  ·  距离降频还有 %d%%
 Picture %d  ·  %d×%d	图片 %d  ·  %d×%d
@@ -259,18 +261,29 @@ Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are stream
 Out of memory	内存不足
 The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	手机内存不足，为避免应用被关闭，已停止生成。请关闭其他应用，或选择更小的尺寸（编辑时用更小的照片），然后重试。
 ⏹ Stop	⏹ 停止
+↶ Undo	↶ 撤销
+Prompt enhancement	提示词优化
+The Qwen3-4B model for enhancing prompts is not installed (folder files/llm: te/, tok_*.txt).	未安装用于优化提示词的 Qwen3-4B 模型（文件夹 files/llm：te/、tok_*.txt）。
+Enhancing the prompt…	正在优化提示词…
+Enhancing the prompt… (up to a minute)	正在优化提示词…（最长一分钟）
+Enhancing: %s	优化中：%s
+Could not enhance the prompt (log files/llm/llm.log)	无法优化提示词（日志 files/llm/llm.log）
+Prompt enhanced	提示词已优化
 Little free memory (%d MB): close other apps, or the generation may stop	可用内存很少（%d MB）：请关闭其他应用，否则生成可能会中断
 Stopped: out of memory	已停止：内存不足
 Loading the LoRA…	正在加载 LoRA…
 For editing the size is at most 1024×768	编辑时尺寸最大为 1024×768
 The prompt is too long for this size: shorten it or pick a smaller size	提示词对于这个尺寸太长：请缩短，或选择更小的尺寸
 Generation failed: %s (log files/mage/mage.log)	生成失败：%s（日志 files/mage/mage.log）
+Enhance prompts on the NPU (slower)	在 NPU 上优化提示词（较慢）
+By default Qwen3-4B runs on the CPU: about 5 tokens per second. On the NPU it is about 1.3 tokens per second, but the CPU stays free.	默认情况下 Qwen3-4B 在 CPU 上运行：约每秒 5 个令牌。在 NPU 上约每秒 1.3 个令牌，但 CPU 保持空闲。
 Base model (no turbo)	基础模型（无 Turbo）
 Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	每一步要运行两次网络（CFG）：生成一张图片比 Turbo 模型慢 10–15 倍。
 Steps	步数
 Negative prompt	负面提示词
 Mage-Flow notices (changes made)	Mage-Flow 声明（所作更改）
 LoRA for Anima	Anima 的 LoRA
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	选择你自己的、为 Anima 制作的 .safetensors 文件（kohya、diffusers/PEFT、LoKr 和 LoHa 格式；28 或 40 个块）。选择后会立即检查。强度 1.00 是作者的设置。LoRA 会在模型加载时融合进模型权重，因此使用新 LoRA（或新强度）的第一张图片会多花 10–15 秒；融合后的权重以 8 位块保存（最近一个 LoRA 约占 2 GB 存储）。LoRA 的文本编码器部分不会被应用。
 Mage-Flow-Edit	Mage-Flow-Edit
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo（Microsoft，4B，MIT 许可证）可根据提示词绘制图片并编辑照片，4 步完成，每张约 12 秒。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；下载约 8.7 GB。要编辑照片，请在“编辑照片”区域选择照片并描述要修改的内容。
 Mage-Flow sizes	Mage-Flow 的尺寸
@@ -354,3 +367,39 @@ Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and 
 Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	选择你自己的、为 MOSS-Image 制作的 .safetensors 文件（FLUX、SDXL 等其他模型的 LoRA 不适用）。选择后会立即检查，如果不适用，应用会说明原因。强度 1.00 是作者的设定：调低则更弱，调高则更强。使用新 LoRA 或新强度生成的第一张图片需要约 15 秒来准备（临时文件约 300 MB）。插槽支持秩最高 128 的 LoRA；一个 LoRA 会替换 Turbo 插槽。使用 LoRA 须遵守其作者的许可证。
 Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
 Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo（Qwen 团队）能在图片中绘制清晰可读的文字，并能理解用普通句子写成的长提示词。要使用 4 步，请在模型下方那一行选择 Turbo LoRA 文件（例如 LightX2V 的 Lightning）；准备只需几秒，并保存在小缓存中（约 16 MB）。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；需要约 14 GB 存储空间，建议使用 12 GB 内存的手机。仅限非商业用途（Qwen Research License）。
+Not enough space for a copy of the file	空间不足，无法保存文件副本
+Copying the file…	正在复制文件…
+The file does not fit: %s	文件不适用：%s
+Regular (20 steps, CFG and negative prompt; a Turbo LoRA can be added as a file)	常规（20 步，CFG 和负面提示词；可另加 Turbo LoRA 文件）
+Already distilled Turbo (4 steps, no CFG)	已蒸馏的 Turbo（4 步，无需 CFG）
+A BF16 / FP16 / FP32 file, blocks: %d (%s). Needs %.1f GB of free space, about a minute.	BF16 / FP16 / FP32 文件，块数：%d（%s）。需要 %.1f GB 可用空间，约一分钟。
+What to pick.\n• Regular (base): a checkpoint without acceleration, as the author published it (on Civitai: base, v1.x and so on). It runs at 20-30 steps with CFG 3-5 for the best quality; add a Turbo LoRA file in the picture settings to speed it up.\n• Turbo: the author's name or description says turbo, 4 step or distilled, so the acceleration is already merged into the weights. It runs at 4 steps without CFG and is the fastest.\nNot sure? Pick Regular: a Turbo checkpoint works there too, you will just see extra fields (CFG, negative prompt).	如何选择。\n• 常规（base）：未加速的检查点，与作者发布时一致（Civitai 上通常标为 base、v1.x 等）。使用 20–30 步和 CFG 3–5 可获得最佳质量；若要加速，请在图片设置中添加 Turbo LoRA 文件。\n• Turbo：作者的名称或说明中带有 turbo、4 step 或 distilled，即加速已融合进权重。使用 4 步、无需 CFG，速度最快。\n不确定？请选“常规”：Turbo 检查点在其中同样可用，只是会多出一些字段（CFG、负面提示词）。
+Own Anima checkpoint	自己的 Anima 检查点
+Convert	转换
+Base files are needed	需要基础文件
+Every Anima model needs the common files: the text encoder and the VAE (about %.1f GB). Download them now and go on?	所有 Anima 模型都需要公共文件：文本编码器和 VAE（约 %.1f GB）。现在下载并继续吗？
+Anima base files	Anima 基础文件
+A model with this name exists: delete it or use another name	已存在同名模型：请先删除或换一个名称
+Not enough free space	可用空间不足
+Converting…	正在转换…
+Block %s of %s	第 %s 块，共 %s 块
+Done: the model is added	完成：模型已添加
+Failed: %s	失败：%s
+Sampler	采样器
+default	默认
+Scheduler	调度器
+＋ Own Anima checkpoint (BF16/FP16)	＋ 自己的 Anima 检查点（BF16/FP16）
+None · 6 steps	无 · 6 步
+33B · 6 steps · pictures from 1 MP, minutes per picture	33B · 6 步 · 1 MP 起的图片，每张需数分钟
+Generation failed: %s (log files/h3/h3.log)	生成失败：%s（日志 files/h3/h3.log）
+In the queue: %d	队列中：%d
+Enter a number	请输入数字
+＋ Own Anima checkpoint (.safetensors, BF16/FP16)	＋ 自己的 Anima 检查点（.safetensors，BF16/FP16）
+Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone.	自己的模型：暂无。上方的“＋ 自己的 Anima 检查点”按钮可直接在手机上转换 .safetensors 文件。
+Own models (%d)  %s	自己的模型（%d）  %s
+%s · %d blocks · %s GB on the phone\nid: %s	%s · %d 块 · 手机上占用 %s GB\nid：%s
+regular	常规
+Delete "%s"? The model files are removed from the phone (the original checkpoint is not touched).	删除“%s”？模型文件将从手机中移除（原始检查点不受影响）。
+Width and height must be multiples of 32	宽度和高度必须是 32 的倍数
+Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	令牌数（%d）必须能被 32 整除，例如 512×512、768×1024、1024×1024
+Too large: at most 4096 tokens (2048×2048)	太大：最多 4096 个令牌（2048×2048）

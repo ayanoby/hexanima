@@ -243,12 +243,14 @@ Low-memory mode (slower)	कम मेमोरी मोड (धीमा)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	मॉडल के वज़न RAM में रखने के बजाय हर तस्वीर के लिए स्टोरेज से पढ़े जाते हैं। 8 GB RAM वाले फ़ोन पर ज़रूरी है, 12 GB पर नहीं।
   ·  app %.1f GB	  ·  ऐप %.1f GB
 Too large: at most 6144 patches (1536×1024)	बहुत बड़ा: अधिकतम 6144 पैच (1536×1024)
+The prompt is too long to enhance	प्रॉम्प्ट सुधारने के लिए बहुत लंबा है
 Compatible: rank %d, %d of %d blocks	संगत: रैंक %d, %d में से %d ब्लॉक
 This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	यह LoRA किसी दूसरे मॉडल (FLUX, SDXL या उसी तरह के) के लिए है। यह Anima के साथ नहीं चलेगी।
 This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	यह फ़ाइल Anima की LoRA जैसी नहीं लगती: अपेक्षित लेयर (blocks.N.*) नहीं हैं।
 Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	लेयर के आकार Anima से मेल नहीं खाते (%s)। संभवतः यह मॉडल के किसी दूसरे संस्करण की LoRA है।
 The LoRA has blocks that Anima does not have (%s).	इस LoRA में ऐसे ब्लॉक हैं जो Anima में नहीं हैं (%s)।
 All models	सभी मॉडल
+✨ Enhance	✨ सुधारें
 Temperature  battery %.1f °C	तापमान  बैटरी %.1f °C
   ·  margin before throttling %d%%	  ·  थ्रॉटलिंग से पहले का अंतर %d%%
 Picture %d  ·  %d×%d	तस्वीर %d  ·  %d×%d
@@ -259,18 +261,29 @@ Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are stream
 Out of memory	मेमोरी खत्म
 The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	फ़ोन की मेमोरी खत्म हो गई, इसलिए ऐप बंद न हो जाए, इस वजह से जनरेशन रोक दिया गया। दूसरे ऐप बंद करें या छोटा आकार (और संपादन के लिए छोटी फ़ोटो) चुनकर फिर कोशिश करें।
 ⏹ Stop	⏹ रोकें
+↶ Undo	↶ पूर्ववत करें
+Prompt enhancement	प्रॉम्प्ट सुधार
+The Qwen3-4B model for enhancing prompts is not installed (folder files/llm: te/, tok_*.txt).	प्रॉम्प्ट सुधारने वाला Qwen3-4B मॉडल इंस्टॉल नहीं है (फ़ोल्डर files/llm: te/, tok_*.txt)।
+Enhancing the prompt…	प्रॉम्प्ट सुधारा जा रहा है…
+Enhancing the prompt… (up to a minute)	प्रॉम्प्ट सुधारा जा रहा है… (एक मिनट तक)
+Enhancing: %s	सुधार: %s
+Could not enhance the prompt (log files/llm/llm.log)	प्रॉम्प्ट सुधारा नहीं जा सका (लॉग files/llm/llm.log)
+Prompt enhanced	प्रॉम्प्ट सुधार दिया गया
 Little free memory (%d MB): close other apps, or the generation may stop	खाली मेमोरी कम है (%d MB): दूसरे ऐप बंद करें, वरना जनरेशन रुक सकता है
 Stopped: out of memory	रोका गया: मेमोरी खत्म
 Loading the LoRA…	LoRA लोड हो रही है…
 For editing the size is at most 1024×768	संपादन के लिए आकार अधिकतम 1024×768 है
 The prompt is too long for this size: shorten it or pick a smaller size	इस आकार के लिए प्रॉम्प्ट बहुत लंबा है: उसे छोटा करें या छोटा आकार चुनें
 Generation failed: %s (log files/mage/mage.log)	जनरेशन विफल: %s (लॉग files/mage/mage.log)
+Enhance prompts on the NPU (slower)	NPU पर प्रॉम्प्ट सुधारें (धीमा)
+By default Qwen3-4B runs on the CPU: about 5 tokens per second. On the NPU it is about 1.3 tokens per second, but the CPU stays free.	डिफ़ॉल्ट रूप से Qwen3-4B CPU पर चलता है: लगभग 5 टोकन प्रति सेकंड। NPU पर यह लगभग 1.3 टोकन प्रति सेकंड है, पर CPU खाली रहता है।
 Base model (no turbo)	बेस मॉडल (टर्बो के बिना)
 Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	हर स्टेप में नेटवर्क के दो पास (CFG): एक तस्वीर टर्बो मॉडलों से 10–15 गुना ज़्यादा समय लेती है।
 Steps	स्टेप
 Negative prompt	नेगेटिव प्रॉम्प्ट
 Mage-Flow notices (changes made)	Mage-Flow सूचनाएँ (किए गए बदलाव)
 LoRA for Anima	Anima के लिए LoRA
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Anima के लिए बनी अपनी .safetensors फ़ाइल चुनें (kohya, diffusers/PEFT, LoKr और LoHa फ़ॉर्मैट; 28 या 40 ब्लॉक)। चुनते ही उसकी जाँच हो जाती है। 1.00 की ताक़त लेखक की सेटिंग है। LoRA मॉडल लोड होते समय उसके वज़न में मिला दिया जाता है, इसलिए नए LoRA (या नई ताक़त) के साथ पहला चित्र 10–15 सेकंड ज़्यादा लेता है; मिलाए गए वज़न 8-बिट ब्लॉक के रूप में रखे जाते हैं (आख़िरी LoRA के लिए लगभग 2 GB जगह)। LoRA का टेक्स्ट-एनकोडर वाला हिस्सा लागू नहीं होता।
 Mage-Flow-Edit	Mage-Flow-Edit
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT लाइसेंस) प्रॉम्प्ट से तस्वीरें बनाता है और फ़ोटो संपादित करता है, 4 स्टेप में, प्रति तस्वीर लगभग 12 सेकंड। टेक्स्ट एनकोडर, ViT, ट्रांसफ़ॉर्मर और VAE सब NPU पर चलते हैं; डाउनलोड लगभग 8.7 GB का है। फ़ोटो संपादित करने के लिए "फ़ोटो संपादित करें" ब्लॉक में उसे चुनें और बताएँ कि क्या बदलना है।
 Mage-Flow sizes	Mage-Flow के आकार
@@ -354,3 +367,39 @@ Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and 
 Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	MOSS-Image के लिए बनी अपनी .safetensors फ़ाइल चुनें (FLUX, SDXL और दूसरे मॉडलों की LoRA नहीं चलतीं)। चुनते ही उसकी जाँच होती है, और मेल न खाने पर ऐप वजह बताता है। ताकत 1.00 रचनाकार की सेटिंग है: कम करने पर कमज़ोर, बढ़ाने पर ज़्यादा असर। नई LoRA या नई ताकत की पहली तस्वीर तैयारी में लगभग 15 सेकंड लेती है (लगभग 300 MB की अस्थायी फ़ाइलें)। स्लॉट रैंक 128 तक की LoRA लेते हैं; एक LoRA टर्बो स्लॉट की जगह ले लेती है। LoRA का उपयोग उसके रचनाकार के लाइसेंस के अधीन है।
 Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
 Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (Qwen टीम) तस्वीरों में पढ़ने लायक लिखावट बनाता है और सामान्य वाक्यों में लिखे लंबे प्रॉम्प्ट का पालन करता है। 4 स्टेप के लिए मॉडल के नीचे वाली पंक्ति में टर्बो LoRA फ़ाइल चुनें (जैसे LightX2V की Lightning); तैयारी में कुछ सेकंड लगते हैं और वह छोटे कैश (लगभग 16 MB) में रखी जाती है। टेक्स्ट एनकोडर, ViT, ट्रांसफ़ॉर्मर और VAE सब NPU पर चलते हैं; लगभग 14 GB स्टोरेज चाहिए और 12 GB RAM वाला फ़ोन सुझाया जाता है। केवल गैर-व्यावसायिक उपयोग (Qwen Research License)।
+Not enough space for a copy of the file	फ़ाइल की प्रति के लिए पर्याप्त जगह नहीं है
+Copying the file…	फ़ाइल कॉपी हो रही है…
+The file does not fit: %s	फ़ाइल उपयुक्त नहीं है: %s
+Regular (20 steps, CFG and negative prompt; a Turbo LoRA can be added as a file)	सामान्य (20 चरण, CFG और नेगेटिव प्रॉम्प्ट; Turbo LoRA को फ़ाइल के रूप में जोड़ा जा सकता है)
+Already distilled Turbo (4 steps, no CFG)	पहले से डिस्टिल्ड Turbo (4 चरण, CFG नहीं)
+A BF16 / FP16 / FP32 file, blocks: %d (%s). Needs %.1f GB of free space, about a minute.	BF16 / FP16 / FP32 फ़ाइल, ब्लॉक: %d (%s)। %.1f GB खाली जगह चाहिए, लगभग एक मिनट लगेगा।
+What to pick.\n• Regular (base): a checkpoint without acceleration, as the author published it (on Civitai: base, v1.x and so on). It runs at 20-30 steps with CFG 3-5 for the best quality; add a Turbo LoRA file in the picture settings to speed it up.\n• Turbo: the author's name or description says turbo, 4 step or distilled, so the acceleration is already merged into the weights. It runs at 4 steps without CFG and is the fastest.\nNot sure? Pick Regular: a Turbo checkpoint works there too, you will just see extra fields (CFG, negative prompt).	क्या चुनें।\n• सामान्य (base): बिना गति-वृद्धि वाला चेकपॉइंट, जैसा लेखक ने प्रकाशित किया (Civitai पर: base, v1.x आदि)। सर्वोत्तम गुणवत्ता के लिए 20–30 चरण और CFG 3–5 पर चलता है; तेज़ करने के लिए चित्र सेटिंग में Turbo LoRA फ़ाइल जोड़ें।\n• Turbo: लेखक के नाम या विवरण में turbo, 4 step या distilled लिखा हो, यानी गति-वृद्धि पहले से वज़न में मिली हुई है। CFG के बिना 4 चरणों में चलता है और सबसे तेज़ है।\nसुनिश्चित नहीं हैं? सामान्य चुनें: Turbo चेकपॉइंट भी उसमें चलता है, बस कुछ अतिरिक्त फ़ील्ड (CFG, नेगेटिव प्रॉम्प्ट) दिखेंगे।
+Own Anima checkpoint	अपना Anima चेकपॉइंट
+Convert	कन्वर्ट करें
+Base files are needed	बेस फ़ाइलें चाहिए
+Every Anima model needs the common files: the text encoder and the VAE (about %.1f GB). Download them now and go on?	हर Anima मॉडल को साझा फ़ाइलें चाहिए: टेक्स्ट एनकोडर और VAE (लगभग %.1f GB)। अभी डाउनलोड करके आगे बढ़ें?
+Anima base files	Anima की बेस फ़ाइलें
+A model with this name exists: delete it or use another name	इस नाम का मॉडल पहले से है: उसे हटाएँ या दूसरा नाम रखें
+Not enough free space	पर्याप्त खाली जगह नहीं है
+Converting…	कन्वर्ट हो रहा है…
+Block %s of %s	ब्लॉक %s / %s
+Done: the model is added	हो गया: मॉडल जोड़ दिया गया
+Failed: %s	विफल: %s
+Sampler	सैम्पलर
+default	डिफ़ॉल्ट
+Scheduler	शेड्यूलर
+＋ Own Anima checkpoint (BF16/FP16)	＋ अपना Anima चेकपॉइंट (BF16/FP16)
+None · 6 steps	कोई नहीं · 6 चरण
+33B · 6 steps · pictures from 1 MP, minutes per picture	33B · 6 चरण · 1 MP से चित्र, प्रति चित्र कई मिनट
+Generation failed: %s (log files/h3/h3.log)	जनरेशन विफल: %s (लॉग files/h3/h3.log)
+In the queue: %d	कतार में: %d
+Enter a number	कोई संख्या दर्ज करें
+＋ Own Anima checkpoint (.safetensors, BF16/FP16)	＋ अपना Anima चेकपॉइंट (.safetensors, BF16/FP16)
+Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone.	अपने मॉडल: अभी कोई नहीं। ऊपर का “＋ अपना Anima चेकपॉइंट” बटन .safetensors फ़ाइल को सीधे फ़ोन पर कन्वर्ट करता है।
+Own models (%d)  %s	अपने मॉडल (%d)  %s
+%s · %d blocks · %s GB on the phone\nid: %s	%s · %d ब्लॉक · फ़ोन पर %s GB\nid: %s
+regular	सामान्य
+Delete "%s"? The model files are removed from the phone (the original checkpoint is not touched).	“%s” हटाएँ? मॉडल की फ़ाइलें फ़ोन से मिट जाएँगी (मूल चेकपॉइंट को छुआ नहीं जाएगा)।
+Width and height must be multiples of 32	चौड़ाई और ऊँचाई 32 के गुणज होने चाहिए
+Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	टोकन की संख्या (%d) 32 से विभाज्य होनी चाहिए, जैसे 512×512, 768×1024, 1024×1024
+Too large: at most 4096 tokens (2048×2048)	बहुत बड़ा: अधिकतम 4096 टोकन (2048×2048)

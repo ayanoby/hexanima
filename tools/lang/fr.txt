@@ -354,3 +354,52 @@
 366	Choisissez votre propre fichier .safetensors fait pour MOSS-Image (les LoRA pour FLUX, SDXL et d’autres modèles ne conviennent pas). Il est vérifié dès que vous le choisissez et, s’il ne convient pas, l’application dit pourquoi. La force 1,00 est le réglage de l’auteur : moins est plus faible, plus est plus fort. La première image avec une nouvelle LoRA ou force passe environ 15 s à la préparer (fichiers temporaires d’environ 300 Mo). Les emplacements acceptent une LoRA de rang jusqu’à 128 ; une LoRA remplace l’emplacement turbo. L’utilisation d’une LoRA est soumise à la licence de son auteur.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (équipe Qwen) dessine du texte lisible dans les images et suit de longs prompts écrits en phrases ordinaires. Pour 4 étapes, choisissez un fichier de LoRA turbo (par exemple Lightning de LightX2V) dans la ligne sous le modèle ; la préparation prend quelques secondes et est gardée dans un petit cache (environ 16 Mo). L’encodeur de texte, le ViT, le transformer et le VAE tournent tous sur le NPU ; il faut environ 14 Go de stockage et un téléphone de 12 Go de RAM est recommandé. Usage non commercial uniquement (Qwen Research License).
+369	Pas assez d'espace pour une copie du fichier
+370	Copie du fichier…
+371	Le fichier ne convient pas : %s
+372	Classique (20 étapes, CFG et prompt négatif ; une LoRA Turbo peut être ajoutée en fichier)
+373	Turbo déjà distillé (4 étapes, sans CFG)
+374	Un fichier BF16 / FP16 / FP32, blocs : %d (%s). Nécessite %.1f Go d'espace libre, environ une minute.
+375	Que choisir ?\n• Classique (base) : un checkpoint sans accélération, tel que l'auteur l'a publié (sur Civitai : base, v1.x, etc.). Il tourne en 20 à 30 étapes avec un CFG de 3 à 5 pour la meilleure qualité ; pour l'accélérer, ajoutez un fichier LoRA Turbo dans les réglages de l'image.\n• Turbo : le nom ou la description de l'auteur mentionne turbo, 4 step ou distilled, donc l'accélération est déjà fusionnée dans les poids. Il tourne en 4 étapes sans CFG et c'est le plus rapide.\nVous hésitez ? Choisissez Classique : un checkpoint Turbo y fonctionne aussi, vous verrez simplement des champs en plus (CFG, prompt négatif).
+376	Checkpoint Anima personnel
+377	Convertir
+378	Fichiers de base requis
+379	Chaque modèle Anima a besoin des fichiers communs : l'encodeur de texte et le VAE (environ %.1f Go). Les télécharger maintenant et continuer ?
+380	Fichiers de base Anima
+381	Un modèle portant ce nom existe déjà : supprimez-le ou choisissez un autre nom
+382	Pas assez d'espace libre
+383	Conversion…
+384	Bloc %s sur %s
+385	Terminé : le modèle est ajouté
+386	Échec : %s
+387	Échantillonneur
+388	par défaut
+389	Planificateur
+390	＋ Checkpoint Anima personnel (BF16/FP16)
+391	Aucune · 6 étapes
+392	33B · 6 étapes · images à partir de 1 MP, plusieurs minutes par image
+393	Échec de la génération : %s (journal files/h3/h3.log)
+394	Dans la file : %d
+395	Saisissez un nombre
+396	＋ Checkpoint Anima personnel (.safetensors, BF16/FP16)
+397	Modèles personnels : aucun pour l'instant. Le bouton « ＋ Checkpoint Anima personnel » ci-dessus convertit un fichier .safetensors directement sur le téléphone.
+398	Modèles personnels (%d)  %s
+399	%s · %d blocs · %s Go sur le téléphone\nid : %s
+400	classique
+401	Supprimer « %s » ? Les fichiers du modèle sont effacés du téléphone (le checkpoint d'origine n'est pas touché).
+402	La largeur et la hauteur doivent être des multiples de 32
+403	Le nombre de tokens (%d) doit être divisible par 32, par exemple 512×512, 768×1024, 1024×1024
+404	Trop grand : 4096 tokens au maximum (2048×2048)
+245	Le prompt est trop long pour être amélioré
+252	✨ Améliorer
+263	↶ Annuler
+264	Amélioration du prompt
+265	Le modèle Qwen3-4B pour améliorer les prompts n'est pas installé (dossier files/llm : te/, tok_*.txt).
+266	Amélioration du prompt…
+267	Amélioration du prompt… (jusqu'à une minute)
+268	Amélioration : %s
+269	Impossible d'améliorer le prompt (journal files/llm/llm.log)
+270	Prompt amélioré
+277	Améliorer les prompts sur le NPU (plus lent)
+278	Par défaut, Qwen3-4B tourne sur le CPU : environ 5 tokens par seconde. Sur le NPU, c'est environ 1,3 token par seconde, mais le CPU reste libre.
+285	Choisissez votre propre fichier .safetensors conçu pour Anima (formats kohya, diffusers/PEFT, LoKr et LoHa ; 28 ou 40 blocs). Il est vérifié dès que vous le choisissez. La force 1.00 est le réglage de l'auteur. La LoRA est fusionnée dans les poids du modèle au chargement, donc la première image avec une nouvelle LoRA (ou une nouvelle force) prend 10 à 15 secondes de plus ; les poids fusionnés sont conservés en blocs 8 bits (environ 2 Go de stockage pour la dernière LoRA). La partie encodeur de texte d'une LoRA n'est pas appliquée.

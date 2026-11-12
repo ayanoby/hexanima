@@ -1,5 +1,17 @@
 # Changes
 
+## 1.5.4
+
+- **Own Anima checkpoints (BF16 / FP16 / FP32 `.safetensors`) are converted on the phone** (`phone/animaconv.cpp`, 28 blocks in about 20 s, byte for byte the output of `export_all.py --q8`): button in the download catalog and in the model picker, the common files are offered for download first, "Own models" section in the catalog with details and Delete for each. 2B (28 blocks) and 2.9B (40 blocks) files, ComfyUI key prefixes (`net.`, `model.diffusion_model.`); fp8 files are not supported.
+- Catalog: Qwen-Image 2.1 is shown as 7B (was 20B).
+- **Anima: prompts up to 512 tokens run on the NPU.** The text encoder graphs were compiled for 128 tokens; a longer prompt fell back to the CPU encoder, whose weights file in the pack is a zero stub, so the picture ignored the text and the second one came out as noise. The slices are now built for 512 tokens (`export/export_te.py A B out.onnx 512`, +0.25 s per picture); `animad` picks 512 or 128 by the size of `te0.bin`, so old packs keep working (prompts over 128 tokens still fall back to the CPU).
+- **Anima: the same prompt again is no longer encoded again.** A prompt over 128 tokens runs on the CPU text encoder (about 20 s) and then the LLM adapter (3 s); sd-cli and animad now keep the last 6 results, so another sampler, scheduler or seed for the same prompt starts at once (40 s -> about 12 s per picture).
+- **Sampler, scheduler and CFG for every Anima model** (rows under Settings on the main screen; turbo models have their own CFG, default 1): euler (default), euler_a, er_sde, dpm++2m, dpm++2mv2, ipndm, lcm; scheduler default / simple / discrete / karras / exponential / sgm_uniform / bong_tangent (issue #3). Passed to the persistent sd-cli per picture (`sm=`, `sc=` job lines, `patches/sd-sampler.patch`; `SAMPLER`/`SCHED` env for `anima.sh`). Only single-pass samplers are offered (the NPU is asked once per step).
+- **Common files with the 512 token text encoder:** new installs of the base files come from `common512/` through `catalog7.json` (about 0.9 GB, same size as before); the files in `common/` stay as they were for apps up to 1.5.3. An installation that already has the 128 token files keeps working (`animad` picks the size by `te0.bin`); delete and re-install the base files to get 512 tokens. `tools/make_catalog7.py`.
+- Patches for sd.cpp: `patches/sd-sampler.patch` (sampler and scheduler per job), `patches/sd-te-cache.patch` (text encoder cache); `phone/build_conv.sh` builds the converter.
+- Translations: every new string, and the 13 older ones that were still English (prompt enhancement, LoRA hint), in the 11 other languages.
+- `app/build.sh` refuses to install without a device and copies the in-app gallery and settings to `/sdcard/HexAnimaBackup` first.
+
 ## 1.5.3
 
 - **MiaoMiao Anima Harem MOSS 1.1** (MIAOKA, Civitai) as a model next to MOSS-Image and RealSkin MOSS (`files/moss/hm`). Fixed on the way: the checkpoint carries the fp16-fix scaling without a flag, `export_moss_orig.py` now takes `MOSS_FP16C`.

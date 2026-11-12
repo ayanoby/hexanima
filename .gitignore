@@ -22,3 +22,4 @@ __pycache__/
 app/assets/anima.sh
 android/build/
 !app/assets/preview_*.bin
+phone/animaconv

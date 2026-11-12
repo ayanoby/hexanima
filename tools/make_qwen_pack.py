@@ -14,5 +14,5 @@ for root, _, fs in os.walk(src, followlinks=True):
 os.makedirs(out, exist_ok=True)
 json.dump({"files": files}, open(os.path.join(out, "manifest.json"), "w"), indent=1)
 total = sum(f["size"] for f in files)
-print(json.dumps({"id": "qwen-image-21-turbo", "kind": "qwen", "name": "Qwen-Image 2.1 Turbo", "params": "20B + Qwen3-VL-8B", "quant": "Q5_K_S + 4-step LoRA", "size": total, "speed": 50, "manifest": "https://huggingface.co/ayanoby/hexanima-qwen-packs/resolve/main/manifest.json",
+print(json.dumps({"id": "qwen-image-21-turbo", "kind": "qwen", "name": "Qwen-Image 2.1 Turbo", "params": "7B + Qwen3-VL-8B", "quant": "Q5_K_S + 4-step LoRA", "size": total, "speed": 50, "manifest": "https://huggingface.co/ayanoby/hexanima-qwen-packs/resolve/main/manifest.json",
                   "desc": "Модель с точными надписями и редактированием фото по описанию, всё на NPU (4 шага). Только некоммерческое использование.", "desc_en": "Accurate text in pictures and photo editing by prompt, everything on the NPU (4 steps). Non-commercial use only.", "author": "Qwen team, LightX2V"}, ensure_ascii=False, indent=1))

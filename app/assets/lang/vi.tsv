@@ -243,12 +243,14 @@ Low-memory mode (slower)	Chế độ tiết kiệm bộ nhớ (chậm hơn)
 The model's weights are read from storage for every picture instead of staying in RAM. Needed on phones with 8 GB of RAM, not on 12 GB.	Trọng số của model được đọc từ bộ nhớ cho mỗi ảnh thay vì giữ trong RAM. Cần cho điện thoại 8 GB RAM, không cần với 12 GB.
   ·  app %.1f GB	  ·  ứng dụng %.1f GB
 Too large: at most 6144 patches (1536×1024)	Quá lớn: tối đa 6144 patch (1536×1024)
+The prompt is too long to enhance	Prompt quá dài để cải thiện
 Compatible: rank %d, %d of %d blocks	Tương thích: rank %d, %d trên %d khối
 This LoRA is for another model (FLUX, SDXL or similar). It does not fit Anima.	LoRA này dành cho mô hình khác (FLUX, SDXL hoặc tương tự). Nó không phù hợp với Anima.
 This file does not look like an Anima LoRA: the expected layers (blocks.N.*) are missing.	Tệp này không giống LoRA của Anima: thiếu các lớp cần có (blocks.N.*).
 Layer sizes do not match Anima (%s). It is probably a LoRA for another version of the model.	Kích thước các lớp không khớp với Anima (%s). Có thể đây là LoRA cho phiên bản khác của mô hình.
 The LoRA has blocks that Anima does not have (%s).	LoRA có các khối mà Anima không có (%s).
 All models	Tất cả mô hình
+✨ Enhance	✨ Cải thiện
 Temperature  battery %.1f °C	Nhiệt độ  pin %.1f °C
   ·  margin before throttling %d%%	  ·  còn cách mức giảm xung %d%%
 Picture %d  ·  %d×%d	Ảnh %d  ·  %d×%d
@@ -259,18 +261,29 @@ Mage-Flow-Edit: text encoder, DiT and VAE run on the NPU; the weights are stream
 Out of memory	Hết bộ nhớ
 The phone ran out of memory, so the generation was stopped to keep the app from being closed. Close other apps, or pick a smaller size (and a smaller photo for editing), and try again.	Điện thoại hết bộ nhớ nên quá trình tạo ảnh đã bị dừng để ứng dụng không bị đóng. Hãy đóng ứng dụng khác hoặc chọn kích thước nhỏ hơn (và ảnh nhỏ hơn khi chỉnh sửa) rồi thử lại.
 ⏹ Stop	⏹ Dừng
+↶ Undo	↶ Hoàn tác
+Prompt enhancement	Cải thiện prompt
+The Qwen3-4B model for enhancing prompts is not installed (folder files/llm: te/, tok_*.txt).	Mô hình Qwen3-4B để cải thiện prompt chưa được cài (thư mục files/llm: te/, tok_*.txt).
+Enhancing the prompt…	Đang cải thiện prompt…
+Enhancing the prompt… (up to a minute)	Đang cải thiện prompt… (tối đa một phút)
+Enhancing: %s	Đang cải thiện: %s
+Could not enhance the prompt (log files/llm/llm.log)	Không thể cải thiện prompt (nhật ký files/llm/llm.log)
+Prompt enhanced	Đã cải thiện prompt
 Little free memory (%d MB): close other apps, or the generation may stop	Bộ nhớ trống ít (%d MB): hãy đóng ứng dụng khác, nếu không quá trình tạo có thể dừng
 Stopped: out of memory	Đã dừng: hết bộ nhớ
 Loading the LoRA…	Đang tải LoRA…
 For editing the size is at most 1024×768	Khi chỉnh sửa, kích thước tối đa là 1024×768
 The prompt is too long for this size: shorten it or pick a smaller size	Prompt quá dài cho kích thước này: hãy rút gọn hoặc chọn kích thước nhỏ hơn
 Generation failed: %s (log files/mage/mage.log)	Tạo ảnh thất bại: %s (nhật ký files/mage/mage.log)
+Enhance prompts on the NPU (slower)	Cải thiện prompt trên NPU (chậm hơn)
+By default Qwen3-4B runs on the CPU: about 5 tokens per second. On the NPU it is about 1.3 tokens per second, but the CPU stays free.	Mặc định Qwen3-4B chạy trên CPU: khoảng 5 token mỗi giây. Trên NPU khoảng 1,3 token mỗi giây, nhưng CPU vẫn rảnh.
 Base model (no turbo)	Mô hình gốc (không turbo)
 Two network passes per step (CFG): a picture takes 10-15 times longer than with the turbo models.	Hai lượt chạy mạng mỗi bước (CFG): một ảnh mất lâu hơn 10–15 lần so với các mô hình turbo.
 Steps	Số bước
 Negative prompt	Prompt phủ định
 Mage-Flow notices (changes made)	Thông báo Mage-Flow (các thay đổi đã thực hiện)
 LoRA for Anima	LoRA cho Anima
+Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and LoHa formats; 28 or 40 blocks). It is checked as soon as you pick it. Strength 1.00 is the author's setting. The LoRA is folded into the model weights when the model loads, so the first picture with a new LoRA (or a new strength) takes 10-15 seconds longer; the folded weights are kept as 8-bit blocks (about 2 GB of storage for the last LoRA). The text-encoder part of a LoRA is not applied.	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1.00 là thiết lập của tác giả. LoRA được gộp vào trọng số mô hình khi mô hình tải, nên ảnh đầu tiên với LoRA mới (hoặc cường độ mới) lâu hơn 10–15 giây; các trọng số đã gộp được giữ dưới dạng khối 8 bit (khoảng 2 GB dung lượng cho LoRA gần nhất). Phần bộ mã hóa văn bản của LoRA không được áp dụng.
 Mage-Flow-Edit	Mage-Flow-Edit
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change.	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh chụp bằng prompt trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh chụp, hãy chọn ảnh trong khối "Chỉnh sửa ảnh" và mô tả điều cần thay đổi.
 Mage-Flow sizes	Kích thước Mage-Flow
@@ -354,3 +367,39 @@ Pick your own .safetensors file made for Anima (kohya, diffusers/PEFT, LoKr and 
 Pick your own .safetensors file made for MOSS-Image (LoRAs for FLUX, SDXL and other models do not fit). It is checked as soon as you pick it, and if it does not fit the app says why. Strength 1.00 is the author's setting: lower is weaker, higher is stronger. The first picture with a new LoRA or strength spends about 15 s preparing it (temporary files of about 300 MB). The slots take a LoRA of rank up to 128; one LoRA replaces the Turbo slot. Using a LoRA is subject to its author's license.	Chọn tệp .safetensors của riêng bạn được làm cho MOSS-Image (LoRA cho FLUX, SDXL và các mô hình khác không phù hợp). Tệp được kiểm tra ngay khi bạn chọn, và nếu không phù hợp, ứng dụng sẽ cho biết lý do. Cường độ 1,00 là thiết lập của tác giả: thấp hơn thì yếu hơn, cao hơn thì mạnh hơn. Ảnh đầu tiên với LoRA hoặc cường độ mới mất khoảng 15 giây để chuẩn bị (tệp tạm khoảng 300 MB). Các khe nhận LoRA có rank đến 128; một LoRA thay thế khe turbo. Việc sử dụng LoRA tuân theo giấy phép của tác giả.
 Qwen-Image-2.1-Turbo	Qwen-Image-2.1-Turbo
 Qwen-Image 2.1 Turbo (Qwen team) draws legible text in pictures and follows long prompts written as plain sentences. For 4 steps pick a Turbo LoRA file (for example Lightning by LightX2V) in the row under the model; preparing it takes seconds and is kept in a small cache (about 16 MB). The text encoder, the ViT, the transformer and the VAE all run on the NPU; it needs about 14 GB of storage and a phone with 12 GB of RAM is recommended. Non-commercial use only (Qwen Research License).	Qwen-Image 2.1 Turbo (nhóm Qwen) vẽ chữ đọc được trong ảnh và làm theo các prompt dài viết bằng câu thông thường. Với 4 bước, hãy chọn tệp LoRA turbo (ví dụ Lightning của LightX2V) ở hàng dưới mô hình; việc chuẩn bị mất vài giây và được giữ trong bộ nhớ đệm nhỏ (khoảng 16 MB). Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; cần khoảng 14 GB bộ nhớ và nên dùng điện thoại 12 GB RAM. Chỉ dùng phi thương mại (Qwen Research License).
+Not enough space for a copy of the file	Không đủ dung lượng cho bản sao của tệp
+Copying the file…	Đang sao chép tệp…
+The file does not fit: %s	Tệp không phù hợp: %s
+Regular (20 steps, CFG and negative prompt; a Turbo LoRA can be added as a file)	Thường (20 bước, CFG và prompt âm; có thể thêm LoRA Turbo dưới dạng tệp)
+Already distilled Turbo (4 steps, no CFG)	Turbo đã được chưng cất sẵn (4 bước, không CFG)
+A BF16 / FP16 / FP32 file, blocks: %d (%s). Needs %.1f GB of free space, about a minute.	Tệp BF16 / FP16 / FP32, số khối: %d (%s). Cần %.1f GB trống, khoảng một phút.
+What to pick.\n• Regular (base): a checkpoint without acceleration, as the author published it (on Civitai: base, v1.x and so on). It runs at 20-30 steps with CFG 3-5 for the best quality; add a Turbo LoRA file in the picture settings to speed it up.\n• Turbo: the author's name or description says turbo, 4 step or distilled, so the acceleration is already merged into the weights. It runs at 4 steps without CFG and is the fastest.\nNot sure? Pick Regular: a Turbo checkpoint works there too, you will just see extra fields (CFG, negative prompt).	Nên chọn gì.\n• Thường (base): checkpoint không tăng tốc, đúng như tác giả đăng (trên Civitai: base, v1.x, v.v.). Chạy 20–30 bước với CFG 3–5 cho chất lượng tốt nhất; để chạy nhanh hơn, hãy thêm tệp LoRA Turbo trong phần cài đặt ảnh.\n• Turbo: tên hoặc mô tả của tác giả có turbo, 4 step hoặc distilled, nghĩa là phần tăng tốc đã được gộp sẵn vào trọng số. Chạy 4 bước không cần CFG và nhanh nhất.\nKhông chắc? Hãy chọn Thường: checkpoint Turbo cũng chạy được ở đó, chỉ là sẽ hiện thêm các ô phụ (CFG, prompt âm).
+Own Anima checkpoint	Checkpoint Anima của bạn
+Convert	Chuyển đổi
+Base files are needed	Cần các tệp cơ sở
+Every Anima model needs the common files: the text encoder and the VAE (about %.1f GB). Download them now and go on?	Mọi mô hình Anima đều cần các tệp chung: bộ mã hóa văn bản và VAE (khoảng %.1f GB). Tải ngay bây giờ và tiếp tục?
+Anima base files	Tệp cơ sở của Anima
+A model with this name exists: delete it or use another name	Đã có mô hình với tên này: hãy xóa nó hoặc dùng tên khác
+Not enough free space	Không đủ dung lượng trống
+Converting…	Đang chuyển đổi…
+Block %s of %s	Khối %s / %s
+Done: the model is added	Xong: đã thêm mô hình
+Failed: %s	Thất bại: %s
+Sampler	Sampler
+default	mặc định
+Scheduler	Scheduler
+＋ Own Anima checkpoint (BF16/FP16)	＋ Checkpoint Anima của bạn (BF16/FP16)
+None · 6 steps	Không · 6 bước
+33B · 6 steps · pictures from 1 MP, minutes per picture	33B · 6 bước · ảnh từ 1 MP, vài phút mỗi ảnh
+Generation failed: %s (log files/h3/h3.log)	Tạo ảnh thất bại: %s (nhật ký files/h3/h3.log)
+In the queue: %d	Trong hàng đợi: %d
+Enter a number	Nhập một số
+＋ Own Anima checkpoint (.safetensors, BF16/FP16)	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16)
+Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone.	Mô hình của bạn: chưa có. Nút “＋ Checkpoint Anima của bạn” ở trên chuyển đổi tệp .safetensors ngay trên điện thoại.
+Own models (%d)  %s	Mô hình của bạn (%d)  %s
+%s · %d blocks · %s GB on the phone\nid: %s	%s · %d khối · %s GB trên điện thoại\nid: %s
+regular	thường
+Delete "%s"? The model files are removed from the phone (the original checkpoint is not touched).	Xóa “%s”? Các tệp của mô hình sẽ bị xóa khỏi điện thoại (checkpoint gốc không bị động tới).
+Width and height must be multiples of 32	Chiều rộng và chiều cao phải là bội số của 32
+Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Số token (%d) phải chia hết cho 32, ví dụ 512×512, 768×1024, 1024×1024
+Too large: at most 4096 tokens (2048×2048)	Quá lớn: tối đa 4096 token (2048×2048)

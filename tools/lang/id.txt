@@ -354,3 +354,52 @@
 366	Pilih berkas .safetensors Anda sendiri yang dibuat untuk MOSS-Image (LoRA untuk FLUX, SDXL, dan model lain tidak cocok). Berkas diperiksa begitu Anda memilihnya, dan jika tidak cocok aplikasi menjelaskan alasannya. Kekuatan 1,00 adalah pengaturan pembuatnya: lebih rendah lebih lemah, lebih tinggi lebih kuat. Gambar pertama dengan LoRA atau kekuatan baru menghabiskan sekitar 15 dtk untuk menyiapkannya (berkas sementara sekitar 300 MB). Slot menerima LoRA dengan rank hingga 128; satu LoRA menggantikan slot turbo. Penggunaan LoRA tunduk pada lisensi pembuatnya.
 367	Qwen-Image-2.1-Turbo
 368	Qwen-Image 2.1 Turbo (tim Qwen) menggambar teks yang terbaca di dalam gambar dan mengikuti prompt panjang yang ditulis dengan kalimat biasa. Untuk 4 langkah, pilih berkas LoRA turbo (misalnya Lightning dari LightX2V) di baris di bawah model; penyiapannya hanya beberapa detik dan disimpan di cache kecil (sekitar 16 MB). Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; butuh sekitar 14 GB penyimpanan dan disarankan ponsel dengan RAM 12 GB. Hanya untuk penggunaan nonkomersial (Qwen Research License).
+369	Ruang tidak cukup untuk salinan berkas
+370	Menyalin berkas…
+371	Berkas tidak cocok: %s
+372	Biasa (20 langkah, CFG dan prompt negatif; LoRA Turbo dapat ditambahkan sebagai berkas)
+373	Turbo yang sudah didistilasi (4 langkah, tanpa CFG)
+374	Berkas BF16 / FP16 / FP32, blok: %d (%s). Butuh ruang kosong %.1f GB, sekitar satu menit.
+375	Apa yang dipilih.\n• Biasa (base): checkpoint tanpa akselerasi, seperti yang dirilis penulisnya (di Civitai: base, v1.x, dan sebagainya). Berjalan dengan 20–30 langkah dan CFG 3–5 untuk kualitas terbaik; untuk mempercepat, tambahkan berkas LoRA Turbo di pengaturan gambar.\n• Turbo: nama atau deskripsi penulis menyebut turbo, 4 step, atau distilled, artinya akselerasi sudah menyatu dalam bobot. Berjalan dengan 4 langkah tanpa CFG dan paling cepat.\nTidak yakin? Pilih Biasa: checkpoint Turbo juga berfungsi di sana, hanya saja akan muncul kolom tambahan (CFG, prompt negatif).
+376	Checkpoint Anima sendiri
+377	Konversi
+378	Berkas dasar diperlukan
+379	Setiap model Anima membutuhkan berkas umum: encoder teks dan VAE (sekitar %.1f GB). Unduh sekarang dan lanjutkan?
+380	Berkas dasar Anima
+381	Model dengan nama ini sudah ada: hapus atau gunakan nama lain
+382	Ruang kosong tidak cukup
+383	Mengonversi…
+384	Blok %s dari %s
+385	Selesai: model ditambahkan
+386	Gagal: %s
+387	Sampler
+388	bawaan
+389	Scheduler
+390	＋ Checkpoint Anima sendiri (BF16/FP16)
+391	Tidak ada · 6 langkah
+392	33B · 6 langkah · gambar mulai 1 MP, beberapa menit per gambar
+393	Pembuatan gagal: %s (log files/h3/h3.log)
+394	Dalam antrean: %d
+395	Masukkan angka
+396	＋ Checkpoint Anima sendiri (.safetensors, BF16/FP16)
+397	Model sendiri: belum ada. Tombol “＋ Checkpoint Anima sendiri” di atas mengonversi berkas .safetensors langsung di ponsel.
+398	Model sendiri (%d)  %s
+399	%s · %d blok · %s GB di ponsel\nid: %s
+400	biasa
+401	Hapus “%s”? Berkas model dihapus dari ponsel (checkpoint asli tidak disentuh).
+402	Lebar dan tinggi harus kelipatan 32
+403	Jumlah token (%d) harus habis dibagi 32, misalnya 512×512, 768×1024, 1024×1024
+404	Terlalu besar: maksimal 4096 token (2048×2048)
+245	Prompt terlalu panjang untuk ditingkatkan
+252	✨ Tingkatkan
+263	↶ Urungkan
+264	Peningkatan prompt
+265	Model Qwen3-4B untuk meningkatkan prompt belum terpasang (folder files/llm: te/, tok_*.txt).
+266	Meningkatkan prompt…
+267	Meningkatkan prompt… (hingga satu menit)
+268	Peningkatan: %s
+269	Prompt tidak dapat ditingkatkan (log files/llm/llm.log)
+270	Prompt ditingkatkan
+277	Tingkatkan prompt di NPU (lebih lambat)
+278	Secara bawaan Qwen3-4B berjalan di CPU: sekitar 5 token per detik. Di NPU sekitar 1,3 token per detik, tetapi CPU tetap bebas.
+285	Pilih berkas .safetensors milik Anda yang dibuat untuk Anima (format kohya, diffusers/PEFT, LoKr, dan LoHa; 28 atau 40 blok). Berkas diperiksa begitu dipilih. Kekuatan 1.00 adalah pengaturan penulis. LoRA digabungkan ke bobot model saat model dimuat, sehingga gambar pertama dengan LoRA baru (atau kekuatan baru) memakan waktu 10–15 detik lebih lama; bobot yang sudah digabung disimpan sebagai blok 8-bit (sekitar 2 GB penyimpanan untuk LoRA terakhir). Bagian encoder teks pada LoRA tidak diterapkan.

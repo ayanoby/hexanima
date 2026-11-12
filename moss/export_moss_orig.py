@@ -16,7 +16,7 @@ class SW:
             self.d, self.f = os.path.dirname(d), {os.path.basename(d): safe_open(d, "pt")}
             self.m = {k: os.path.basename(d) for k in self.f[os.path.basename(d)].keys()}
             md = self.f[os.path.basename(d)].metadata() or {}; fx = md.get("kohakumoss_fp16_fix")
-            self.c = float(json.loads(fx)["c"]) if fx else None
+            self.c = float(json.loads(fx)["c"]) if fx else (float(os.environ["MOSS_FP16C"]) if os.environ.get("MOSS_FP16C") else None)   # MOSS_FP16C=0.0625 for fp16-fix builds that lack the metadata flag (MiaoMiao Harem)
         else:
             idx = json.load(open(os.path.join(d, "diffusion_pytorch_model.safetensors.index.json")))["weight_map"]
             self.d, self.m, self.f = d, idx, {}

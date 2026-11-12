@@ -1,8 +1,16 @@
 # Changes
 
-## Unreleased
+## 1.5.3
 
+- **MiaoMiao Anima Harem MOSS 1.1** (MIAOKA, Civitai) as a model next to MOSS-Image and RealSkin MOSS (`files/moss/hm`). Fixed on the way: the checkpoint carries the fp16-fix scaling without a flag, `export_moss_orig.py` now takes `MOSS_FP16C`.
+- **Download catalog:** RealSkin MOSS 1.0 and Harem MOSS 1.1 are listed in the new `catalog6.json` (the app tries it before `catalog5.json`; older apps keep reading `catalog5.json` and see nothing new). The packs are in `ayanoby/hexanima` on Hugging Face and need the MOSS-Image 8 step base (`moss-sft-q5`).
 - RealSkin MOSS: "8 step · DMD" next to the 4 step rapid-moss in the Turbo LoRA row (uses the installed MOSS-Image 8 step add-on; the mode is the `rs_mode` preference).
+- **MiniMax-H3-Image (33B) on the NPU, experimental, local files only.** INT8-ConvRot DiT (50 blocks), Qwen3-VL text encoder and the ViT VAE all run on the phone, the 70 GB of weights are streamed from flash (about 2.5 GB/s): from roughly 5 minutes at 1024x1024. The model shows up in the manager once `files/h3` is converted with `h3/export_h3*.py` (no download pack: the MiniMax license wants its text with every copy and excludes some regions). Sizes: multiples of 32 px, 256 to 2048.
+  - Compact weight format (-12.5 % flash read): the per-row scale is stored once per tile column, no requantization.
+  - **1 to 6 steps** by hand (the model's own 6-step schedule is sampled at the chosen number of steps).
+  - **pDMD 2-step LoRA** (akhaliq / pdmd, 2-4 steps, rank 128) as a separate delta in the GEMM epilogue, picked in the Turbo LoRA row.
+  - Known issue: with the pDMD LoRA below about 2 MP a fine grid/hatching texture can show up; the 4-step result with a lower shift looked better in a first test, not changed yet.
+- `tools/make_catalog6.py` builds the catalog from the pack manifests.
 
 ## 1.5.2
 

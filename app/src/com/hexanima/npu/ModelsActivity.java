@@ -113,7 +113,7 @@ public class ModelsActivity extends Base {
     List<Entry> entries() {
         java.util.LinkedHashMap<String, Entry> map = new java.util.LinkedHashMap<>();
         for (Models.Item it : items) {
-            String fam = familyOf(it), key = it.qwen ? "qwen" : it.moss ? (Moss.isRs(it.id) ? "moss-rs" : "moss") : fam.equals("Anima") ? Main.famOf(it.id) : it.id;
+            String fam = familyOf(it), key = it.qwen ? "qwen" : it.moss ? (Moss.isRs(it.id) ? "moss-" + Moss.sub(it.id) : "moss") : fam.equals("Anima") ? Main.famOf(it.id) : it.id;
             final boolean legacy = (it.qwen && !Qwen.is8(it.id)) || (fam.equals("Anima") && !it.id.endsWith("base"));   // old scheme: merged turbo checkpoints / the 4 step Qwen pack; new users see base + LoRA only
             if (legacy) { key = "legacy-" + it.id; fam = "Legacy"; }
             Entry e = map.get(key); if (e == null) { e = new Entry(); e.key = key; e.family = fam; e.line = fam.equals("Anima") ? lineOf(it) : ""; map.put(key, e); }

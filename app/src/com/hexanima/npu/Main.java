@@ -53,10 +53,12 @@ public class Main extends Base {
     boolean rs8() { return Moss.isRs(model) && prefs().getString("rs_mode", "4").equals("8"); }
     boolean moss8() { return Moss.is8(model) || rs8(); }
     int mossSteps() { return customTurbo() ? prefs().getInt("turbo_sampler", 4) : rs8() ? 8 : Moss.steps(model); }
-    int stepsDef() { return base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
-    int stepsMin() { return 1; }
-    int stepsMax() { return base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
-    String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : "") + (rs8() && !customTurbo() ? "_8" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
+    boolean h3Lora() { return isH3() && prefs().getBoolean("h3_lora", false) && H3.loraInstalled(getFilesDir()); }
+    int h3Steps() { return steps(); }   // 6 fixed; with the pDMD LoRA 2..4 (default 2)
+    int stepsDef() { return isH3() ? (h3Lora() ? H3.LORA_STEPS : H3.STEPS) : base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
+    int stepsMin() { return isH3() ? (h3Lora() ? H3.LORA_STEPS : 1) : 1; }
+    int stepsMax() { return isH3() ? (h3Lora() ? H3.LORA_MAX_STEPS : H3.STEPS) : base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
+    String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : "") + (rs8() && !customTurbo() ? "_8" : "") + (isH3() && h3Lora() ? "_hl" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
     int steps() { return Math.max(stepsMin(), Math.min(stepsMax(), prefs().getInt(stepsKey(), stepsDef()))); }
     void setSteps(int v) { prefs().edit().putInt(stepsKey(), Math.max(stepsMin(), Math.min(stepsMax(), v))).apply(); if (base()) prefs().edit().putInt("base_steps", steps()).apply(); refreshBaseUi(); }
     int cm() { return base() ? 2 : 1; }   // DiT passes per step
@@ -792,9 +794,10 @@ public class Main extends Base {
 
     boolean isMoss() { return Moss.is(model); }
     boolean isMage() { return Mage.is(model); }
-    boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage(); }
+    boolean isH3() { return H3.is(model); }
+    boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3(); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
-    java.util.List<int[]> sizeList() { return isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
+    java.util.List<int[]> sizeList() { return isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
 
     // ---- model state --------------------------------------------------------------------------
@@ -844,21 +847,21 @@ public class Main extends Base {
         final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(16), dp(14), dp(16), dp(10));
         final android.app.AlertDialog[] dlg = new android.app.AlertDialog[1];
         TextView title = text(L.s("Модель", "Model"), 20, TXT, true); title.setPadding(dp(2), 0, 0, dp(6)); col.addView(title);
-        final String[][] groups = {{"anima", "ANIMA"}, {"moss", "MOSS-IMAGE"}, {"qwen", "QWEN-IMAGE"}, {"mage", "MAGE-FLOW"}};
+        final String[][] groups = {{"anima", "ANIMA"}, {"moss", "MOSS-IMAGE"}, {"qwen", "QWEN-IMAGE"}, {"mage", "MAGE-FLOW"}, {"h3", "MINIMAX-H3"}};
         for (String[] g : groups) {
             boolean head = false; final java.util.Set<String> seen = new java.util.HashSet<>();
             for (final String id0 : ids) {
                 String mg = modelGroup(id0); if (!(g[0].equals("anima") ? mg.equals("turbo") || mg.equals("base") : mg.equals(g[0]))) continue;
-                final boolean anima = g[0].equals("anima"), qw = g[0].equals("qwen"), ms = g[0].equals("moss"); final String fam = anima ? famOf(id0) : qw ? "qwen" : ms ? (Moss.isRs(id0) ? "moss-rs" : "moss") : id0;
+                final boolean anima = g[0].equals("anima"), qw = g[0].equals("qwen"), ms = g[0].equals("moss"); final String fam = anima ? famOf(id0) : qw ? "qwen" : ms ? (Moss.isRs(id0) ? "moss-" + Moss.sub(id0) : "moss") : id0;
                 if (!seen.add(fam)) continue;
                 final String id = anima && ids.contains(fam) ? fam : id0; final boolean fm = anima || qw;   // the name of a family is the turbo one when it is installed
                 if (!head) { head = true; TextView h = text(g[1], 12, DIM, false); h.setLetterSpacing(0.04f); h.setPadding(dp(4), dp(18), 0, dp(6)); col.addView(h); }
-                final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() && Moss.isRs(model) == Moss.isRs(id0) : id.equals(model);
+                final boolean sel = anima ? famOf(model).equals(fam) && isAnima() : qw ? isQwen() : ms ? isMoss() && (Moss.isRs(id0) ? model.equals(id0) : !Moss.isRs(model)) : id.equals(model);
                 LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL); row.setPadding(dp(14), dp(10), dp(14), dp(10));
                 { GradientDrawable rb = bg(CARD, 12); if (sel) rb.setStroke(dp(2), TXT); row.setBackground(rb); }
                 row.addView(text(qw ? "Qwen-Image-2.1-Turbo" : ms && Moss.isRs(id0) ? store.name(id0) : store.name(id).replace(" (base)", ""), 15, TXT, true));
                 TextView cap = text(anima ? familyCaption(fam) : qw ? qwenCaption() : ms ? mossCaption() : modelCaption(id), 12, DIM, false); cap.setPadding(0, dp(3), 0, 0); row.addView(cap);
-                row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(Moss.isRs(id0) ? Moss.IDRS : mossVariant()); } else if (!sel) setModel(id); });
+                row.setOnClickListener(v -> { dlg[0].dismiss(); if (anima) { if (!sel) setModel(variantOf(fam)); } else if (qw) { if (!sel) setModel(qwenVariant()); } else if (ms) { if (!sel) setModel(Moss.isRs(id0) ? id0 : mossVariant()); } else if (!sel) setModel(id); });
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); col.addView(row, lp);
             }
         }
@@ -868,7 +871,7 @@ public class Main extends Base {
         dlg[0] = builder().setView(sv).create(); dlg[0].show();
         if (dlg[0].getWindow() != null) dlg[0].getWindow().setBackgroundDrawable(framed(20));
     }
-    static String modelGroup(String id) { return Moss.is(id) ? "moss" : Qwen.is(id) ? "qwen" : Mage.is(id) ? "mage" : id.endsWith("base") ? "base" : "turbo"; }
+    static String modelGroup(String id) { return H3.is(id) ? "h3" : Moss.is(id) ? "moss" : Qwen.is(id) ? "qwen" : Mage.is(id) ? "mage" : id.endsWith("base") ? "base" : "turbo"; }
     /** an Anima family = the turbo model and its base twin (id + "base") */
     static String famOf(String id) { return id.endsWith("base") ? id.substring(0, id.length() - 4) : id; }
     /** the variant to open for a family: the last one used, else turbo, else base */
@@ -938,6 +941,7 @@ public class Main extends Base {
             if (MossLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("turbo_name", "LoRA") + " (" + prefs().getInt("turbo_sampler", 4) + " step)", "custom"});
             o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"});
         }
+        else if (isH3()) { o.add(new String[]{L.s("Нет · 6 шагов", "None · 6 steps"), "h3none"}); if (H3.loraInstalled(getFilesDir())) o.add(new String[]{"pDMD · 2 step", "h3pdmd2"}); }
         else if (isQwen()) {
             if (ids.contains(Qwen.ID8)) o.add(new String[]{L.s("Нет", "None"), Qwen.ID8}); if (ids.contains(qwenBase())) o.add(new String[]{"4 step · Lightning", qwenBase()});
             if (ids.contains(Qwen.ID8)) { if (QwenLora.turboSrc(getFilesDir()).exists()) o.add(new String[]{prefs().getString("qturbo_name", "LoRA") + " (" + prefs().getInt("qturbo_sampler", 4) + " step)", "custom"}); o.add(new String[]{L.s("Выбрать файл…", "Pick a file…"), "pick"}); }
@@ -947,6 +951,7 @@ public class Main extends Base {
         if (o.isEmpty()) return;
         int cur = 0; for (int i = 0; i < o.size(); i++) if (customTurbo() || customTurboAnima() || customTurboQwen() ? o.get(i)[1].equals("custom") : o.get(i)[1].equals(model)) cur = i;
         if (Moss.isRs(model) && !customTurbo()) for (int i = 0; i < o.size(); i++) if (o.get(i)[1].equals(rs8() ? "rs8" : "rs4")) cur = i;
+        if (isH3()) for (int i = 0; i < o.size(); i++) if (o.get(i)[1].equals(h3Lora() ? "h3pdmd2" : "h3none")) cur = i;
         variantRow.addView(text(L.s("Turbo LoRA", "Turbo LoRA"), 14, DIM, false), new LinearLayout.LayoutParams(0, -2, 1));
         variantRow.addView(text((cur < 0 ? L.s("не выбрана", "none") : o.get(cur)[0]) + "  ▾", 15, cur < 0 ? DIM : TXT, false));
         final int sel = cur;
@@ -958,6 +963,7 @@ public class Main extends Base {
                 if (id.equals("pick")) { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE), 14); return; }
                 if (id.equals("custom") && isQwen() && i == sel) { prefs().edit().putBoolean("qturbo_on", false).apply(); setModelUi(false, false, ""); return; }   // tapping the chosen file again turns the LoRA off
                 if (id.equals("custom")) { if (isQwen()) { prefs().edit().putBoolean("qturbo_on", true).apply(); if (!Qwen.is8(model)) { setModel(Qwen.ID8); return; } } else if (isAnima()) { prefs().edit().putBoolean("aturbo_on", true).apply(); if (!isBase(model)) { setModel(fam + "base"); return; } } else prefs().edit().putBoolean("turbo_on", true).apply(); setModelUi(false, false, ""); return; }
+                if (id.equals("h3none") || id.equals("h3pdmd2")) { prefs().edit().putBoolean("h3_lora", id.equals("h3pdmd2")).apply(); setModelUi(false, false, ""); refreshBaseUi(); return; }
                 if (id.equals("rs4") || id.equals("rs8")) { prefs().edit().putBoolean("turbo_on", false).putString("rs_mode", id.substring(2)).apply(); setModelUi(false, false, ""); refreshBaseUi(); return; }
                 prefs().edit().putBoolean("turbo_on", false).putBoolean("aturbo_on", false).putBoolean("qturbo_on", false).apply();
                 if (!id.equals(model)) setModel(id); else setModelUi(false, false, "");
@@ -976,6 +982,7 @@ public class Main extends Base {
             case "base": return L.s("20–30 шагов · CFG и негативный промпт", "20–30 steps · CFG and negative prompt");
             case "moss": return L.s("описания обычными предложениями, надписи", "plain-sentence prompts, text in pictures");
             case "qwen": return L.s("правка фото, до 3 картинок", "photo editing, up to 3 pictures");
+            case "h3": return L.s("33B · 6 шагов · картинки от 1 МП, минуты на картинку", "33B · 6 steps · pictures from 1 MP, minutes per picture");
             default: return L.s("4 шага · правка фото", "4 steps · photo editing");
         }
     }
@@ -1037,6 +1044,7 @@ public class Main extends Base {
     }
     String genLabel() {
         if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
+        if (isH3()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, H3.estimate(resW, resH, h3Steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", H3.estimate(resW, resH, h3Steps()));
         if (isQwen()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, qwenEst() * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", qwenEst());
         long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
         return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, est) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", est);
@@ -1051,7 +1059,7 @@ public class Main extends Base {
     }
 
     /** token limit of the prompt of the current model (0 = none): Anima keeps 512 text tokens, MOSS-Image and Qwen-Image text-to-image 480 (with their chat template) */
-    int tokLimit() { return isAnima() ? 512 : isMoss() ? 480 : isQwen() && editBm == null ? 480 : 0; }
+    int tokLimit() { return isH3() ? 480 : isAnima() ? 512 : isMoss() ? 480 : isQwen() && editBm == null ? 480 : 0; }
     /** tokens of `text` for the current model (the quality prefix counts for Anima); runs off the UI thread (the vocabulary takes a second to load) */
     int tokCount(String text) throws Exception {
         if (isMoss()) { if (tokM == null) tokM = new QwenTok(Moss.dir(getFilesDir()).getPath()); return tokM.encodePrompt(text).length; }
@@ -1063,7 +1071,7 @@ public class Main extends Base {
             }
             tokQ = new QwenTok(d.getPath());
         }
-        return isQwen() ? tokQ.encodeQwenImage(text).length : tokQ.encode(text).length + 1;   // Anima: + end token
+        return isH3() ? tokQ.encode(text.isEmpty() ? " " : text).length : isQwen() ? tokQ.encodeQwenImage(text).length : tokQ.encode(text).length + 1;   // Anima: + end token; H3: the prompt verbatim
     }
     void updateTokens() {
         final int lim = tokLimit();
@@ -1095,7 +1103,7 @@ public class Main extends Base {
             applyFamily(); updateTokens();
             state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена в NPU, генерация стартует сразу", "Loaded on the NPU, generation starts at once") : L.s("Выгружена · загрузится сама при генерации (~5 с)", "Unloaded · loads itself when you generate (~5 s)"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
-            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage());
+            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3());
             loadBtn.setVisibility(loadBtn.isEnabled() || (isLoaded && isAnima()) ? View.VISIBLE : View.GONE);
             boolean can = busy ? !cancelled : !working;   // while a picture is made the main button is "Stop"
             genBtn.setEnabled(can);
@@ -1106,7 +1114,7 @@ public class Main extends Base {
     }
 
     void refreshState() {
-        if (isMoss() || isQwen() || isMage()) { setModelUi(false, false, ""); return; }
+        if (isMoss() || isQwen() || isMage() || isH3()) { setModelUi(false, false, ""); return; }
         ex.submit(() -> {
             String s = su("sh " + D + "/anima.sh status", true);
             if (s.startsWith("ERR") || s.isEmpty()) {
@@ -1131,7 +1139,7 @@ public class Main extends Base {
     }
 
     void toggleModel() {
-        if (isMoss() || isQwen() || isMage()) return;   // nothing to preload
+        if (isMoss() || isQwen() || isMage() || isH3()) return;   // nothing to preload
         final boolean want = !loaded;
         setModelUi(loaded, true, want ? L.s("Загружаю модель…", "Loading the model…") : L.s("Выгружаю модель…", "Unloading the model…"));
         ex.submit(() -> {
@@ -1143,7 +1151,7 @@ public class Main extends Base {
 
     /** anima.sh ships in assets and is rewritten at every start (it is a script, so it may live in the app's data dir) */
     void installScript() {
-        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh"})
+        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh", "h3.sh"})
             try (InputStream in = getAssets().open(nm); FileOutputStream o = new FileOutputStream(new File(D, nm))) {
                 byte[] b = new byte[8192]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n);
             } catch (IOException e) { Toast.makeText(this, nm + ": " + e, Toast.LENGTH_LONG).show(); }
@@ -1195,7 +1203,8 @@ public class Main extends Base {
         if (!busy || cancelled) return;
         cancelled = true;
         setModelUi(loaded, false, "");
-        if (isMage()) ex2.submit(() -> ctlSh.run("sh " + D + "/mage.sh stop < /dev/null >/dev/null 2>&1"));
+        if (isH3()) ex2.submit(() -> ctlSh.run("sh " + D + "/h3.sh stop < /dev/null >/dev/null 2>&1"));
+        else if (isMage()) ex2.submit(() -> ctlSh.run("sh " + D + "/mage.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isQwen()) ex2.submit(() -> ctlSh.run("sh " + D + "/qwen.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isMoss()) ex2.submit(() -> ctlSh.run("sh " + D + "/moss.sh stop < /dev/null >/dev/null 2>&1"));
         else ex2.submit(() -> ctlSh.run("touch " + D + "/cancel; sh " + D + "/anima.sh stop < /dev/null >/dev/null 2>&1"));
@@ -1230,7 +1239,7 @@ public class Main extends Base {
         if (model.isEmpty()) { openModels(); return; }
         int cw = 0, ch = 0;
         try { cw = Integer.parseInt(wEdit.getText().toString().trim()); ch = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
-        String bad = isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
+        String bad = isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
         if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
         if (cw != resW || ch != resH) setRes(cw, ch);
         final String pr = prompt.getText().toString().trim();
@@ -1304,6 +1313,7 @@ public class Main extends Base {
 
     /** one picture: loads the model if needed, runs anima.sh, stores the PNG (with the settings inside) in the history; null on failure or Stop */
     File runOne(String pr, String seedS, int w, int h, long t0) {
+        if (isH3()) return runOneH3(pr, seedS, w, h, t0);
         if (isMage()) return runOneMage(pr, seedS, w, h, t0);
         if (isQwen()) return runOneQwen(pr, seedS, w, h, t0);
         if (isMoss()) return runOneMoss(pr, seedS, w, h, t0);
@@ -1349,7 +1359,7 @@ public class Main extends Base {
     File runOneMoss(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), M = Moss.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final int STEPS = steps();
         final File MR;   // the dir mossrun runs in: the pack itself, or the RealSkin link dir
-        try { MR = Moss.isRs(model) ? Moss.variantRs(home) : M; } catch (Exception e) { ui.post(() -> Toast.makeText(this, "RealSkin: " + e, Toast.LENGTH_LONG).show()); return null; }
+        try { MR = Moss.isRs(model) ? Moss.variantRs(home, model) : M; } catch (Exception e) { ui.post(() -> Toast.makeText(this, "RealSkin: " + e, Toast.LENGTH_LONG).show()); return null; }
         setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
         try { Moss.writeIds(home, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
         String loraEnv = moss8() ? "MODE=8 " : ""; final boolean useLora = loraOn();
@@ -1438,6 +1448,39 @@ public class Main extends Base {
             if (edit) meta.put("edit", true);
             return Gallery.save(this, PngMeta.embed(png, meta), meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
+    }
+
+    /** one MiniMax-H3-Image picture: tokenise here, text encoder + DiT + VAE on the NPU through h3.sh (log files/h3/h3.log) */
+    File runOneH3(String pr, String seedS, int w, int h, long t0) {
+        final File home = getFilesDir(), M = H3.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final boolean lora = h3Lora(); final int STEPS = h3Steps();
+        final String loraEnv = lora ? "H3_LORA=" + q(H3.lora(home).getPath()) + " H3_SIG=" + H3.loraSigmas(STEPS) + " H3_HEADS=" + H3.loraHeads(STEPS) + " " : STEPS != H3.STEPS ? "H3_SIG=" + H3.pddSigmas(STEPS) + " H3_HEADS=" + H3.pddHeads(STEPS) + " " : "";
+        setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
+        try { H3.writeIds(home, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
+        final boolean[] done = {false};
+        Thread poll = new Thread(() -> {
+            while (!done[0]) {
+                try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                String s = su("echo $(grep -c '^text encoder' " + M + "/h3.log) $(grep -c '^step' " + M + "/h3.log) $(grep -c '^done' " + M + "/h3.log)", true);
+                try {
+                    String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), st = Integer.parseInt(a[1]), dn = Integer.parseInt(a[2]);
+                    if (dn > 0) setProgressUi(97, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (st >= STEPS) setProgressUi(93, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (te > 0) setProgressUi(14 + 78 * st / STEPS, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
+                    else setProgressUi(6, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                } catch (Exception ignored) { }
+            }
+        });
+        poll.start();
+        su("rm -f " + q(raw.getPath()) + "; " + loraEnv + "HM=" + q(M.getPath()) + " sh " + D + "/h3.sh " + q(ids.getPath()) + " " + w + " " + h + " " + seedS + " " + q(raw.getPath()) + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        done[0] = true;
+        try { poll.join(); } catch (InterruptedException ignored) { }
+        if (cancelled) return null;
+        try {
+            byte[] png = Moss.png(raw, w, h); raw.delete();
+            JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            if (lora) meta.put("lora", "pDMD " + STEPS + "-step");
+            return Gallery.save(this, PngMeta.embed(png, meta), meta);
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/h3/h3.log)", "Generation failed: %s (log files/h3/h3.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
     /** shows the preview of the picture being made in place of the last result (the final picture replaces it) */

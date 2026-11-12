@@ -16,12 +16,15 @@ final class Moss {
     static boolean installed8(File home) { return new File(dir(home), "lora8/blk41.ovl").exists() && new File(dir(home), "glue8.bin").exists(); }
     /** MiaoMiao RealSkin MOSS (a fine-tune of MOSS-Image-SFT by MIAOKA): its own DiT / refiner / glue under files/moss/rs, everything else (text encoder, embeddings, VAE, tokenizer) is the installed MOSS-Image pack's */
     static final String IDRS = "moss-realskin-1";
-    static boolean isRs(String id) { return IDRS.equals(id); }
-    static boolean installedRs(File home) { File r = new File(dir(home), "rs"); return new File(r, "dit/blk41.bin").exists() && new File(r, "ref/ref1.bin").exists() && new File(r, "glue.bin").exists(); }
+    /** MiaoMiao Harem MOSS 1.1 (MIAOKA): same layout as RealSkin, under files/moss/hm */
+    static final String IDHM = "moss-harem-1";
+    static boolean isRs(String id) { return IDRS.equals(id) || IDHM.equals(id); }
+    static String sub(String id) { return IDHM.equals(id) ? "hm" : "rs"; }
+    static boolean installedRs(File home, String id) { File r = new File(dir(home), sub(id)); return new File(r, "dit/blk41.bin").exists() && new File(r, "ref/ref1.bin").exists() && new File(r, "glue.bin").exists(); }
     /** files/moss/vrs: the model dir mossrun is pointed at for RealSkin: links to the shared files of the base pack and to rs/{dit,ref,glue.bin}; its own text cache and log */
-    static File variantRs(File home) throws IOException {
-        File m = dir(home), v = new File(m, "vrs"); v.mkdirs();
-        String[][] l = {{"te", "te"}, {"embd.q4k", "embd.q4k"}, {"vae", "vae"}, {"tok_merges.txt", "tok_merges.txt"}, {"tok_special.txt", "tok_special.txt"}, {"tok_vocab.txt", "tok_vocab.txt"}, {"glue8.bin", "glue8.bin"}, {"lora8", "lora8"}, {"dit", "rs/dit"}, {"ref", "rs/ref"}, {"glue.bin", "rs/glue.bin"}};
+    static File variantRs(File home, String id) throws IOException {
+        String s = sub(id); File m = dir(home), v = new File(m, "v" + s); v.mkdirs();
+        String[][] l = {{"te", "te"}, {"embd.q4k", "embd.q4k"}, {"vae", "vae"}, {"tok_merges.txt", "tok_merges.txt"}, {"tok_special.txt", "tok_special.txt"}, {"tok_vocab.txt", "tok_vocab.txt"}, {"glue8.bin", "glue8.bin"}, {"lora8", "lora8"}, {"dit", s + "/dit"}, {"ref", s + "/ref"}, {"glue.bin", s + "/glue.bin"}};
         for (String[] x : l) {
             File t = new File(m, x[1]), k = new File(v, x[0]);
             if (!t.exists()) continue;

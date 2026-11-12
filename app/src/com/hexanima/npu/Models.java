@@ -41,6 +41,7 @@ final class Models {
     long commonSize;
     List<Item> catalog(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { return catalog5(get(base + "catalog6.json"), base); } catch (Exception e6) { }   // catalog6.json = catalog5 + the MiaoMiao MOSS fine-tunes (older apps do not read it)
         try { return catalog5(get(base + "catalog5.json"), base); } catch (Exception e5) { }   // catalog5.json: packs + models with switchable modes (flattened here to one Item per mode)
         try { txt = get(base + "catalog4.json"); } catch (Exception e0) { try { txt = get(base + "catalog3.json"); } catch (Exception e) { try { txt = get(base + "catalog2.json"); } catch (Exception e2) { txt = get(base + "catalog.json"); } } }
         JSONObject j = new JSONObject(txt);
@@ -81,9 +82,9 @@ final class Models {
     static String packUrl(JSONObject p, String base) { String u = p.has("url") ? p.optString("url") : base + p.optString("path"); return u.endsWith("/") ? u : u + "/"; }
 
     // ---- state ----------------------------------------------------------------------------------
-    File modelDir(String id) { return Moss.is(id) ? Moss.dir(home) : Mage.is(id) ? Mage.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
+    File modelDir(String id) { return H3.is(id) ? H3.dir(home) : Moss.is(id) ? Moss.dir(home) : Mage.is(id) ? Mage.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
     File doneMark(File dir) { return new File(dir, ".installed"); }
-    boolean modelInstalled(String id) { if (Moss.is(id)) return Moss.installed(home) && (Moss.is8(id) ? Moss.installed8(home) : Moss.isRs(id) ? Moss.installedRs(home) : id.equals(mossId())); if (Qwen.is(id)) return Qwen.is8(id) ? Qwen.installed8(home) : Qwen.installed(home) && id.equals(qwenId()); if (Mage.is(id)) return Mage.installed(home) && id.equals(mageId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
+    boolean modelInstalled(String id) { if (H3.is(id)) return H3.installed(home); if (Moss.is(id)) return Moss.installed(home) && (Moss.is8(id) ? Moss.installed8(home) : Moss.isRs(id) ? Moss.installedRs(home, id) : id.equals(mossId())); if (Qwen.is(id)) return Qwen.is8(id) ? Qwen.installed8(home) : Qwen.installed(home) && id.equals(qwenId()); if (Mage.is(id)) return Mage.installed(home) && id.equals(mageId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
     /** v69 keeps the original "common" folder (older apps use it); other Hexagon generations have their own QNN contexts in common_<arch> */
     static String commonDir() { String a = Compat.dspArch(); return a.isEmpty() || a.equals("v69") ? "common" : "common_" + a; }
     boolean commonInstalled() { return doneMark(new File(anima, commonDir())).exists(); }
@@ -93,9 +94,10 @@ final class Models {
     /** ids of installed models, in catalog order of installation directory names */
     List<String> installed() {
         List<String> out = new ArrayList<>();
-        if (Moss.installed(home)) { out.add(mossId()); if (Moss.installed8(home)) out.add(Moss.ID8); if (Moss.installedRs(home)) out.add(Moss.IDRS); }
+        if (Moss.installed(home)) { out.add(mossId()); if (Moss.installed8(home)) out.add(Moss.ID8); if (Moss.installedRs(home, Moss.IDRS)) out.add(Moss.IDRS); if (Moss.installedRs(home, Moss.IDHM)) out.add(Moss.IDHM); }
         if (Qwen.installed(home)) out.add(qwenId()); if (Qwen.installed8(home)) out.add(Qwen.ID8);
         if (Mage.installed(home)) out.add(mageId());
+        if (H3.installed(home)) out.add(H3.ID);
         File[] ds = anima.listFiles();
         if (ds != null) for (File d : ds) if (d.getName().startsWith("m_") && modelInstalled(d.getName().substring(2))) out.add(d.getName().substring(2));
         java.util.Collections.sort(out);
@@ -109,13 +111,15 @@ final class Models {
             case Qwen.ID8: return "Qwen-Image-2.1-Turbo";
             case Moss.ID8: return "MOSS-Image 8 step";
             case Moss.IDRS: return "MiaoMiao RealSkin · MOSS-Image 1.0";
+            case Moss.IDHM: return "MiaoMiao Harem · MOSS-Image 1.1";
+            case H3.ID: return "MiniMax-H3-Image";
             default: return name;
         }
     }
-    String name(String id) { if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
+    String name(String id) { if (H3.is(id)) return niceName(id, ""); if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
 
     /** seconds per picture at 512x768 (from the catalog at install time; models installed before that get the measured value of their size class) */
-    int speed(String id) { if (Moss.isRs(id)) return speed(mossId()); if (Qwen.is8(id)) return 80; if (Moss.is8(id)) return 3 * speed(mossId()) / 2; try { int v = new JSONObject(read(new File(modelDir(id), "meta.json"))).optInt("speed", 0); if (v > 0) return v; } catch (Exception e) { } return id.contains("29") ? 12 : 7; }
+    int speed(String id) { if (H3.is(id)) return 110; if (Moss.isRs(id)) return speed(mossId()); if (Qwen.is8(id)) return 80; if (Moss.is8(id)) return 3 * speed(mossId()) / 2; try { int v = new JSONObject(read(new File(modelDir(id), "meta.json"))).optInt("speed", 0); if (v > 0) return v; } catch (Exception e) { } return id.contains("29") ? 12 : 7; }
 
     static byte[] readBytes(File f) throws IOException {
         try (FileInputStream in = new FileInputStream(f)) { byte[] b = new byte[(int) f.length()]; int o = 0; for (int n; o < b.length && (n = in.read(b, o, b.length - o)) > 0; ) o += n; return b; }
@@ -152,7 +156,7 @@ final class Models {
         }
         if (Moss.isRs(it.id)) {   // RealSkin: dit/ref/glue into files/moss/rs, the shared files come from the installed MOSS-Image
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
-            File rs = new File(dir, "rs"); rs.mkdirs(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, rs, total(files), done, pg, cancel); return;
+            File rs = new File(dir, Moss.sub(it.id)); rs.mkdirs(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, rs, total(files), done, pg, cancel); return;
         }
         if (Moss.is8(it.id)) {   // an add-on to the installed pack: its files only, the default pack's meta and marker stay
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
@@ -181,9 +185,9 @@ final class Models {
         File dir = modelDir(id);
         if (Qwen.is8(id) && !new File(dir, "dit/blk31.bin").exists()) { deleteTree(dir); return; }   // no old 4 step pack: the plain Turbo owns the whole folder
         if (Qwen.is8(id)) { deleteTree(new File(dir, "dit8")); new File(dir, "glue8.bin").delete(); deleteTree(new File(dir, "v8")); deleteTree(new File(dir, "cache8")); return; }   // only the extra pack; the default Qwen stays
-        if (Moss.isRs(id)) { deleteTree(new File(dir, "rs")); deleteTree(new File(dir, "vrs")); return; }
+        if (Moss.isRs(id)) { deleteTree(new File(dir, Moss.sub(id))); deleteTree(new File(dir, "v" + Moss.sub(id))); return; }
         if (Moss.is8(id)) { deleteTree(new File(dir, "lora8")); new File(dir, "glue8.bin").delete(); return; }
-        if (Moss.is(id) || Qwen.is(id) || Mage.is(id)) { deleteTree(dir); return; }
+        if (Moss.is(id) || Qwen.is(id) || Mage.is(id) || H3.is(id)) { deleteTree(dir); return; }
         File[] fs = dir.listFiles(); if (fs != null) for (File f : fs) f.delete();
         dir.delete(); new File(sd, id + ".safetensors").delete();
     }

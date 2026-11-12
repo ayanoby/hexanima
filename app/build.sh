@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build + sign hexanima.apk without gradle (SDK in ~/anima-npu/sdk/android, JDK from the temurin docker image), then install on the phone.
 cd "$(dirname "$0")"
-cp ../phone/anima.sh assets/anima.sh; cp ../phone/moss.sh assets/moss.sh; cp ../phone/qwen.sh assets/qwen.sh; cp ../phone/mage.sh assets/mage.sh
+cp ../phone/anima.sh assets/anima.sh; cp ../phone/moss.sh assets/moss.sh; cp ../phone/qwen.sh assets/qwen.sh; cp ../phone/mage.sh assets/mage.sh; cp ../phone/h3.sh assets/h3.sh
 SDK=~/anima-npu/sdk/android
 docker run --rm -v $SDK:/sdk -v $PWD:/app eclipse-temurin:17-jdk bash -c '
 set -e; BT=/sdk/build-tools/34.0.0; AJ=/sdk/platforms/android-34/android.jar; cd /app; rm -rf out; mkdir -p out/obj out/cls

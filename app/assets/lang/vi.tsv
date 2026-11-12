@@ -403,3 +403,8 @@ Delete "%s"? The model files are removed from the phone (the original checkpoint
 Width and height must be multiples of 32	Chiều rộng và chiều cao phải là bội số của 32
 Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Số token (%d) phải chia hết cho 32, ví dụ 512×512, 768×1024, 1024×1024
 Too large: at most 4096 tokens (2048×2048)	Quá lớn: tối đa 4096 token (2048×2048)
+＋ Add	＋ Thêm
+Remove	Gỡ
+Remove "%s" from the list?	Gỡ “%s” khỏi danh sách?
+Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Các tệp .safetensors của riêng bạn cho Anima (kohya, diffusers/PEFT, LoKr, LoHa): thêm bao nhiêu tùy ý, mỗi tệp có công tắc và cường độ riêng. Chúng được gộp vào mô hình khi tải, nên ảnh đầu tiên với bộ mới lâu hơn 10–15 giây.
+Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Đang bật: %d / %d. Bộ hoặc cường độ mới làm ảnh đầu tiên chậm hơn 10–15 giây.

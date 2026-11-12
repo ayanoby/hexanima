@@ -92,6 +92,7 @@ public class Main extends Base {
     TextView tokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
     final Runnable tokTick = this::updateTokens;
     LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal, samplerVal, schedVal;   // Anima base models: negative prompt, steps and CFG under the prompt
+    LinearLayout aloraBox, aloraList; TextView aloraInfo;   // Anima: the LoRA library (AnimaLoras)
     LinearLayout loraBox; TextView loraName, loraInfo, strText; SeekBar strBar; Button loraPick, loraDrop;
     LinearLayout editBox; TextView editNote; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
     ProgressBar bar, ramBar;
@@ -103,12 +104,12 @@ public class Main extends Base {
     String animaLoraEnv() {
         StringBuilder l = new StringBuilder();
         if (customTurboAnima()) l.append(AnimaLora.turboSrc(getFilesDir()).getPath()).append('*').append(String.format(java.util.Locale.US, "%.2f", prefs().getFloat("aturbo_str", 1f)));
-        if (loraOn()) { if (l.length() > 0) l.append('|'); l.append(AnimaLora.src(getFilesDir()).getPath()).append('*').append(String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f)); }
+        String lu = AnimaLoras.env(prefs(), getFilesDir()); if (!lu.isEmpty()) { if (l.length() > 0) l.append('|'); l.append(lu); }
         return l.length() == 0 ? "" : "LORA=" + q(l.toString()) + " ";
     }
     /** the LoRA the Anima server has loaded (changing it restarts the server, anima.sh keeps the LoRA in the server key) */
     String servedSig = "";
-    String loraSig() { return loraOn() && isAnima() ? loraId() + "*" + strBar.getProgress() : ""; }
+    String loraSig() { return isAnima() ? animaLoraEnv() : ""; }   // the whole LORA= value: another set, strength or turbo LoRA restarts the server
 
     GradientDrawable gradient(boolean enabled) { return bg(enabled ? ACC : CARD, 12); }
     /** "HexAnima Lab" (second launcher icon, activity-alias .Lab -> this activity): the layout of the new loader design: only the base of a model is listed, the turbo LoRA is a row under it, the manual LoRA stays; own preferences, the same models and pictures */
@@ -350,6 +351,17 @@ public class Main extends Base {
         strText.setText(String.format(java.util.Locale.US, "%.2f", strBar.getProgress() * 0.05f));
         loraBox.addView(sr2);
         pcard.addView(loraBox);
+        // Anima: any number of LoRA files, each with a switch and a strength
+        aloraBox = new LinearLayout(this); aloraBox.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout ah = new LinearLayout(this); ah.setGravity(Gravity.CENTER_VERTICAL);
+        ah.addView(text("LoRA", 15, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        Button aadd = button(L.s("＋ Добавить", "＋ Add"), BG, TXT); aadd.setTextSize(14); aadd.setBackground(null); aadd.setOnClickListener(v -> pickLora());
+        ah.addView(aadd, new LinearLayout.LayoutParams(-2, dp(40)));
+        aloraBox.addView(divider()); LinearLayout.LayoutParams ahl = new LinearLayout.LayoutParams(-1, dp(48)); aloraBox.addView(ah, ahl);
+        aloraList = new LinearLayout(this); aloraList.setOrientation(LinearLayout.VERTICAL); aloraBox.addView(aloraList);
+        aloraInfo = text("", 12, DIM, false); aloraInfo.setPadding(0, 0, 0, dp(8)); aloraBox.addView(aloraInfo);
+        aloraBox.setVisibility(View.GONE);
+        pcard.addView(aloraBox);
         turboStrRow = new LinearLayout(this); turboStrRow.setGravity(Gravity.CENTER_VERTICAL); turboStrRow.setPadding(0, dp(8), 0, dp(8)); turboStrRow.setVisibility(View.GONE);
         turboStrRow.addView(text(L.s("Сила turbo LoRA", "Turbo LoRA strength"), 15, TXT, false));
         turboBar = new SeekBar(this); final SeekBar tb = turboBar; tb.setMax(40); tb.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20));
@@ -572,7 +584,7 @@ public class Main extends Base {
     String lp() { return isMoss() ? "moss_lora_" : "anima_lora_"; }
     File loraSrc() { return isMoss() ? MossLora.src(getFilesDir()) : AnimaLora.src(getFilesDir()); }
     String loraId() { return prefs().getString(lp() + "id", ""); }
-    boolean loraOn() { return (isMoss() && !moss8() && !customTurbo() || isAnima()) && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
+    boolean loraOn() { if (isAnima()) return !AnimaLoras.env(prefs(), getFilesDir()).isEmpty(); return isMoss() && !moss8() && !customTurbo() && !loraId().isEmpty() && loraSrc().exists() && strBar.getProgress() > 0; }
     void refreshLora() {
         if (loraName == null) return;
         boolean has = !loraId().isEmpty() && loraSrc().exists();
@@ -581,6 +593,66 @@ public class Main extends Base {
         loraInfo.setText(has ? prefs().getString(lp() + "info", "") : isMoss() ? L.s("Файл .safetensors для MOSS-Image: проверяется сразу после выбора", "A .safetensors file for MOSS-Image: it is checked as soon as you pick it") : L.s("Файл .safetensors для Anima: проверяется сразу после выбора", "A .safetensors file for Anima: it is checked as soon as you pick it"));
         loraInfo.setTextColor(DIM);
         loraDrop.setVisibility(has ? View.VISIBLE : View.GONE); ((View) strBar.getParent()).setVisibility(has ? View.VISIBLE : View.GONE); loraName.setTextColor(has ? TXT : DIM); loraInfo.setVisibility(has || loraInfo.getCurrentTextColor() == WARN ? View.VISIBLE : View.GONE);
+    }
+    /** the Anima LoRA library as rows: switch, name, remove, and the strength under it */
+    void refreshAnimaLoras() {
+        if (aloraList == null) return;
+        aloraList.removeAllViews();
+        final java.util.List<AnimaLoras.Item> ls = AnimaLoras.load(prefs(), getFilesDir()); int act = 0;
+        for (final AnimaLoras.Item it : ls) {
+            if (AnimaLoras.active(it)) act++;
+            LinearLayout row = new LinearLayout(this); row.setOrientation(LinearLayout.VERTICAL); row.setPadding(0, dp(4), 0, dp(6));
+            LinearLayout top = new LinearLayout(this); top.setGravity(Gravity.CENTER_VERTICAL);
+            Switch sw = new Switch(this); sw.setChecked(it.on);
+            sw.setThumbTintList(new ColorStateList(new int[][]{{android.R.attr.state_checked}, {}}, new int[]{ACC, DIM}));
+            sw.setTrackTintList(new ColorStateList(new int[][]{{android.R.attr.state_checked}, {}}, new int[]{(ACC & 0x00FFFFFF) | 0x66000000, (DIM & 0x00FFFFFF) | 0x44000000}));
+            top.addView(sw);
+            TextView nm = text(it.name.replaceAll("(?i)\\.safetensors$", ""), 14, it.on ? TXT : DIM, false); nm.setSingleLine(true); nm.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE); nm.setPadding(dp(10), 0, 0, 0);
+            top.addView(nm, new LinearLayout.LayoutParams(0, -2, 1));
+            TextView del = text("✕", 16, DIM, false); del.setGravity(Gravity.CENTER); del.setContentDescription(L.s("Убрать", "Remove"));
+            del.setOnClickListener(v -> { if (busy) return; builder().setMessage(L.f("Убрать «%s» из списка?", "Remove \"%s\" from the list?", it.name)).setNegativeButton(L.s("Отмена", "Cancel"), null)
+                .setPositiveButton(L.s("Убрать", "Remove"), (d, w) -> { ls.remove(it); AnimaLoras.file(getFilesDir(), it.id).delete(); AnimaLoras.save(prefs(), ls); refreshAnimaLoras(); }).show(); });
+            top.addView(del, new LinearLayout.LayoutParams(dp(40), dp(36)));
+            row.addView(top);
+            LinearLayout sr = new LinearLayout(this); sr.setGravity(Gravity.CENTER_VERTICAL);
+            final SeekBar bar = new SeekBar(this); bar.setMax(40); bar.setProgress(Math.round(it.str * 20));
+            bar.setProgressTintList(ColorStateList.valueOf(TXT)); bar.setThumbTintList(ColorStateList.valueOf(TXT)); bar.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
+            sr.addView(bar, new LinearLayout.LayoutParams(0, -2, 1));
+            final TextView st = text(String.format(java.util.Locale.US, "%.2f", it.str), 14, TXT, false); st.setMinWidth(dp(40)); st.setGravity(Gravity.END); sr.addView(st);
+            bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                public void onProgressChanged(SeekBar b, int p, boolean u) { st.setText(String.format(java.util.Locale.US, "%.2f", p * 0.05f)); if (u) { it.str = p * 0.05f; AnimaLoras.save(prefs(), ls); } }
+                public void onStartTrackingTouch(SeekBar b) { }
+                public void onStopTrackingTouch(SeekBar b) { refreshAnimaInfo(ls); }
+            });
+            sw.setOnCheckedChangeListener((b, on) -> { if (busy) { b.setChecked(it.on); return; } it.on = on; AnimaLoras.save(prefs(), ls); refreshAnimaLoras(); });
+            row.addView(sr); aloraList.addView(row);
+        }
+        refreshAnimaInfo(ls);
+    }
+    void refreshAnimaInfo(java.util.List<AnimaLoras.Item> ls) {
+        int act = 0; for (AnimaLoras.Item it : ls) if (AnimaLoras.active(it)) act++;
+        aloraInfo.setTextColor(DIM);
+        aloraInfo.setText(ls.isEmpty() ? L.s("Файлы .safetensors для Anima (kohya, diffusers/PEFT, LoKr, LoHa): добавляйте сколько нужно. У каждого свой выключатель и сила. LoRA вливаются в модель при загрузке, поэтому первая картинка с новым набором на 10-15 секунд дольше.", "Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.")
+            : L.f("Включено: %d из %d. Новый набор или сила: первая картинка на 10-15 секунд дольше.", "Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.", act, ls.size()));
+    }
+    void importAnimaLora(Uri uri) {
+        String nm = "LoRA";
+        try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
+        final String name = nm;
+        aloraInfo.setTextColor(WARN); aloraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
+        ex2.submit(() -> {
+            final File dir = AnimaLoras.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "new.tmp");
+            try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
+                byte[] b = new byte[1 << 16]; long total = 0;
+                for (int n; (n = in.read(b)) > 0; ) { o.write(b, 0, n); total += n; if (total > (1L << 30)) throw new IOException(L.s("файл больше 1 ГБ", "the file is larger than 1 GB")); }
+            } catch (Exception e) { tmp.delete(); ui.post(() -> { refreshAnimaLoras(); loraFail(name, L.f("Не удалось прочитать файл: %s", "Cannot read the file: %s", e.getMessage())); }); return; }
+            AnimaLora.Check c = AnimaLora.check(tmp);
+            if (!c.ok) { tmp.delete(); final String msg = c.message(); ui.post(() -> { refreshAnimaLoras(); loraFail(name, msg); }); return; }
+            AnimaLoras.Item it = new AnimaLoras.Item(); it.id = Long.toHexString(System.currentTimeMillis()); it.name = name; it.info = "✓ " + c.message();
+            tmp.renameTo(AnimaLoras.file(getFilesDir(), it.id));
+            java.util.List<AnimaLoras.Item> ls = AnimaLoras.load(prefs(), getFilesDir()); ls.add(it); AnimaLoras.save(prefs(), ls);
+            ui.post(this::refreshAnimaLoras);
+        });
     }
     void pickLora() {
         if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
@@ -593,6 +665,7 @@ public class Main extends Base {
         ex2.submit(() -> { File d = moss ? MossLora.dir(getFilesDir()) : AnimaLora.dir(getFilesDir()); File[] fs = d.listFiles(); if (fs != null) for (File f : fs) if (!f.getName().startsWith("turbo")) MossLora.deleteTree(f); ui.post(this::refreshLora); });
     }
     void importLora(Uri uri) {
+        if (isAnima()) { importAnimaLora(uri); return; }
         String nm = "LoRA";
         try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
         final String name = nm;
@@ -1115,7 +1188,8 @@ public class Main extends Base {
             int c = working ? WARN : isLoaded ? OK : DIM;
             chipDot.setTextColor(c);
             if (turboStrRow != null) { boolean tv = customTurbo() || customTurboAnima() || customTurboQwen(); turboStrRow.setVisibility(tv ? View.VISIBLE : View.GONE); if (tv) turboBar.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20)); }
-            if (loraBox != null) { loraBox.setVisibility(isMoss() && !moss8() && !customTurbo() || isAnima() ? View.VISIBLE : View.GONE); refreshLora(); }
+            if (loraBox != null) { loraBox.setVisibility(isMoss() && !moss8() && !customTurbo() ? View.VISIBLE : View.GONE); refreshLora(); }
+            if (aloraBox != null) { aloraBox.setVisibility(isAnima() ? View.VISIBLE : View.GONE); refreshAnimaLoras(); }
             if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
             if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
             applyFamily(); updateTokens();
@@ -1368,7 +1442,7 @@ public class Main extends Base {
         if (png.length == 0 || BitmapFactory.decodeByteArray(png, 0, png.length) == null) return null;
         try {
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
-            if (!sig.isEmpty()) meta.put("lora", prefs().getString(lp() + "name", "LoRA")).put("lora_strength", strBar.getProgress() * 0.05f);
+            if (!AnimaLoras.names(prefs(), getFilesDir()).isEmpty()) meta.put("lora", AnimaLoras.names(prefs(), getFilesDir()));
             return Gallery.save(this, PngMeta.embed(png, meta), meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()); return null; }
     }

@@ -403,3 +403,8 @@
 277	Mejorar prompts en la NPU (más lento)
 278	De forma predeterminada Qwen3-4B se ejecuta en la CPU: unos 5 tokens por segundo. En la NPU son unos 1,3 tokens por segundo, pero la CPU queda libre.
 285	Elige tu propio archivo .safetensors hecho para Anima (formatos kohya, diffusers/PEFT, LoKr y LoHa; 28 o 40 bloques). Se comprueba en cuanto lo eliges. La fuerza 1.00 es el ajuste del autor. La LoRA se fusiona con los pesos del modelo al cargarlo, así que la primera imagen con una LoRA nueva (o una fuerza nueva) tarda de 10 a 15 segundos más; los pesos fusionados se guardan como bloques de 8 bits (unos 2 GB de almacenamiento para la última LoRA). La parte del codificador de texto de una LoRA no se aplica.
+405	＋ Añadir
+406	Quitar
+407	¿Quitar «%s» de la lista?
+408	Tus propios archivos .safetensors para Anima (kohya, diffusers/PEFT, LoKr, LoHa): añade tantos como necesites, cada uno con su interruptor y su fuerza. Se fusionan con el modelo al cargarlo, así que la primera imagen con un conjunto nuevo tarda de 10 a 15 segundos más.
+409	Activas: %d de %d. Un conjunto o una fuerza nuevos hacen la primera imagen de 10 a 15 segundos más lenta.

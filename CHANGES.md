@@ -1,5 +1,9 @@
 # Changes
 
+## 1.5.5
+
+- **Anima: any number of LoRA files at once.** The LoRA row is now a library: add as many `.safetensors` files as you need, each with its own switch, strength (0 to 2) and remove button (`AnimaLoras.java`). All active ones are folded into the blocks in list order when the model loads (the native side already took a `file*strength|file*strength` list); a new set or strength restarts the server and the first picture takes 10-15 seconds longer. A single LoRA picked with an older version moves into the list. MOSS-Image keeps its single LoRA.
+
 ## 1.5.4
 
 - **Own Anima checkpoints (BF16 / FP16 / FP32 `.safetensors`) are converted on the phone** (`phone/animaconv.cpp`, 28 blocks in about 20 s, byte for byte the output of `export_all.py --q8`): button in the download catalog and in the model picker, the common files are offered for download first, "Own models" section in the catalog with details and Delete for each. 2B (28 blocks) and 2.9B (40 blocks) files, ComfyUI key prefixes (`net.`, `model.diffusion_model.`); fp8 files are not supported.

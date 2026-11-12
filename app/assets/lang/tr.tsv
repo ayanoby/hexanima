@@ -403,3 +403,8 @@ Delete "%s"? The model files are removed from the phone (the original checkpoint
 Width and height must be multiples of 32	Genişlik ve yükseklik 32'nin katı olmalı
 Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Token sayısı (%d) 32'ye bölünebilmeli, örneğin 512×512, 768×1024, 1024×1024
 Too large: at most 4096 tokens (2048×2048)	Çok büyük: en fazla 4096 token (2048×2048)
+＋ Add	＋ Ekle
+Remove	Kaldır
+Remove "%s" from the list?	“%s” listeden kaldırılsın mı?
+Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Anima için kendi .safetensors dosyalarınız (kohya, diffusers/PEFT, LoKr, LoHa): ihtiyacınız kadar ekleyin, her birinin kendi anahtarı ve gücü vardır. Model yüklenirken modele eklenirler, bu yüzden yeni bir setle ilk görsel 10–15 saniye daha uzun sürer.
+Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Etkin: %d / %d. Yeni bir set veya güç, ilk görseli 10–15 saniye yavaşlatır.

@@ -403,3 +403,8 @@
 277	Promptları NPU'da iyileştir (daha yavaş)
 278	Varsayılan olarak Qwen3-4B CPU'da çalışır: saniyede yaklaşık 5 token. NPU'da saniyede yaklaşık 1,3 token olur, ama CPU boş kalır.
 285	Anima için hazırlanmış kendi .safetensors dosyanızı seçin (kohya, diffusers/PEFT, LoKr ve LoHa biçimleri; 28 veya 40 blok). Seçer seçmez denetlenir. 1.00 güç, yazarın ayarıdır. LoRA, model yüklenirken model ağırlıklarına eklenir; bu yüzden yeni bir LoRA (veya yeni güç) ile ilk görsel 10–15 saniye daha uzun sürer; eklenmiş ağırlıklar 8 bitlik bloklar olarak saklanır (son LoRA için yaklaşık 2 GB depolama). LoRA'nın metin kodlayıcı kısmı uygulanmaz.
+405	＋ Ekle
+406	Kaldır
+407	“%s” listeden kaldırılsın mı?
+408	Anima için kendi .safetensors dosyalarınız (kohya, diffusers/PEFT, LoKr, LoHa): ihtiyacınız kadar ekleyin, her birinin kendi anahtarı ve gücü vardır. Model yüklenirken modele eklenirler, bu yüzden yeni bir setle ilk görsel 10–15 saniye daha uzun sürer.
+409	Etkin: %d / %d. Yeni bir set veya güç, ilk görseli 10–15 saniye yavaşlatır.

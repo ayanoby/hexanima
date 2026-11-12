@@ -403,5 +403,10 @@
 "Delete \"%s\"? The model files are removed from the phone (the original checkpoint is not touched).",
 "Width and height must be multiples of 32",
 "Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024",
-"Too large: at most 4096 tokens (2048×2048)"
+"Too large: at most 4096 tokens (2048×2048)",
+"＋ Add",
+"Remove",
+"Remove \"%s\" from the list?",
+"Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.",
+"Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower."
 ]

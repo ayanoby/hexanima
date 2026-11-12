@@ -403,3 +403,8 @@
 277	Cải thiện prompt trên NPU (chậm hơn)
 278	Mặc định Qwen3-4B chạy trên CPU: khoảng 5 token mỗi giây. Trên NPU khoảng 1,3 token mỗi giây, nhưng CPU vẫn rảnh.
 285	Chọn tệp .safetensors của riêng bạn được làm cho Anima (định dạng kohya, diffusers/PEFT, LoKr và LoHa; 28 hoặc 40 khối). Tệp được kiểm tra ngay khi bạn chọn. Cường độ 1.00 là thiết lập của tác giả. LoRA được gộp vào trọng số mô hình khi mô hình tải, nên ảnh đầu tiên với LoRA mới (hoặc cường độ mới) lâu hơn 10–15 giây; các trọng số đã gộp được giữ dưới dạng khối 8 bit (khoảng 2 GB dung lượng cho LoRA gần nhất). Phần bộ mã hóa văn bản của LoRA không được áp dụng.
+405	＋ Thêm
+406	Gỡ
+407	Gỡ “%s” khỏi danh sách?
+408	Các tệp .safetensors của riêng bạn cho Anima (kohya, diffusers/PEFT, LoKr, LoHa): thêm bao nhiêu tùy ý, mỗi tệp có công tắc và cường độ riêng. Chúng được gộp vào mô hình khi tải, nên ảnh đầu tiên với bộ mới lâu hơn 10–15 giây.
+409	Đang bật: %d / %d. Bộ hoặc cường độ mới làm ảnh đầu tiên chậm hơn 10–15 giây.

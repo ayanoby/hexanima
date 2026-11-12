@@ -403,3 +403,8 @@ Delete "%s"? The model files are removed from the phone (the original checkpoint
 Width and height must be multiples of 32	El ancho y el alto deben ser múltiplos de 32
 Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	El número de tokens (%d) debe ser divisible por 32, por ejemplo 512×512, 768×1024, 1024×1024
 Too large: at most 4096 tokens (2048×2048)	Demasiado grande: 4096 tokens como máximo (2048×2048)
+＋ Add	＋ Añadir
+Remove	Quitar
+Remove "%s" from the list?	¿Quitar «%s» de la lista?
+Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Tus propios archivos .safetensors para Anima (kohya, diffusers/PEFT, LoKr, LoHa): añade tantos como necesites, cada uno con su interruptor y su fuerza. Se fusionan con el modelo al cargarlo, así que la primera imagen con un conjunto nuevo tarda de 10 a 15 segundos más.
+Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	Activas: %d de %d. Un conjunto o una fuerza nuevos hacen la primera imagen de 10 a 15 segundos más lenta.

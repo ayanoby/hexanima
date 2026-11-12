@@ -403,3 +403,8 @@ Delete "%s"? The model files are removed from the phone (the original checkpoint
 Width and height must be multiples of 32	宽度和高度必须是 32 的倍数
 Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	令牌数（%d）必须能被 32 整除，例如 512×512、768×1024、1024×1024
 Too large: at most 4096 tokens (2048×2048)	太大：最多 4096 个令牌（2048×2048）
+＋ Add	＋ 添加
+Remove	移除
+Remove "%s" from the list?	从列表中移除“%s”？
+Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	你自己的 Anima .safetensors 文件（kohya、diffusers/PEFT、LoKr、LoHa）：想加多少就加多少，每个都有自己的开关和强度。它们在模型加载时融合进模型，因此使用新组合的第一张图片会多花 10–15 秒。
+Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	已启用：%d / %d。新的组合或强度会让第一张图片慢 10–15 秒。

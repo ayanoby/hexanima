@@ -403,3 +403,8 @@ Delete "%s"? The model files are removed from the phone (the original checkpoint
 Width and height must be multiples of 32	너비와 높이는 32의 배수여야 합니다
 Token count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	토큰 수(%d)는 32로 나누어떨어져야 합니다(예: 512×512, 768×1024, 1024×1024)
 Too large: at most 4096 tokens (2048×2048)	너무 큽니다: 최대 4096 토큰(2048×2048)
+＋ Add	＋ 추가
+Remove	제거
+Remove "%s" from the list?	'%s'을(를) 목록에서 제거할까요?
+Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.	Anima용 내 .safetensors 파일(kohya, diffusers/PEFT, LoKr, LoHa): 필요한 만큼 추가할 수 있고, 각각 자신의 스위치와 강도가 있습니다. 모델을 불러올 때 합쳐지므로 새 조합으로 만드는 첫 이미지는 10~15초 더 걸립니다.
+Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.	켜짐: %d / %d. 새 조합이나 강도를 쓰면 첫 이미지가 10~15초 느려집니다.

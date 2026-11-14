@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ 自己的 Anima 检查点（.safetensors，BF16/FP16/FP32）
 Model name	模型名称
 Reset	重置
+Update for the shared files	共享文件更新
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	目录中的文本编码器和 VAE 已更改(%s GB)。更新可修复例如长提示词时第二张图出现噪点的问题。模型保持不变。
+Update  %s GB	更新  %s GB
+Cancelled: you can resume	已取消:可以继续
+Shared files updated	共享文件已更新
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	模型执行的去噪步数。步数越多,细节越细,但出图越慢,而且只在一定范围内有效。请使用该模型推荐的步数:Anima 基础模型通常需要 20–30,Turbo 和 Lightning 模型为 4–8。橙色数字表示你改动了推荐值。
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	图像遵循提示词的严格程度。越高:越贴近描述,但对比更强、伪影更多;越低:更自由、更柔和。基础模型在 3–5 左右效果较好,Turbo 模型使用 1。大于 1 时每一步会变慢,因为模型要计算两次(带提示词和不带提示词),只有此时才会使用负面提示词。
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	模型从噪声走向图像所用的算法。不同采样器的画面风格和速度略有差异。euler 是稳妥的默认选择,euler_a 和 dpm++ 系列会增加变化,lcm 适用于只需极少步数的模型。
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	步数在各噪声级别上的分配方式。“默认”会使用采样器通常采用的方式。karras 和 exponential 把更多步数用在细节上,simple 和 sgm_uniform 则平均分配。不确定时保持默认即可。
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	决定图像起点的随机噪声的数字。相同的种子、相同的提示词和设置会得到相同的图像。−1 每次随机选择新的种子;输入数字可复现或微调某个结果。
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	模型执行的去噪步数。步数越多,细节越细,但出图越慢,而且只在一定范围内有效。请使用该模型推荐的步数:快速模型(Turbo、Lightning)约需 4–8 步,普通模型 20–30 步。橙色数字表示你改动了推荐值。
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	图像遵循提示词的严格程度。越高:越贴近描述,但对比更强、伪影更多;越低:更自由、更柔和。普通模型在 3–5 左右效果较好,快速(Turbo)模型使用 1。大于 1 时每一步会变慢,因为模型要计算两次(带提示词和不带提示词),只有此时才会使用负面提示词。
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA 是一个小的 .safetensors 文件,用来改变模型的风格,或让它学会某个角色、物体或外观。只有针对同一模型训练的文件才适用(为其他模型制作的 LoRA 无法使用)。可按需添加任意数量:每个都有独立的开关和强度(1.00 是作者的设定,越低越弱,越高越强)。LoRA 会在模型加载时合并进去,所以使用新组合或新强度时的第一张图会稍慢一些。使用 LoRA 须遵守其作者的许可证。
+Prompt templates	提示词模板
+Negative prompt templates	负面提示词模板
+Save the current negative prompt	保存当前负面提示词
+Clear all	全部清除
+Clear the prompt history? Pictures in the gallery stay.	清除提示词历史?图库中的图片会保留。
+Pack all	全部打包
+Nothing to pack	没有可打包的内容
+Packing %d of %d…	正在打包 %d / %d…
+The archive is saved in Downloads: %d pictures, %.1f MB	压缩包已保存到“下载”:%d 张图片,%.1f MB
+Archive name	压缩包名称
+Saved to: %s (.zip)	将保存到:%s(.zip)
+Pack	打包
+The archive is saved: %d pictures, %.1f MB	压缩包已保存:%d 张图片,%.1f MB
+Downloads	下载
+Internal storage	内部存储
+Where to save archives	压缩包保存位置
+Choose a folder…	选择文件夹…
+Could not open the picture: %s	无法打开图片:%s
+Wallpaper	壁纸
+Own	自定义
+Choose a picture…	选择图片…
+Remove the wallpaper	移除壁纸
+Block transparency	区块透明度
+Wallpaper dimming	壁纸变暗
+Pinch to zoom, drag to move	双指缩放,单指拖动
+Position and scale	位置和缩放
+Loaded	已加载
+Unloaded	未加载
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	该模型依据 MiniMax-H3-Image Community License Agreement 分发(许可证文本会随文件一起下载)。不得在美国、欧盟、英国和韩国使用,其输出也不得用于改进其他 AI 模型。大小:%s GB。是否下载?
+Accept and download	接受并下载

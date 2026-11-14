@@ -425,3 +425,46 @@
 424	＋ Eigener Anima-Checkpoint (.safetensors, BF16/FP16/FP32)
 425	Modellname
 426	Zurücksetzen
+427	Update für die gemeinsamen Dateien
+428	Textencoder und VAE im Katalog wurden geändert (%s GB). Das Update behebt z. B. Rauschen beim zweiten Bild mit langem Prompt. Die Modelle bleiben unverändert.
+429	Aktualisieren  %s GB
+430	Abgebrochen: du kannst fortsetzen
+431	Gemeinsame Dateien aktualisiert
+432	Wie viele Entrauschungsschritte das Modell macht. Mehr Schritte: feinere Details, aber ein langsameres Bild, und nur bis zu einer Grenze. Nimm die für das Modell empfohlene Zahl: Anima-Basismodelle brauchen meist 20–30, Turbo- und Lightning-Modelle 4–8. Eine orange Zahl bedeutet, dass du den empfohlenen Wert geändert hast.
+433	Wie streng das Bild dem Prompt folgt. Höher: näher an der Beschreibung, aber härterer Kontrast und mehr Artefakte; niedriger: freier und weicher. Basismodelle funktionieren gut bei etwa 3–5, Turbo-Modelle nutzen 1. Ein Wert über 1 verlangsamt jeden Schritt, weil das Modell zweimal rechnet (mit und ohne Prompt); nur dann wird der negative Prompt verwendet.
+434	Der Algorithmus, mit dem das Modell vom Rauschen zum Bild gelangt. Verschiedene Sampler geben einen leicht anderen Look und eine andere Geschwindigkeit. euler ist der sichere Standard, euler_a und die dpm++-Varianten bringen mehr Variation, lcm ist für Modelle mit sehr wenigen Schritten.
+435	Wie die Schritte über die Rauschstufen verteilt werden. „Standard“ nimmt, was der Sampler normalerweise verwendet. karras und exponential setzen mehr Schritte auf feine Details, simple und sgm_uniform verteilen gleichmäßig. Im Zweifel auf Standard lassen.
+436	Die Zahl, die das Zufallsrauschen festlegt, von dem das Bild ausgeht. Derselbe Seed mit demselben Prompt und denselben Einstellungen ergibt dasselbe Bild. −1 wählt jedes Mal einen neuen Zufallswert; gib eine Zahl ein, um ein Ergebnis zu wiederholen oder zu verfeinern.
+437	Wie viele Entrauschungsschritte das Modell macht. Mehr Schritte: feinere Details, aber ein langsameres Bild, und nur bis zu einer Grenze. Nimm die für das Modell empfohlene Zahl: schnelle Modelle (Turbo, Lightning) brauchen etwa 4–8 Schritte, normale 20–30. Eine orange Zahl bedeutet, dass du den empfohlenen Wert geändert hast.
+438	Wie streng das Bild dem Prompt folgt. Höher: näher an der Beschreibung, aber härterer Kontrast und mehr Artefakte; niedriger: freier und weicher. Normale Modelle funktionieren gut bei etwa 3–5, schnelle (Turbo) Modelle nutzen 1. Ein Wert über 1 verlangsamt jeden Schritt, weil das Modell zweimal rechnet (mit und ohne Prompt); nur dann wird der negative Prompt verwendet.
+439	Eine LoRA ist eine kleine .safetensors-Datei, die den Stil eines Modells ändert oder ihm eine Figur, ein Objekt oder einen Look beibringt. Es passen nur Dateien, die für dasselbe Modell trainiert wurden (eine LoRA für ein anderes Modell funktioniert nicht). Füge so viele hinzu, wie du brauchst: jede hat einen eigenen Schalter und eine eigene Stärke (1.00 ist die Einstellung des Autors, niedriger ist schwächer, höher stärker). Eine LoRA wird beim Laden in das Modell eingerechnet, daher dauert das erste Bild mit einem neuen Satz oder einer neuen Stärke etwas länger. Für die Nutzung gilt die Lizenz des Autors.
+440	Prompt-Vorlagen
+441	Vorlagen für negative Prompts
+442	Aktuellen negativen Prompt speichern
+443	Alle löschen
+444	Prompt-Verlauf löschen? Die Bilder in der Galerie bleiben erhalten.
+445	Alle packen
+446	Nichts zu packen
+447	Packe %d von %d…
+448	Das Archiv ist in Downloads gespeichert: %d Bilder, %.1f MB
+449	Name des Archivs
+450	Gespeichert in: %s (.zip)
+451	Packen
+452	Das Archiv ist gespeichert: %d Bilder, %.1f MB
+453	Downloads
+454	Interner Speicher
+455	Wohin Archive gespeichert werden
+456	Ordner wählen…
+457	Bild konnte nicht geöffnet werden: %s
+458	Hintergrundbild
+459	Eigenes
+460	Bild wählen…
+461	Hintergrundbild entfernen
+462	Transparenz der Blöcke
+463	Abdunklung des Hintergrunds
+464	Mit zwei Fingern zoomen, mit einem verschieben
+465	Position und Größe
+466	Geladen
+467	Entladen
+468	Das Modell wird unter der MiniMax-H3-Image Community License Agreement verbreitet (der Lizenztext wird mit den Dateien geladen). Es darf nicht in den USA, der Europäischen Union, im Vereinigten Königreich und in Südkorea verwendet werden, und seine Ergebnisse dürfen nicht zur Verbesserung anderer KI-Modelle genutzt werden. Größe: %s GB. Herunterladen?
+469	Akzeptieren und herunterladen

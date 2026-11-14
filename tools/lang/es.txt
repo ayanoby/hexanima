@@ -425,3 +425,46 @@
 424	＋ Checkpoint propio de Anima (.safetensors, BF16/FP16/FP32)
 425	Nombre del modelo
 426	Restablecer
+427	Actualización de los archivos compartidos
+428	El codificador de texto y el VAE del catálogo han cambiado (%s GB). La actualización corrige, por ejemplo, el ruido en la segunda imagen con un prompt largo. Los modelos no cambian.
+429	Actualizar  %s GB
+430	Cancelado: puedes reanudar
+431	Archivos compartidos actualizados
+432	Cuántos pasos de eliminación de ruido da el modelo. Más pasos: más detalle pero una imagen más lenta, y solo hasta cierto punto. Usa el número recomendado para el modelo: los modelos base de Anima suelen necesitar 20–30, los Turbo y Lightning 4–8. Un número naranja indica que cambiaste el valor recomendado.
+433	Qué tan estrictamente sigue la imagen al prompt. Más alto: más cerca de la descripción pero con más contraste y artefactos; más bajo: más libre y suave. Los modelos base funcionan bien con 3–5 aproximadamente; los Turbo usan 1. Un valor superior a 1 ralentiza cada paso porque el modelo calcula dos veces (con y sin prompt), y solo entonces se usa el prompt negativo.
+434	El algoritmo con el que el modelo va del ruido a la imagen. Distintos samplers dan un aspecto y una velocidad ligeramente distintos. euler es la opción segura por defecto, euler_a y las variantes dpm++ añaden más variación, lcm es para modelos hechos para muy pocos pasos.
+435	Cómo se reparten los pasos entre los niveles de ruido. «Por defecto» usa lo que el sampler suele tomar. karras y exponential dedican más pasos a los detalles finos, simple y sgm_uniform los reparten por igual. Si dudas, déjalo por defecto.
+436	El número que fija el ruido aleatorio del que parte la imagen. La misma semilla con el mismo prompt y ajustes da la misma imagen. −1 elige una nueva al azar cada vez; escribe un número para repetir o afinar un resultado.
+437	Cuántos pasos de eliminación de ruido da el modelo. Más pasos: más detalle pero una imagen más lenta, y solo hasta cierto punto. Usa el número recomendado para el modelo: los modelos rápidos (Turbo, Lightning) necesitan unos 4–8 pasos, los normales 20–30. Un número naranja indica que cambiaste el valor recomendado.
+438	Qué tan estrictamente sigue la imagen al prompt. Más alto: más cerca de la descripción pero con más contraste y artefactos; más bajo: más libre y suave. Los modelos normales funcionan bien con 3–5 aproximadamente; los rápidos (Turbo) usan 1. Un valor superior a 1 ralentiza cada paso porque el modelo calcula dos veces (con y sin prompt), y solo entonces se usa el prompt negativo.
+439	Un LoRA es un archivo .safetensors pequeño que cambia el estilo de un modelo o le enseña un personaje, un objeto o un aspecto. Solo sirven archivos entrenados para el mismo modelo (un LoRA hecho para otro modelo no funcionará). Añade los que necesites: cada uno tiene su propio interruptor e intensidad (1.00 es el ajuste del autor, más bajo es más débil, más alto más fuerte). Un LoRA se fusiona con el modelo al cargarlo, así que la primera imagen con un conjunto o intensidad nuevos tarda un poco más. El uso de un LoRA está sujeto a la licencia de su autor.
+440	Plantillas de prompt
+441	Plantillas de prompt negativo
+442	Guardar el prompt negativo actual
+443	Borrar todo
+444	¿Borrar el historial de prompts? Las imágenes de la galería se conservan.
+445	Empaquetar todo
+446	Nada que empaquetar
+447	Empaquetando %d de %d…
+448	El archivo se guardó en Descargas: %d imágenes, %.1f MB
+449	Nombre del archivo
+450	Se guardará en: %s (.zip)
+451	Empaquetar
+452	El archivo se guardó: %d imágenes, %.1f MB
+453	Descargas
+454	Almacenamiento interno
+455	Dónde guardar los archivos
+456	Elegir una carpeta…
+457	No se pudo abrir la imagen: %s
+458	Fondo de pantalla
+459	Propio
+460	Elegir una imagen…
+461	Quitar el fondo
+462	Transparencia de los bloques
+463	Oscurecimiento del fondo
+464	Pellizca para ampliar, arrastra para mover
+465	Posición y escala
+466	Cargado
+467	Descargado
+468	El modelo se distribuye bajo la MiniMax-H3-Image Community License Agreement (el texto de la licencia se descarga con los archivos). No debe usarse en Estados Unidos, la Unión Europea, el Reino Unido ni Corea del Sur, y sus resultados no deben usarse para mejorar otros modelos de IA. Tamaño: %s GB. ¿Descargar?
+469	Aceptar y descargar

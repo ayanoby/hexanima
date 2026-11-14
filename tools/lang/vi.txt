@@ -425,3 +425,46 @@
 424	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16/FP32)
 425	Tên mô hình
 426	Đặt lại
+427	Cập nhật tệp dùng chung
+428	Bộ mã hóa văn bản và VAE trong danh mục đã thay đổi (%s GB). Bản cập nhật sửa lỗi như nhiễu ở ảnh thứ hai với prompt dài. Các mô hình giữ nguyên.
+429	Cập nhật  %s GB
+430	Đã hủy: có thể tiếp tục
+431	Đã cập nhật tệp dùng chung
+432	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số được khuyến nghị cho mô hình: mô hình gốc Anima thường cần 20–30, Turbo và Lightning 4–8. Số màu cam nghĩa là bạn đã đổi giá trị khuyến nghị.
+433	Ảnh bám sát prompt đến mức nào. Cao hơn: gần mô tả hơn nhưng tương phản gắt và nhiều lỗi hơn; thấp hơn: tự do và mềm hơn. Mô hình gốc chạy tốt ở khoảng 3–5, mô hình Turbo dùng 1. Giá trị trên 1 làm mỗi bước chậm hơn vì mô hình tính hai lần (có và không có prompt), và chỉ khi đó prompt phủ định mới được dùng.
+434	Thuật toán mô hình dùng để đi từ nhiễu đến ảnh. Các sampler khác nhau cho vẻ ngoài và tốc độ hơi khác nhau. euler là mặc định an toàn, euler_a và các biến thể dpm++ thêm sự đa dạng, lcm dành cho mô hình làm cho rất ít bước.
+435	Cách các bước được phân bổ theo mức nhiễu. “Mặc định” dùng thứ sampler thường dùng. karras và exponential dành nhiều bước hơn cho chi tiết nhỏ, simple và sgm_uniform phân bổ đều. Nếu không chắc, hãy để mặc định.
+436	Con số cố định nhiễu ngẫu nhiên mà ảnh bắt đầu từ đó. Cùng seed, cùng prompt và cài đặt cho ra cùng một ảnh. −1 chọn một giá trị ngẫu nhiên mới mỗi lần; nhập một số để lặp lại hoặc tinh chỉnh kết quả.
+437	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số được khuyến nghị cho mô hình: mô hình nhanh (Turbo, Lightning) cần khoảng 4–8 bước, mô hình thường 20–30. Số màu cam nghĩa là bạn đã đổi giá trị khuyến nghị.
+438	Ảnh bám sát prompt đến mức nào. Cao hơn: gần mô tả hơn nhưng tương phản gắt và nhiều lỗi hơn; thấp hơn: tự do và mềm hơn. Mô hình thường chạy tốt ở khoảng 3–5, mô hình nhanh (Turbo) dùng 1. Giá trị trên 1 làm mỗi bước chậm hơn vì mô hình tính hai lần (có và không có prompt), và chỉ khi đó prompt phủ định mới được dùng.
+439	LoRA là một tệp .safetensors nhỏ thay đổi phong cách của mô hình hoặc dạy nó một nhân vật, vật thể hay diện mạo. Chỉ các tệp được huấn luyện cho cùng mô hình mới phù hợp (LoRA làm cho mô hình khác sẽ không hoạt động). Thêm bao nhiêu tùy ý: mỗi tệp có công tắc và độ mạnh riêng (1.00 là cài đặt của tác giả, thấp hơn là yếu hơn, cao hơn là mạnh hơn). LoRA được hợp nhất vào mô hình khi tải, nên ảnh đầu tiên với bộ hoặc độ mạnh mới sẽ lâu hơn một chút. Việc dùng LoRA tuân theo giấy phép của tác giả.
+440	Mẫu prompt
+441	Mẫu prompt phủ định
+442	Lưu prompt phủ định hiện tại
+443	Xóa tất cả
+444	Xóa lịch sử prompt? Ảnh trong thư viện vẫn được giữ.
+445	Nén tất cả
+446	Không có gì để nén
+447	Đang nén %d / %d…
+448	Đã lưu tệp nén vào Tải xuống: %d ảnh, %.1f MB
+449	Tên tệp nén
+450	Sẽ lưu vào: %s (.zip)
+451	Nén
+452	Đã lưu tệp nén: %d ảnh, %.1f MB
+453	Tải xuống
+454	Bộ nhớ trong
+455	Nơi lưu tệp nén
+456	Chọn thư mục…
+457	Không mở được ảnh: %s
+458	Hình nền
+459	Riêng
+460	Chọn ảnh…
+461	Xóa hình nền
+462	Độ trong suốt của khối
+463	Làm tối hình nền
+464	Chụm để phóng to, kéo để di chuyển
+465	Vị trí và tỷ lệ
+466	Đã tải
+467	Chưa tải
+468	Mô hình được phân phối theo MiniMax-H3-Image Community License Agreement (văn bản giấy phép được tải cùng các tệp). Không được dùng tại Hoa Kỳ, Liên minh châu Âu, Vương quốc Anh và Hàn Quốc, và kết quả không được dùng để cải thiện các mô hình AI khác. Dung lượng: %s GB. Tải xuống?
+469	Chấp nhận và tải xuống

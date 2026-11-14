@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Checkpoint Anima personnel (.safetensors, BF16/FP16/FP32)
 Model name	Nom du modèle
 Reset	Réinitialiser
+Update for the shared files	Mise à jour des fichiers partagés
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	L'encodeur de texte et le VAE du catalogue ont changé (%s Go). La mise à jour corrige par ex. le bruit sur la deuxième image avec un long prompt. Les modèles restent inchangés.
+Update  %s GB	Mettre à jour  %s Go
+Cancelled: you can resume	Annulé : vous pouvez reprendre
+Shared files updated	Fichiers partagés mis à jour
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	Le nombre d'étapes de débruitage du modèle. Plus d'étapes : plus de détails mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles de base Anima demandent en général 20–30, les modèles Turbo et Lightning 4–8. Un nombre orange signifie que vous avez modifié la valeur recommandée.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	À quel point l'image suit strictement le prompt. Plus haut : plus proche de la description mais contraste plus dur et plus d'artefacts ; plus bas : plus libre et plus doux. Les modèles de base fonctionnent bien vers 3–5, les modèles Turbo utilisent 1. Une valeur supérieure à 1 ralentit chaque étape car le modèle calcule deux fois (avec et sans prompt), et seulement alors le prompt négatif est utilisé.
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	L'algorithme que le modèle utilise pour passer du bruit à l'image. Les samplers donnent un rendu et une vitesse légèrement différents. euler est le choix sûr par défaut, euler_a et les variantes dpm++ ajoutent de la variation, lcm est pour les modèles conçus pour très peu d'étapes.
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	La répartition des étapes sur les niveaux de bruit. « Par défaut » reprend ce que le sampler utilise normalement. karras et exponential consacrent plus d'étapes aux détails fins, simple et sgm_uniform les répartissent également. En cas de doute, laissez par défaut.
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	Le nombre qui fixe le bruit aléatoire dont part l'image. Le même seed avec le même prompt et les mêmes réglages donne la même image. −1 en choisit un nouveau au hasard à chaque fois ; saisissez un nombre pour répéter ou affiner un résultat.
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	Le nombre d'étapes de débruitage du modèle. Plus d'étapes : plus de détails mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles rapides (Turbo, Lightning) demandent environ 4–8 étapes, les modèles normaux 20–30. Un nombre orange signifie que vous avez modifié la valeur recommandée.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	À quel point l'image suit strictement le prompt. Plus haut : plus proche de la description mais contraste plus dur et plus d'artefacts ; plus bas : plus libre et plus doux. Les modèles normaux fonctionnent bien vers 3–5, les modèles rapides (Turbo) utilisent 1. Une valeur supérieure à 1 ralentit chaque étape car le modèle calcule deux fois (avec et sans prompt), et seulement alors le prompt négatif est utilisé.
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	Un LoRA est un petit fichier .safetensors qui change le style d'un modèle ou lui apprend un personnage, un objet ou un rendu. Seuls conviennent les fichiers entraînés pour le même modèle (un LoRA fait pour un autre modèle ne fonctionnera pas). Ajoutez-en autant que nécessaire : chacun a son propre interrupteur et sa force (1.00 est le réglage de l'auteur, plus bas est plus faible, plus haut plus fort). Un LoRA est fusionné au modèle pendant le chargement, donc la première image avec un nouvel ensemble ou une nouvelle force prend un peu plus de temps. L'utilisation d'un LoRA est soumise à la licence de son auteur.
+Prompt templates	Modèles de prompt
+Negative prompt templates	Modèles de prompt négatif
+Save the current negative prompt	Enregistrer le prompt négatif actuel
+Clear all	Tout effacer
+Clear the prompt history? Pictures in the gallery stay.	Effacer l'historique des prompts ? Les images de la galerie sont conservées.
+Pack all	Tout archiver
+Nothing to pack	Rien à archiver
+Packing %d of %d…	Archivage de %d sur %d…
+The archive is saved in Downloads: %d pictures, %.1f MB	L'archive est enregistrée dans Téléchargements : %d images, %.1f Mo
+Archive name	Nom de l'archive
+Saved to: %s (.zip)	Enregistrée dans : %s (.zip)
+Pack	Archiver
+The archive is saved: %d pictures, %.1f MB	L'archive est enregistrée : %d images, %.1f Mo
+Downloads	Téléchargements
+Internal storage	Stockage interne
+Where to save archives	Où enregistrer les archives
+Choose a folder…	Choisir un dossier…
+Could not open the picture: %s	Impossible d'ouvrir l'image : %s
+Wallpaper	Fond d'écran
+Own	Personnalisé
+Choose a picture…	Choisir une image…
+Remove the wallpaper	Supprimer le fond d'écran
+Block transparency	Transparence des blocs
+Wallpaper dimming	Assombrissement du fond
+Pinch to zoom, drag to move	Pincez pour zoomer, glissez pour déplacer
+Position and scale	Position et échelle
+Loaded	Chargé
+Unloaded	Déchargé
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Le modèle est distribué sous la MiniMax-H3-Image Community License Agreement (le texte de la licence est téléchargé avec les fichiers). Il ne doit pas être utilisé aux États-Unis, dans l'Union européenne, au Royaume-Uni ni en Corée du Sud, et ses résultats ne doivent pas servir à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
+Accept and download	Accepter et télécharger

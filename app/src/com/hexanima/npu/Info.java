@@ -76,13 +76,13 @@ public class Info extends Base {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         LinearLayout col = screen(L.s("Инфо", "Info"), null);
+        about(col);
         for (String[] it : ITEMS) {
             LinearLayout c = card(col);
             c.addView(text(L.s(it[0], it[1]), 16, TXT, true));
             TextView body = text(L.s(it[2], it[3]), 14, DIM, false); body.setPadding(0, dp(6), 0, 0); body.setLineSpacing(0, 1.15f);
             c.addView(body);
         }
-        about(col);
     }
 
     void about(LinearLayout col) {

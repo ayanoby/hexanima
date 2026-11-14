@@ -425,3 +425,46 @@
 424	＋ Checkpoint próprio do Anima (.safetensors, BF16/FP16/FP32)
 425	Nome do modelo
 426	Redefinir
+427	Atualização dos arquivos compartilhados
+428	O codificador de texto e o VAE do catálogo mudaram (%s GB). A atualização corrige, por exemplo, o ruído na segunda imagem com um prompt longo. Os modelos não mudam.
+429	Atualizar  %s GB
+430	Cancelado: você pode retomar
+431	Arquivos compartilhados atualizados
+432	Quantos passos de remoção de ruído o modelo faz. Mais passos: detalhes mais finos, mas a imagem fica mais lenta, e só até certo ponto. Use o número recomendado para o modelo: os modelos base do Anima costumam pedir 20–30, os Turbo e Lightning 4–8. Um número laranja indica que você alterou o valor recomendado.
+433	Quão estritamente a imagem segue o prompt. Mais alto: mais próxima da descrição, mas com contraste mais duro e mais artefatos; mais baixo: mais livre e suave. Os modelos base funcionam bem em cerca de 3–5, os Turbo usam 1. Um valor acima de 1 deixa cada passo mais lento porque o modelo calcula duas vezes (com e sem prompt), e só então o prompt negativo é usado.
+434	O algoritmo que o modelo usa para ir do ruído à imagem. Samplers diferentes dão um visual e uma velocidade ligeiramente diferentes. euler é o padrão seguro, euler_a e as variantes dpm++ trazem mais variação, lcm é para modelos feitos para pouquíssimos passos.
+435	Como os passos são distribuídos pelos níveis de ruído. “Padrão” usa o que o sampler normalmente usa. karras e exponential gastam mais passos nos detalhes finos, simple e sgm_uniform distribuem por igual. Na dúvida, deixe no padrão.
+436	O número que fixa o ruído aleatório de onde a imagem parte. A mesma seed com o mesmo prompt e as mesmas configurações dá a mesma imagem. −1 escolhe uma nova aleatória a cada vez; digite um número para repetir ou refinar um resultado.
+437	Quantos passos de remoção de ruído o modelo faz. Mais passos: detalhes mais finos, mas a imagem fica mais lenta, e só até certo ponto. Use o número recomendado para o modelo: modelos rápidos (Turbo, Lightning) precisam de cerca de 4–8 passos, os normais 20–30. Um número laranja indica que você alterou o valor recomendado.
+438	Quão estritamente a imagem segue o prompt. Mais alto: mais próxima da descrição, mas com contraste mais duro e mais artefatos; mais baixo: mais livre e suave. Os modelos normais funcionam bem em cerca de 3–5, os rápidos (Turbo) usam 1. Um valor acima de 1 deixa cada passo mais lento porque o modelo calcula duas vezes (com e sem prompt), e só então o prompt negativo é usado.
+439	Um LoRA é um pequeno arquivo .safetensors que muda o estilo de um modelo ou ensina a ele um personagem, objeto ou visual. Só servem arquivos treinados para o mesmo modelo (um LoRA feito para outro modelo não funcionará). Adicione quantos precisar: cada um tem seu próprio interruptor e intensidade (1.00 é a configuração do autor, menor é mais fraco, maior é mais forte). O LoRA é mesclado ao modelo durante o carregamento, então a primeira imagem com um conjunto ou intensidade novos demora um pouco mais. O uso de um LoRA está sujeito à licença do seu autor.
+440	Modelos de prompt
+441	Modelos de prompt negativo
+442	Salvar o prompt negativo atual
+443	Limpar tudo
+444	Limpar o histórico de prompts? As imagens da galeria permanecem.
+445	Compactar tudo
+446	Nada para compactar
+447	Compactando %d de %d…
+448	O arquivo foi salvo em Downloads: %d imagens, %.1f MB
+449	Nome do arquivo
+450	Será salvo em: %s (.zip)
+451	Compactar
+452	O arquivo foi salvo: %d imagens, %.1f MB
+453	Downloads
+454	Armazenamento interno
+455	Onde salvar os arquivos compactados
+456	Escolher uma pasta…
+457	Não foi possível abrir a imagem: %s
+458	Papel de parede
+459	Próprio
+460	Escolher uma imagem…
+461	Remover o papel de parede
+462	Transparência dos blocos
+463	Escurecimento do papel de parede
+464	Pinça para ampliar, arraste para mover
+465	Posição e escala
+466	Carregado
+467	Descarregado
+468	O modelo é distribuído sob a MiniMax-H3-Image Community License Agreement (o texto da licença é baixado junto com os arquivos). Não pode ser usado nos Estados Unidos, na União Europeia, no Reino Unido nem na Coreia do Sul, e seus resultados não podem ser usados para melhorar outros modelos de IA. Tamanho: %s GB. Baixar?
+469	Aceitar e baixar

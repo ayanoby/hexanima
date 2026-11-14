@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Kendi Anima checkpoint'iniz (.safetensors, BF16/FP16/FP32)
 Model name	Model adı
 Reset	Sıfırla
+Update for the shared files	Ortak dosyalar için güncelleme
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	Katalogdaki metin kodlayıcı ve VAE değişti (%s GB). Güncelleme, örneğin uzun istemle ikinci görüntüde oluşan gürültüyü giderir. Modeller olduğu gibi kalır.
+Update  %s GB	Güncelle  %s GB
+Cancelled: you can resume	İptal edildi: devam edebilirsiniz
+Shared files updated	Ortak dosyalar güncellendi
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	Modelin kaç gürültü giderme adımı attığı. Daha fazla adım: daha ince detay ama daha yavaş görüntü, bunun da bir sınırı var. Model için önerilen sayıyı kullanın: Anima temel modelleri genelde 20–30, Turbo ve Lightning modelleri 4–8 ister. Turuncu bir sayı, önerilen değeri değiştirdiğiniz anlamına gelir.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Görüntünün isteme ne kadar sıkı uyduğu. Yüksek: açıklamaya daha yakın ama kontrast sertleşir ve artefaktlar artar; düşük: daha serbest ve yumuşak. Temel modeller yaklaşık 3–5'te iyi çalışır, Turbo modeller 1 kullanır. 1'in üzerindeki değer her adımı yavaşlatır, çünkü model iki kez hesaplar (istemli ve istemsiz), negatif istem de ancak o zaman kullanılır.
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	Modelin gürültüden görüntüye giderken kullandığı algoritma. Farklı örnekleyiciler biraz farklı görünüm ve hız verir. euler güvenli varsayılandır, euler_a ve dpm++ varyantları daha fazla çeşitlilik katar, lcm çok az adım için yapılmış modellere göredir.
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	Adımların gürültü seviyelerine nasıl dağıtıldığı. “Varsayılan”, örnekleyicinin normalde kullandığını alır. karras ve exponential ince detaylara daha çok adım harcar, simple ve sgm_uniform eşit dağıtır. Emin değilseniz varsayılanda bırakın.
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	Görüntünün başladığı rastgele gürültüyü sabitleyen sayı. Aynı seed, aynı istem ve ayarlar aynı görüntüyü verir. −1 her seferinde yeni bir rastgele değer seçer; bir sonucu tekrarlamak veya ince ayar yapmak için sayı girin.
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	Modelin kaç gürültü giderme adımı attığı. Daha fazla adım: daha ince detay ama daha yavaş görüntü, bunun da bir sınırı var. Model için önerilen sayıyı kullanın: hızlı modeller (Turbo, Lightning) yaklaşık 4–8 adım, normal modeller 20–30 adım ister. Turuncu bir sayı, önerilen değeri değiştirdiğiniz anlamına gelir.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Görüntünün isteme ne kadar sıkı uyduğu. Yüksek: açıklamaya daha yakın ama kontrast sertleşir ve artefaktlar artar; düşük: daha serbest ve yumuşak. Normal modeller yaklaşık 3–5'te iyi çalışır, hızlı (Turbo) modeller 1 kullanır. 1'in üzerindeki değer her adımı yavaşlatır, çünkü model iki kez hesaplar (istemli ve istemsiz), negatif istem de ancak o zaman kullanılır.
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA, bir modelin stilini değiştiren veya ona bir karakter, nesne ya da görünüm öğreten küçük bir .safetensors dosyasıdır. Yalnızca aynı model için eğitilmiş dosyalar uyar (başka bir model için yapılmış LoRA çalışmaz). İhtiyacınız kadar ekleyin: her birinin kendi anahtarı ve gücü vardır (1.00 yazarın ayarıdır, düşük daha zayıf, yüksek daha güçlüdür). LoRA model yüklenirken ona katılır, bu yüzden yeni bir set veya güçle ilk görüntü biraz daha uzun sürer. LoRA kullanımı yazarının lisansına tabidir.
+Prompt templates	İstem şablonları
+Negative prompt templates	Negatif istem şablonları
+Save the current negative prompt	Geçerli negatif istemi kaydet
+Clear all	Tümünü temizle
+Clear the prompt history? Pictures in the gallery stay.	İstem geçmişi temizlensin mi? Galerideki görüntüler kalır.
+Pack all	Tümünü paketle
+Nothing to pack	Paketlenecek bir şey yok
+Packing %d of %d…	%d / %d paketleniyor…
+The archive is saved in Downloads: %d pictures, %.1f MB	Arşiv İndirilenler'e kaydedildi: %d görüntü, %.1f MB
+Archive name	Arşiv adı
+Saved to: %s (.zip)	Kaydedilecek yer: %s (.zip)
+Pack	Paketle
+The archive is saved: %d pictures, %.1f MB	Arşiv kaydedildi: %d görüntü, %.1f MB
+Downloads	İndirilenler
+Internal storage	Dahili depolama
+Where to save archives	Arşivlerin kaydedileceği yer
+Choose a folder…	Klasör seç…
+Could not open the picture: %s	Resim açılamadı: %s
+Wallpaper	Duvar kâğıdı
+Own	Kendi
+Choose a picture…	Resim seç…
+Remove the wallpaper	Duvar kâğıdını kaldır
+Block transparency	Blok şeffaflığı
+Wallpaper dimming	Duvar kâğıdı karartma
+Pinch to zoom, drag to move	Yakınlaştırmak için iki parmak, taşımak için bir parmak
+Position and scale	Konum ve ölçek
+Loaded	Yüklü
+Unloaded	Yüklü değil
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Model, MiniMax-H3-Image Community License Agreement kapsamında dağıtılır (lisans metni dosyalarla birlikte indirilir). ABD, Avrupa Birliği, Birleşik Krallık ve Güney Kore'de kullanılamaz ve çıktıları başka yapay zekâ modellerini geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
+Accept and download	Kabul et ve indir

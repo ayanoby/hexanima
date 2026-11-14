@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ 내 Anima 체크포인트(.safetensors, BF16/FP16/FP32)
 Model name	모델 이름
 Reset	초기화
+Update for the shared files	공유 파일 업데이트
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	카탈로그의 텍스트 인코더와 VAE가 변경되었습니다(%s GB). 예를 들어 긴 프롬프트의 두 번째 이미지에 생기던 노이즈가 해결됩니다. 모델은 그대로 유지됩니다.
+Update  %s GB	업데이트  %s GB
+Cancelled: you can resume	취소됨: 이어서 받을 수 있습니다
+Shared files updated	공유 파일을 업데이트했습니다
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	모델이 수행하는 노이즈 제거 단계 수입니다. 단계가 많을수록 디테일이 섬세해지지만 이미지가 느려지며, 일정 수준까지만 효과가 있습니다. 모델에 권장되는 값을 사용하세요. Anima 베이스 모델은 보통 20–30, Turbo와 Lightning 모델은 4–8입니다. 주황색 숫자는 권장값을 바꿨다는 뜻입니다.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	이미지가 프롬프트를 얼마나 엄격하게 따르는지입니다. 높음: 설명에 더 가깝지만 대비가 거칠고 아티팩트가 늘어납니다. 낮음: 더 자유롭고 부드럽습니다. 베이스 모델은 3–5 정도에서 잘 작동하고 Turbo 모델은 1을 씁니다. 1보다 크면 모델이 두 번(프롬프트 포함·제외) 계산하므로 각 단계가 느려지며, 그때만 네거티브 프롬프트가 사용됩니다.
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	모델이 노이즈에서 이미지로 가는 데 쓰는 알고리즘입니다. 샘플러마다 결과 느낌과 속도가 조금씩 다릅니다. euler는 안전한 기본값, euler_a와 dpm++ 계열은 변화를 더하고, lcm은 매우 적은 단계용 모델에 씁니다.
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	단계를 노이즈 수준에 어떻게 배분하는지입니다. “기본값”은 샘플러가 보통 쓰는 것을 사용합니다. karras와 exponential은 세부 묘사에 더 많은 단계를 쓰고, simple과 sgm_uniform은 균등하게 나눕니다. 잘 모르겠으면 기본값으로 두세요.
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	이미지가 시작되는 무작위 노이즈를 고정하는 숫자입니다. 같은 시드, 같은 프롬프트, 같은 설정이면 같은 이미지가 나옵니다. −1은 매번 새 무작위 값을 고릅니다. 결과를 재현하거나 다듬으려면 숫자를 입력하세요.
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	모델이 수행하는 노이즈 제거 단계 수입니다. 단계가 많을수록 디테일이 섬세해지지만 이미지가 느려지며, 일정 수준까지만 효과가 있습니다. 모델에 권장되는 값을 사용하세요. 빠른 모델(Turbo, Lightning)은 약 4–8단계, 일반 모델은 20–30단계가 필요합니다. 주황색 숫자는 권장값을 바꿨다는 뜻입니다.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	이미지가 프롬프트를 얼마나 엄격하게 따르는지입니다. 높음: 설명에 더 가깝지만 대비가 거칠고 아티팩트가 늘어납니다. 낮음: 더 자유롭고 부드럽습니다. 일반 모델은 3–5 정도에서 잘 작동하고 빠른(Turbo) 모델은 1을 씁니다. 1보다 크면 모델이 두 번(프롬프트 포함·제외) 계산하므로 각 단계가 느려지며, 그때만 네거티브 프롬프트가 사용됩니다.
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA는 모델의 스타일을 바꾸거나 캐릭터, 사물, 분위기를 가르치는 작은 .safetensors 파일입니다. 같은 모델용으로 학습된 파일만 맞습니다(다른 모델용 LoRA는 작동하지 않습니다). 필요한 만큼 추가할 수 있으며 각각 자체 스위치와 강도가 있습니다(1.00은 제작자의 설정, 낮을수록 약하고 높을수록 강합니다). LoRA는 모델을 불러올 때 합쳐지므로 새 조합이나 새 강도의 첫 이미지는 조금 더 걸립니다. LoRA 사용은 제작자의 라이선스를 따릅니다.
+Prompt templates	프롬프트 템플릿
+Negative prompt templates	네거티브 프롬프트 템플릿
+Save the current negative prompt	현재 네거티브 프롬프트 저장
+Clear all	모두 지우기
+Clear the prompt history? Pictures in the gallery stay.	프롬프트 기록을 지울까요? 갤러리의 이미지는 그대로 남습니다.
+Pack all	모두 압축
+Nothing to pack	압축할 항목이 없습니다
+Packing %d of %d…	%d / %d 압축 중…
+The archive is saved in Downloads: %d pictures, %.1f MB	압축 파일이 다운로드에 저장되었습니다: 이미지 %d개, %.1f MB
+Archive name	압축 파일 이름
+Saved to: %s (.zip)	저장 위치: %s (.zip)
+Pack	압축
+The archive is saved: %d pictures, %.1f MB	압축 파일을 저장했습니다: 이미지 %d개, %.1f MB
+Downloads	다운로드
+Internal storage	내부 저장소
+Where to save archives	압축 파일 저장 위치
+Choose a folder…	폴더 선택…
+Could not open the picture: %s	이미지를 열 수 없습니다: %s
+Wallpaper	배경화면
+Own	직접 설정
+Choose a picture…	이미지 선택…
+Remove the wallpaper	배경화면 제거
+Block transparency	블록 투명도
+Wallpaper dimming	배경화면 어둡게
+Pinch to zoom, drag to move	두 손가락으로 확대, 한 손가락으로 이동
+Position and scale	위치 및 크기
+Loaded	로드됨
+Unloaded	언로드됨
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	이 모델은 MiniMax-H3-Image Community License Agreement에 따라 배포됩니다(라이선스 본문은 파일과 함께 내려받습니다). 미국, 유럽연합, 영국, 대한민국에서는 사용할 수 없으며, 결과물을 다른 AI 모델 개선에 사용할 수 없습니다. 크기: %s GB. 다운로드할까요?
+Accept and download	동의하고 다운로드

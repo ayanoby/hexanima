@@ -17,7 +17,7 @@ import org.json.JSONObject;
  * Layout: files/anima/{te*.bin, te_embed.f16, vae.bin} (common), files/anima/m_ID/{small.bin, blkNN.bin}, files/sd/{ID.safetensors stub, llm stub, taew2_1.safetensors}.
  */
 final class Models {
-    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage; }   // speed: seconds per picture at 512x768
+    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage, h3; }   // speed: seconds per picture at 512x768
     interface Progress { void on(long done, long total, String what); }
 
     final File anima, sd, home;
@@ -41,6 +41,7 @@ final class Models {
     long commonSize;
     List<Item> catalog(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { return catalog5(get(base + "catalog8.json"), base); } catch (Exception e8) { }   // catalog8.json = catalog7 + MiniMax-H3-Image (1.6.0+; older apps would not know the family)
         try { return catalog5(get(base + "catalog7.json"), base); } catch (Exception e7) { }   // catalog7.json = catalog6 + the common files with the 512 token text encoder (1.5.4+; older apps expect 128 tokens)
         try { return catalog5(get(base + "catalog6.json"), base); } catch (Exception e6) { }   // catalog6.json = catalog5 + the MiaoMiao MOSS fine-tunes (older apps do not read it)
         try { return catalog5(get(base + "catalog5.json"), base); } catch (Exception e5) { }   // catalog5.json: packs + models with switchable modes (flattened here to one Item per mode)
@@ -74,7 +75,7 @@ final class Models {
                 it.manifest = packUrl(p, base) + p.optString("manifest", "manifest.json");
                 it.desc = m.optString("desc", ""); it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.author = m.optString("author", "");
                 it.speed = md.optInt("speed", 0); String f = m.optString("family", "Anima");
-                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow");
+                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3");
                 out.add(it);
             }
         }
@@ -152,7 +153,53 @@ final class Models {
         File hdr = new File(marker, "llm_hdr.bin");
         fetch(cu + llm.getString("hdr"), hdr, llm.optLong("hdr_size", -1), llm.optString("hdr_sha256", null), null, cancel);
         stub(hdr, new File(sd, llm.getString("name")), llm.getLong("size"));
+        saveCommonRec(m);
         doneMark(marker).createNewFile();
+    }
+
+    // ---- updating the shared files: the catalog's manifest is compared with what is on the phone (sha256 kept in common.json) ----
+    File commonRec() { return new File(new File(anima, commonDir()), "common.json"); }
+    void saveCommonRec(JSONObject m) throws Exception {
+        JSONObject r = new JSONObject();
+        for (String k : new String[]{"files", "sd"}) { JSONArray a = m.getJSONArray(k); for (int i = 0; i < a.length(); i++) { JSONObject f = a.getJSONObject(i); r.put(k + "/" + f.getString("path"), f.optString("sha256", "")); } }
+        try (FileWriter w = new FileWriter(commonRec())) { w.write(r.toString()); }
+    }
+    JSONObject commonManifest(String base) throws Exception { return new JSONObject(get((commonUrl != null ? commonUrl : base + commonDir() + "/") + "manifest.json")); }
+
+    /** the files of the shared pack that differ from the catalog: [dirKey, entry] pairs. A file with no record is hashed once (the packs installed before this check existed). */
+    List<Object[]> commonStale(JSONObject m) throws Exception {
+        List<Object[]> out = new ArrayList<>();
+        JSONObject rec; try { rec = new JSONObject(read(commonRec())); } catch (Exception e) { rec = new JSONObject(); }
+        boolean changed = false;
+        for (String k : new String[]{"files", "sd"}) {
+            JSONArray a = m.getJSONArray(k);
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject f = a.getJSONObject(i); File lf = new File(k.equals("sd") ? sd : anima, f.getString("path")); String key = k + "/" + f.getString("path"), want = f.optString("sha256", "");
+                if (!lf.exists() || lf.length() != f.getLong("size")) { out.add(new Object[]{k, f}); continue; }
+                if (want.isEmpty()) continue;
+                String have = rec.optString(key, ""); if (have.isEmpty()) { have = sha256(lf); rec.put(key, have); changed = true; }
+                if (!have.equalsIgnoreCase(want)) out.add(new Object[]{k, f});
+            }
+        }
+        if (changed && out.isEmpty()) try (FileWriter w = new FileWriter(commonRec())) { w.write(rec.toString()); }
+        return out;
+    }
+    static long staleBytes(List<Object[]> l) { long n = 0; for (Object[] o : l) n += ((JSONObject) o[1]).optLong("size"); return n; }
+
+    /** download the changed shared files over the old ones (each one is verified before it replaces the old file) */
+    void updateCommon(String base, JSONObject m, Progress pg, AtomicBoolean cancel) throws Exception {
+        List<Object[]> st = commonStale(m); final String cu = commonUrl != null ? commonUrl : base + commonDir() + "/";
+        long total = staleBytes(st), done = 0;
+        List<File[]> swap = new ArrayList<>();
+        for (Object[] o : st) {   // the new files go beside the old ones (name.new, resumable); the old ones are replaced only when every new file is complete and verified
+            JSONObject f = (JSONObject) o[1]; File lf = new File(o[0].equals("sd") ? sd : anima, f.getString("path")), nf = new File(lf.getPath() + ".new"); final long before = done;
+            fetch(cu + f.getString("path"), nf, f.getLong("size"), f.optString("sha256", null), n -> { if (pg != null) pg.on(before + n, total, f.optString("path")); }, cancel);
+            swap.add(new File[]{nf, lf}); done += f.getLong("size");
+        }
+        for (File[] w : swap) if (!w[0].renameTo(w[1])) throw new IOException("rename " + w[1]);   // rename over the old file replaces it in one step
+        JSONObject llm = m.getJSONObject("llm_stub"); File marker = new File(anima, commonDir()), hdr = new File(marker, "llm_hdr.bin"), stub = new File(sd, llm.getString("name"));
+        if (!hdr.exists() || !stub.exists() || stub.length() != llm.getLong("size")) { hdr.delete(); fetch(cu + llm.getString("hdr"), hdr, -1, null, null, cancel); stub(hdr, stub, llm.getLong("size")); }
+        saveCommonRec(m);
     }
 
     void installModel(String base, Item it, Progress pg, AtomicBoolean cancel) throws Exception {
@@ -171,6 +218,9 @@ final class Models {
         if (Moss.is8(it.id)) {   // an add-on to the installed pack: its files only, the default pack's meta and marker stay
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
             fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); return;
+        }
+        if (H3.is(it.id)) {   // MiniMax-H3-Image: raw files (with the licence texts) into files/h3; the marker is set once every file is verified
+            doneMark(dir).delete(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); doneMark(dir).createNewFile(); return;
         }
         doneMark(dir).delete();
         fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel);

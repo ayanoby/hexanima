@@ -425,3 +425,46 @@
 424	＋ Checkpoint Anima personnel (.safetensors, BF16/FP16/FP32)
 425	Nom du modèle
 426	Réinitialiser
+427	Mise à jour des fichiers partagés
+428	L'encodeur de texte et le VAE du catalogue ont changé (%s Go). La mise à jour corrige par ex. le bruit sur la deuxième image avec un long prompt. Les modèles restent inchangés.
+429	Mettre à jour  %s Go
+430	Annulé : vous pouvez reprendre
+431	Fichiers partagés mis à jour
+432	Le nombre d'étapes de débruitage du modèle. Plus d'étapes : plus de détails mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles de base Anima demandent en général 20–30, les modèles Turbo et Lightning 4–8. Un nombre orange signifie que vous avez modifié la valeur recommandée.
+433	À quel point l'image suit strictement le prompt. Plus haut : plus proche de la description mais contraste plus dur et plus d'artefacts ; plus bas : plus libre et plus doux. Les modèles de base fonctionnent bien vers 3–5, les modèles Turbo utilisent 1. Une valeur supérieure à 1 ralentit chaque étape car le modèle calcule deux fois (avec et sans prompt), et seulement alors le prompt négatif est utilisé.
+434	L'algorithme que le modèle utilise pour passer du bruit à l'image. Les samplers donnent un rendu et une vitesse légèrement différents. euler est le choix sûr par défaut, euler_a et les variantes dpm++ ajoutent de la variation, lcm est pour les modèles conçus pour très peu d'étapes.
+435	La répartition des étapes sur les niveaux de bruit. « Par défaut » reprend ce que le sampler utilise normalement. karras et exponential consacrent plus d'étapes aux détails fins, simple et sgm_uniform les répartissent également. En cas de doute, laissez par défaut.
+436	Le nombre qui fixe le bruit aléatoire dont part l'image. Le même seed avec le même prompt et les mêmes réglages donne la même image. −1 en choisit un nouveau au hasard à chaque fois ; saisissez un nombre pour répéter ou affiner un résultat.
+437	Le nombre d'étapes de débruitage du modèle. Plus d'étapes : plus de détails mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles rapides (Turbo, Lightning) demandent environ 4–8 étapes, les modèles normaux 20–30. Un nombre orange signifie que vous avez modifié la valeur recommandée.
+438	À quel point l'image suit strictement le prompt. Plus haut : plus proche de la description mais contraste plus dur et plus d'artefacts ; plus bas : plus libre et plus doux. Les modèles normaux fonctionnent bien vers 3–5, les modèles rapides (Turbo) utilisent 1. Une valeur supérieure à 1 ralentit chaque étape car le modèle calcule deux fois (avec et sans prompt), et seulement alors le prompt négatif est utilisé.
+439	Un LoRA est un petit fichier .safetensors qui change le style d'un modèle ou lui apprend un personnage, un objet ou un rendu. Seuls conviennent les fichiers entraînés pour le même modèle (un LoRA fait pour un autre modèle ne fonctionnera pas). Ajoutez-en autant que nécessaire : chacun a son propre interrupteur et sa force (1.00 est le réglage de l'auteur, plus bas est plus faible, plus haut plus fort). Un LoRA est fusionné au modèle pendant le chargement, donc la première image avec un nouvel ensemble ou une nouvelle force prend un peu plus de temps. L'utilisation d'un LoRA est soumise à la licence de son auteur.
+440	Modèles de prompt
+441	Modèles de prompt négatif
+442	Enregistrer le prompt négatif actuel
+443	Tout effacer
+444	Effacer l'historique des prompts ? Les images de la galerie sont conservées.
+445	Tout archiver
+446	Rien à archiver
+447	Archivage de %d sur %d…
+448	L'archive est enregistrée dans Téléchargements : %d images, %.1f Mo
+449	Nom de l'archive
+450	Enregistrée dans : %s (.zip)
+451	Archiver
+452	L'archive est enregistrée : %d images, %.1f Mo
+453	Téléchargements
+454	Stockage interne
+455	Où enregistrer les archives
+456	Choisir un dossier…
+457	Impossible d'ouvrir l'image : %s
+458	Fond d'écran
+459	Personnalisé
+460	Choisir une image…
+461	Supprimer le fond d'écran
+462	Transparence des blocs
+463	Assombrissement du fond
+464	Pincez pour zoomer, glissez pour déplacer
+465	Position et échelle
+466	Chargé
+467	Déchargé
+468	Le modèle est distribué sous la MiniMax-H3-Image Community License Agreement (le texte de la licence est téléchargé avec les fichiers). Il ne doit pas être utilisé aux États-Unis, dans l'Union européenne, au Royaume-Uni ni en Corée du Sud, et ses résultats ne doivent pas servir à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
+469	Accepter et télécharger

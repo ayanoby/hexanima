@@ -1,5 +1,17 @@
 # Changes
 
+## 1.6.0
+
+- **MiniMax-H3-Image is in the download catalog** (`catalog8.json`, read by apps from 1.6.0; older apps keep `catalog7.json`). The 33B INT8-ConvRot model (6 steps without CFG, or 2 with the pDMD LoRA, sizes 512 to 2048) is a 48 GB pack in the public repository `ayanoby/hexanima-h3` with `manifest.json` (size and sha256 of every file), `LICENSE` and `NOTICE`. The download asks for consent first: MiniMax community licence, not for the US, EU, UK and South Korea, outputs must not be used to improve other AI models. `tools/make_catalog8.py` builds the catalog.
+- **Updating the shared Anima files.** The catalog screen compares the shared files (text encoder, VAE, embeddings) with the catalog's manifest (sha256, kept in `common.json`; files installed before are hashed once) and shows an "Update" card with the size when something differs: it fixes installs that still have the 128 token text encoder (noise on the second picture with a long prompt, issue #3). The new files download beside the old ones (`name.new`, resumable) and replace them only when all are complete and verified, so an interrupted update loses nothing. A running Anima server restarts to pick them up.
+- **Own wallpaper** (Settings): pick a picture, then place it (pinch to zoom, drag to move; "Position and scale" later), set the block transparency and the dimming; both sliders preview live. Every screen shows the wallpaper behind see-through blocks.
+- **History: Pack all** puts every picture of the open tab (and model filter) into one ZIP (it opens everywhere; PNG is already compressed, so it costs almost nothing); the name is asked each time, the folder is chosen in Settings ("Where to save archives": Downloads or any folder), the archive can be shared at once; stopping removes the half-written file.
+- **Prompt templates:** the history of recent prompts has no limit and "Clear all" (pictures stay); a star next to a recent prompt saves it (a filled star = saved); the negative prompt has its own templates; the buttons are bookmark icons.
+- **Prompts are cleaned:** line breaks, tabs, no-break and zero-width spaces become one space and runs of spaces collapse, right in the field (a pasted prompt used to break at invisible line breaks and the rest never reached the encoder).
+- **Main screen:** the picture area follows the shape of the chosen size; the token counters sit in the title row ("212 / 512"); pictures per run is one icon beside Generate (a tap opens − / + and a typed number); the model card says just "Unloaded" / "Loaded"; the "Settings" caption is gone; a faint "i" next to Steps, CFG, Sampler, Scheduler, Seed and LoRA opens a plain explanation (the same for every model); the CFG row is dimmed with a turbo model or LoRA (it still works, but turbo is made for CFG 1).
+- **Info:** "About" is the first card.
+- Translations: every new string in the 11 other languages.
+
 ## 1.5.6
 
 - **Main screen layout:** the picture area is square and keeps its size whatever the resolution; the size row sits right under it (width ⇄ height, always editable, and a "Presets" button with the list of ready sizes, each group sorted from the smallest to the largest); the ratio segments and the "Size" caption are gone; the prompt field grows down with its text; the gaps between the blocks are smaller.

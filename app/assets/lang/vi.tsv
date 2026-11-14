@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Checkpoint Anima của bạn (.safetensors, BF16/FP16/FP32)
 Model name	Tên mô hình
 Reset	Đặt lại
+Update for the shared files	Cập nhật tệp dùng chung
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	Bộ mã hóa văn bản và VAE trong danh mục đã thay đổi (%s GB). Bản cập nhật sửa lỗi như nhiễu ở ảnh thứ hai với prompt dài. Các mô hình giữ nguyên.
+Update  %s GB	Cập nhật  %s GB
+Cancelled: you can resume	Đã hủy: có thể tiếp tục
+Shared files updated	Đã cập nhật tệp dùng chung
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số được khuyến nghị cho mô hình: mô hình gốc Anima thường cần 20–30, Turbo và Lightning 4–8. Số màu cam nghĩa là bạn đã đổi giá trị khuyến nghị.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Ảnh bám sát prompt đến mức nào. Cao hơn: gần mô tả hơn nhưng tương phản gắt và nhiều lỗi hơn; thấp hơn: tự do và mềm hơn. Mô hình gốc chạy tốt ở khoảng 3–5, mô hình Turbo dùng 1. Giá trị trên 1 làm mỗi bước chậm hơn vì mô hình tính hai lần (có và không có prompt), và chỉ khi đó prompt phủ định mới được dùng.
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	Thuật toán mô hình dùng để đi từ nhiễu đến ảnh. Các sampler khác nhau cho vẻ ngoài và tốc độ hơi khác nhau. euler là mặc định an toàn, euler_a và các biến thể dpm++ thêm sự đa dạng, lcm dành cho mô hình làm cho rất ít bước.
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	Cách các bước được phân bổ theo mức nhiễu. “Mặc định” dùng thứ sampler thường dùng. karras và exponential dành nhiều bước hơn cho chi tiết nhỏ, simple và sgm_uniform phân bổ đều. Nếu không chắc, hãy để mặc định.
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	Con số cố định nhiễu ngẫu nhiên mà ảnh bắt đầu từ đó. Cùng seed, cùng prompt và cài đặt cho ra cùng một ảnh. −1 chọn một giá trị ngẫu nhiên mới mỗi lần; nhập một số để lặp lại hoặc tinh chỉnh kết quả.
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số được khuyến nghị cho mô hình: mô hình nhanh (Turbo, Lightning) cần khoảng 4–8 bước, mô hình thường 20–30. Số màu cam nghĩa là bạn đã đổi giá trị khuyến nghị.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Ảnh bám sát prompt đến mức nào. Cao hơn: gần mô tả hơn nhưng tương phản gắt và nhiều lỗi hơn; thấp hơn: tự do và mềm hơn. Mô hình thường chạy tốt ở khoảng 3–5, mô hình nhanh (Turbo) dùng 1. Giá trị trên 1 làm mỗi bước chậm hơn vì mô hình tính hai lần (có và không có prompt), và chỉ khi đó prompt phủ định mới được dùng.
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA là một tệp .safetensors nhỏ thay đổi phong cách của mô hình hoặc dạy nó một nhân vật, vật thể hay diện mạo. Chỉ các tệp được huấn luyện cho cùng mô hình mới phù hợp (LoRA làm cho mô hình khác sẽ không hoạt động). Thêm bao nhiêu tùy ý: mỗi tệp có công tắc và độ mạnh riêng (1.00 là cài đặt của tác giả, thấp hơn là yếu hơn, cao hơn là mạnh hơn). LoRA được hợp nhất vào mô hình khi tải, nên ảnh đầu tiên với bộ hoặc độ mạnh mới sẽ lâu hơn một chút. Việc dùng LoRA tuân theo giấy phép của tác giả.
+Prompt templates	Mẫu prompt
+Negative prompt templates	Mẫu prompt phủ định
+Save the current negative prompt	Lưu prompt phủ định hiện tại
+Clear all	Xóa tất cả
+Clear the prompt history? Pictures in the gallery stay.	Xóa lịch sử prompt? Ảnh trong thư viện vẫn được giữ.
+Pack all	Nén tất cả
+Nothing to pack	Không có gì để nén
+Packing %d of %d…	Đang nén %d / %d…
+The archive is saved in Downloads: %d pictures, %.1f MB	Đã lưu tệp nén vào Tải xuống: %d ảnh, %.1f MB
+Archive name	Tên tệp nén
+Saved to: %s (.zip)	Sẽ lưu vào: %s (.zip)
+Pack	Nén
+The archive is saved: %d pictures, %.1f MB	Đã lưu tệp nén: %d ảnh, %.1f MB
+Downloads	Tải xuống
+Internal storage	Bộ nhớ trong
+Where to save archives	Nơi lưu tệp nén
+Choose a folder…	Chọn thư mục…
+Could not open the picture: %s	Không mở được ảnh: %s
+Wallpaper	Hình nền
+Own	Riêng
+Choose a picture…	Chọn ảnh…
+Remove the wallpaper	Xóa hình nền
+Block transparency	Độ trong suốt của khối
+Wallpaper dimming	Làm tối hình nền
+Pinch to zoom, drag to move	Chụm để phóng to, kéo để di chuyển
+Position and scale	Vị trí và tỷ lệ
+Loaded	Đã tải
+Unloaded	Chưa tải
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Mô hình được phân phối theo MiniMax-H3-Image Community License Agreement (văn bản giấy phép được tải cùng các tệp). Không được dùng tại Hoa Kỳ, Liên minh châu Âu, Vương quốc Anh và Hàn Quốc, và kết quả không được dùng để cải thiện các mô hình AI khác. Dung lượng: %s GB. Tải xuống?
+Accept and download	Chấp nhận và tải xuống

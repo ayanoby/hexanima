@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ अपना Anima चेकपॉइंट (.safetensors, BF16/FP16/FP32)
 Model name	मॉडल का नाम
 Reset	रीसेट करें
+Update for the shared files	साझा फ़ाइलों का अपडेट
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	कैटलॉग में टेक्स्ट एन्कोडर और VAE बदल गए हैं (%s GB)। अपडेट से, जैसे, लंबे प्रॉम्प्ट वाली दूसरी तस्वीर में आने वाला शोर ठीक होता है। मॉडल जस के तस रहते हैं।
+Update  %s GB	अपडेट करें  %s GB
+Cancelled: you can resume	रद्द: आप फिर शुरू कर सकते हैं
+Shared files updated	साझा फ़ाइलें अपडेट हो गईं
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	मॉडल कितने डीनॉइज़िंग चरण करता है। ज़्यादा चरण: बारीक डिटेल, पर तस्वीर धीमी बनती है, और वह भी एक सीमा तक। मॉडल के लिए सुझाई गई संख्या रखें: Anima बेस मॉडल को आमतौर पर 20–30, Turbo और Lightning को 4–8 चाहिए। नारंगी संख्या का मतलब है कि आपने सुझाया गया मान बदला है।
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	तस्वीर प्रॉम्प्ट का कितना सख़्ती से पालन करती है। ज़्यादा: विवरण के करीब, पर कंट्रास्ट कड़ा और आर्टिफ़ैक्ट ज़्यादा; कम: ज़्यादा खुली और मुलायम। बेस मॉडल लगभग 3–5 पर अच्छा चलते हैं, Turbo मॉडल 1 इस्तेमाल करते हैं। 1 से ऊपर का मान हर चरण को धीमा करता है, क्योंकि मॉडल दो बार गणना करता है (प्रॉम्प्ट के साथ और बिना), और तभी नेगेटिव प्रॉम्प्ट काम करता है।
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	वह एल्गोरिद्म जिससे मॉडल शोर से तस्वीर तक पहुँचता है। अलग सैम्प्लर थोड़ा अलग रूप और गति देते हैं। euler सुरक्षित डिफ़ॉल्ट है, euler_a और dpm++ रूप ज़्यादा विविधता लाते हैं, lcm बहुत कम चरणों वाले मॉडल के लिए है।
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	चरण शोर के स्तरों पर कैसे बँटे हैं। “डिफ़ॉल्ट” वही लेता है जो सैम्प्लर आमतौर पर लेता है। karras और exponential बारीक डिटेल पर ज़्यादा चरण लगाते हैं, simple और sgm_uniform बराबर बाँटते हैं। पक्का न हो तो डिफ़ॉल्ट रहने दें।
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	वह संख्या जो उस यादृच्छिक शोर को तय करती है जिससे तस्वीर शुरू होती है। वही सीड, वही प्रॉम्प्ट और सेटिंग हों तो वही तस्वीर बनती है। −1 हर बार नया यादृच्छिक चुनता है; नतीजा दोहराने या सुधारने के लिए संख्या डालें।
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	मॉडल कितने डीनॉइज़िंग चरण करता है। ज़्यादा चरण: बारीक डिटेल, पर तस्वीर धीमी बनती है, और वह भी एक सीमा तक। मॉडल के लिए सुझाई गई संख्या रखें: तेज़ मॉडल (Turbo, Lightning) को लगभग 4–8 चरण चाहिए, सामान्य को 20–30। नारंगी संख्या का मतलब है कि आपने सुझाया गया मान बदला है।
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	तस्वीर प्रॉम्प्ट का कितना सख़्ती से पालन करती है। ज़्यादा: विवरण के करीब, पर कंट्रास्ट कड़ा और आर्टिफ़ैक्ट ज़्यादा; कम: ज़्यादा खुली और मुलायम। सामान्य मॉडल लगभग 3–5 पर अच्छा चलते हैं, तेज़ (Turbo) मॉडल 1 इस्तेमाल करते हैं। 1 से ऊपर का मान हर चरण को धीमा करता है, क्योंकि मॉडल दो बार गणना करता है (प्रॉम्प्ट के साथ और बिना), और तभी नेगेटिव प्रॉम्प्ट काम करता है।
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA एक छोटी .safetensors फ़ाइल है जो मॉडल की शैली बदलती है या उसे कोई किरदार, वस्तु या लुक सिखाती है। सिर्फ़ उसी मॉडल के लिए प्रशिक्षित फ़ाइलें चलती हैं (दूसरे मॉडल की LoRA काम नहीं करेगी)। जितनी चाहें जोड़ें: हर एक का अपना स्विच और ताकत है (1.00 लेखक की सेटिंग है, कम मतलब कमज़ोर, ज़्यादा मतलब मज़बूत)। LoRA मॉडल लोड होते समय उसमें मिला दी जाती है, इसलिए नए सेट या नई ताकत के साथ पहली तस्वीर थोड़ी देर से बनती है। LoRA का उपयोग उसके लेखक के लाइसेंस के अधीन है।
+Prompt templates	प्रॉम्प्ट टेम्पलेट
+Negative prompt templates	नेगेटिव प्रॉम्प्ट टेम्पलेट
+Save the current negative prompt	मौजूदा नेगेटिव प्रॉम्प्ट सहेजें
+Clear all	सब साफ़ करें
+Clear the prompt history? Pictures in the gallery stay.	प्रॉम्प्ट इतिहास साफ़ करें? गैलरी की तस्वीरें बनी रहेंगी।
+Pack all	सब पैक करें
+Nothing to pack	पैक करने को कुछ नहीं
+Packing %d of %d…	%d में से %d पैक हो रहा है…
+The archive is saved in Downloads: %d pictures, %.1f MB	आर्काइव डाउनलोड में सहेजा गया: %d तस्वीरें, %.1f MB
+Archive name	आर्काइव का नाम
+Saved to: %s (.zip)	यहाँ सहेजा जाएगा: %s (.zip)
+Pack	पैक करें
+The archive is saved: %d pictures, %.1f MB	आर्काइव सहेजा गया: %d तस्वीरें, %.1f MB
+Downloads	डाउनलोड
+Internal storage	इंटरनल स्टोरेज
+Where to save archives	आर्काइव कहाँ सहेजें
+Choose a folder…	फ़ोल्डर चुनें…
+Could not open the picture: %s	तस्वीर नहीं खुल सकी: %s
+Wallpaper	वॉलपेपर
+Own	अपना
+Choose a picture…	तस्वीर चुनें…
+Remove the wallpaper	वॉलपेपर हटाएँ
+Block transparency	ब्लॉक की पारदर्शिता
+Wallpaper dimming	वॉलपेपर का धुंधलापन
+Pinch to zoom, drag to move	ज़ूम के लिए दो उँगलियाँ, हिलाने के लिए एक उँगली
+Position and scale	स्थिति और स्केल
+Loaded	लोड है
+Unloaded	अनलोड है
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	यह मॉडल MiniMax-H3-Image Community License Agreement के तहत वितरित है (लाइसेंस का पाठ फ़ाइलों के साथ डाउनलोड होता है)। इसे अमेरिका, यूरोपीय संघ, यूनाइटेड किंगडम और दक्षिण कोरिया में इस्तेमाल नहीं किया जा सकता, और इसके नतीजों का उपयोग अन्य AI मॉडल सुधारने के लिए नहीं किया जा सकता। आकार: %s GB। डाउनलोड करें?
+Accept and download	स्वीकार करें और डाउनलोड करें

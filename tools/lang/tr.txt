@@ -425,3 +425,46 @@
 424	＋ Kendi Anima checkpoint'iniz (.safetensors, BF16/FP16/FP32)
 425	Model adı
 426	Sıfırla
+427	Ortak dosyalar için güncelleme
+428	Katalogdaki metin kodlayıcı ve VAE değişti (%s GB). Güncelleme, örneğin uzun istemle ikinci görüntüde oluşan gürültüyü giderir. Modeller olduğu gibi kalır.
+429	Güncelle  %s GB
+430	İptal edildi: devam edebilirsiniz
+431	Ortak dosyalar güncellendi
+432	Modelin kaç gürültü giderme adımı attığı. Daha fazla adım: daha ince detay ama daha yavaş görüntü, bunun da bir sınırı var. Model için önerilen sayıyı kullanın: Anima temel modelleri genelde 20–30, Turbo ve Lightning modelleri 4–8 ister. Turuncu bir sayı, önerilen değeri değiştirdiğiniz anlamına gelir.
+433	Görüntünün isteme ne kadar sıkı uyduğu. Yüksek: açıklamaya daha yakın ama kontrast sertleşir ve artefaktlar artar; düşük: daha serbest ve yumuşak. Temel modeller yaklaşık 3–5'te iyi çalışır, Turbo modeller 1 kullanır. 1'in üzerindeki değer her adımı yavaşlatır, çünkü model iki kez hesaplar (istemli ve istemsiz), negatif istem de ancak o zaman kullanılır.
+434	Modelin gürültüden görüntüye giderken kullandığı algoritma. Farklı örnekleyiciler biraz farklı görünüm ve hız verir. euler güvenli varsayılandır, euler_a ve dpm++ varyantları daha fazla çeşitlilik katar, lcm çok az adım için yapılmış modellere göredir.
+435	Adımların gürültü seviyelerine nasıl dağıtıldığı. “Varsayılan”, örnekleyicinin normalde kullandığını alır. karras ve exponential ince detaylara daha çok adım harcar, simple ve sgm_uniform eşit dağıtır. Emin değilseniz varsayılanda bırakın.
+436	Görüntünün başladığı rastgele gürültüyü sabitleyen sayı. Aynı seed, aynı istem ve ayarlar aynı görüntüyü verir. −1 her seferinde yeni bir rastgele değer seçer; bir sonucu tekrarlamak veya ince ayar yapmak için sayı girin.
+437	Modelin kaç gürültü giderme adımı attığı. Daha fazla adım: daha ince detay ama daha yavaş görüntü, bunun da bir sınırı var. Model için önerilen sayıyı kullanın: hızlı modeller (Turbo, Lightning) yaklaşık 4–8 adım, normal modeller 20–30 adım ister. Turuncu bir sayı, önerilen değeri değiştirdiğiniz anlamına gelir.
+438	Görüntünün isteme ne kadar sıkı uyduğu. Yüksek: açıklamaya daha yakın ama kontrast sertleşir ve artefaktlar artar; düşük: daha serbest ve yumuşak. Normal modeller yaklaşık 3–5'te iyi çalışır, hızlı (Turbo) modeller 1 kullanır. 1'in üzerindeki değer her adımı yavaşlatır, çünkü model iki kez hesaplar (istemli ve istemsiz), negatif istem de ancak o zaman kullanılır.
+439	LoRA, bir modelin stilini değiştiren veya ona bir karakter, nesne ya da görünüm öğreten küçük bir .safetensors dosyasıdır. Yalnızca aynı model için eğitilmiş dosyalar uyar (başka bir model için yapılmış LoRA çalışmaz). İhtiyacınız kadar ekleyin: her birinin kendi anahtarı ve gücü vardır (1.00 yazarın ayarıdır, düşük daha zayıf, yüksek daha güçlüdür). LoRA model yüklenirken ona katılır, bu yüzden yeni bir set veya güçle ilk görüntü biraz daha uzun sürer. LoRA kullanımı yazarının lisansına tabidir.
+440	İstem şablonları
+441	Negatif istem şablonları
+442	Geçerli negatif istemi kaydet
+443	Tümünü temizle
+444	İstem geçmişi temizlensin mi? Galerideki görüntüler kalır.
+445	Tümünü paketle
+446	Paketlenecek bir şey yok
+447	%d / %d paketleniyor…
+448	Arşiv İndirilenler'e kaydedildi: %d görüntü, %.1f MB
+449	Arşiv adı
+450	Kaydedilecek yer: %s (.zip)
+451	Paketle
+452	Arşiv kaydedildi: %d görüntü, %.1f MB
+453	İndirilenler
+454	Dahili depolama
+455	Arşivlerin kaydedileceği yer
+456	Klasör seç…
+457	Resim açılamadı: %s
+458	Duvar kâğıdı
+459	Kendi
+460	Resim seç…
+461	Duvar kâğıdını kaldır
+462	Blok şeffaflığı
+463	Duvar kâğıdı karartma
+464	Yakınlaştırmak için iki parmak, taşımak için bir parmak
+465	Konum ve ölçek
+466	Yüklü
+467	Yüklü değil
+468	Model, MiniMax-H3-Image Community License Agreement kapsamında dağıtılır (lisans metni dosyalarla birlikte indirilir). ABD, Avrupa Birliği, Birleşik Krallık ve Güney Kore'de kullanılamaz ve çıktıları başka yapay zekâ modellerini geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
+469	Kabul et ve indir

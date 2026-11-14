@@ -425,3 +425,46 @@
 424	＋ Checkpoint Anima sendiri (.safetensors, BF16/FP16/FP32)
 425	Nama model
 426	Atur ulang
+427	Pembaruan file bersama
+428	Text encoder dan VAE di katalog berubah (%s GB). Pembaruan ini memperbaiki, misalnya, noise pada gambar kedua dengan prompt panjang. Model tidak berubah.
+429	Perbarui  %s GB
+430	Dibatalkan: bisa dilanjutkan
+431	File bersama diperbarui
+432	Berapa langkah penghilangan noise yang dilakukan model. Lebih banyak langkah: detail lebih halus tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan angka yang direkomendasikan untuk model: model dasar Anima biasanya butuh 20–30, model Turbo dan Lightning 4–8. Angka oranye berarti Anda mengubah nilai yang direkomendasikan.
+433	Seberapa ketat gambar mengikuti prompt. Lebih tinggi: lebih dekat ke deskripsi tetapi kontras lebih keras dan lebih banyak artefak; lebih rendah: lebih bebas dan lembut. Model dasar bekerja baik di sekitar 3–5, model Turbo memakai 1. Nilai di atas 1 memperlambat setiap langkah karena model menghitung dua kali (dengan dan tanpa prompt), dan hanya saat itu prompt negatif dipakai.
+434	Algoritma yang dipakai model untuk bergerak dari noise ke gambar. Sampler berbeda memberi tampilan dan kecepatan yang sedikit berbeda. euler adalah default yang aman, euler_a dan varian dpm++ menambah variasi, lcm untuk model yang dibuat dengan sangat sedikit langkah.
+435	Bagaimana langkah disebar pada tingkat noise. “Default” memakai apa yang biasanya dipakai sampler. karras dan exponential memberi lebih banyak langkah untuk detail halus, simple dan sgm_uniform menyebar merata. Jika ragu, biarkan default.
+436	Angka yang menentukan noise acak tempat gambar dimulai. Seed yang sama dengan prompt dan pengaturan yang sama menghasilkan gambar yang sama. −1 memilih yang acak baru setiap kali; ketik angka untuk mengulang atau menyempurnakan hasil.
+437	Berapa langkah penghilangan noise yang dilakukan model. Lebih banyak langkah: detail lebih halus tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan angka yang direkomendasikan untuk model: model cepat (Turbo, Lightning) butuh sekitar 4–8 langkah, model biasa 20–30. Angka oranye berarti Anda mengubah nilai yang direkomendasikan.
+438	Seberapa ketat gambar mengikuti prompt. Lebih tinggi: lebih dekat ke deskripsi tetapi kontras lebih keras dan lebih banyak artefak; lebih rendah: lebih bebas dan lembut. Model biasa bekerja baik di sekitar 3–5, model cepat (Turbo) memakai 1. Nilai di atas 1 memperlambat setiap langkah karena model menghitung dua kali (dengan dan tanpa prompt), dan hanya saat itu prompt negatif dipakai.
+439	LoRA adalah file .safetensors kecil yang mengubah gaya model atau mengajarinya karakter, objek, atau tampilan. Hanya file yang dilatih untuk model yang sama yang cocok (LoRA untuk model lain tidak akan berfungsi). Tambahkan sebanyak yang Anda perlukan: masing-masing punya sakelar dan kekuatan sendiri (1.00 adalah pengaturan pembuatnya, lebih rendah lebih lemah, lebih tinggi lebih kuat). LoRA digabungkan ke model saat dimuat, jadi gambar pertama dengan set atau kekuatan baru butuh waktu sedikit lebih lama. Penggunaan LoRA tunduk pada lisensi pembuatnya.
+440	Templat prompt
+441	Templat prompt negatif
+442	Simpan prompt negatif saat ini
+443	Hapus semua
+444	Hapus riwayat prompt? Gambar di galeri tetap ada.
+445	Kemas semua
+446	Tidak ada yang dikemas
+447	Mengemas %d dari %d…
+448	Arsip disimpan di Unduhan: %d gambar, %.1f MB
+449	Nama arsip
+450	Disimpan di: %s (.zip)
+451	Kemas
+452	Arsip disimpan: %d gambar, %.1f MB
+453	Unduhan
+454	Penyimpanan internal
+455	Tempat menyimpan arsip
+456	Pilih folder…
+457	Tidak bisa membuka gambar: %s
+458	Wallpaper
+459	Sendiri
+460	Pilih gambar…
+461	Hapus wallpaper
+462	Transparansi blok
+463	Peredupan wallpaper
+464	Cubit untuk memperbesar, geser untuk memindahkan
+465	Posisi dan skala
+466	Dimuat
+467	Tidak dimuat
+468	Model ini didistribusikan di bawah MiniMax-H3-Image Community License Agreement (teks lisensi diunduh bersama file). Tidak boleh digunakan di Amerika Serikat, Uni Eropa, Inggris, atau Korea Selatan, dan hasilnya tidak boleh dipakai untuk meningkatkan model AI lain. Ukuran: %s GB. Unduh?
+469	Terima dan unduh

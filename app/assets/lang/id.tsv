@@ -425,3 +425,46 @@ MP	MP
 ＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)	＋ Checkpoint Anima sendiri (.safetensors, BF16/FP16/FP32)
 Model name	Nama model
 Reset	Atur ulang
+Update for the shared files	Pembaruan file bersama
+The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.	Text encoder dan VAE di katalog berubah (%s GB). Pembaruan ini memperbaiki, misalnya, noise pada gambar kedua dengan prompt panjang. Model tidak berubah.
+Update  %s GB	Perbarui  %s GB
+Cancelled: you can resume	Dibatalkan: bisa dilanjutkan
+Shared files updated	File bersama diperbarui
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: base Anima usually wants 20–30, Turbo and Lightning models 4–8. An orange number means you changed the recommended value.	Berapa langkah penghilangan noise yang dilakukan model. Lebih banyak langkah: detail lebih halus tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan angka yang direkomendasikan untuk model: model dasar Anima biasanya butuh 20–30, model Turbo dan Lightning 4–8. Angka oranye berarti Anda mengubah nilai yang direkomendasikan.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Base models work well at about 3–5, Turbo models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Seberapa ketat gambar mengikuti prompt. Lebih tinggi: lebih dekat ke deskripsi tetapi kontras lebih keras dan lebih banyak artefak; lebih rendah: lebih bebas dan lembut. Model dasar bekerja baik di sekitar 3–5, model Turbo memakai 1. Nilai di atas 1 memperlambat setiap langkah karena model menghitung dua kali (dengan dan tanpa prompt), dan hanya saat itu prompt negatif dipakai.
+The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps.	Algoritma yang dipakai model untuk bergerak dari noise ke gambar. Sampler berbeda memberi tampilan dan kecepatan yang sedikit berbeda. euler adalah default yang aman, euler_a dan varian dpm++ menambah variasi, lcm untuk model yang dibuat dengan sangat sedikit langkah.
+How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default.	Bagaimana langkah disebar pada tingkat noise. “Default” memakai apa yang biasanya dipakai sampler. karras dan exponential memberi lebih banyak langkah untuk detail halus, simple dan sgm_uniform menyebar merata. Jika ragu, biarkan default.
+The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.	Angka yang menentukan noise acak tempat gambar dimulai. Seed yang sama dengan prompt dan pengaturan yang sama menghasilkan gambar yang sama. −1 memilih yang acak baru setiap kali; ketik angka untuk mengulang atau menyempurnakan hasil.
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value.	Berapa langkah penghilangan noise yang dilakukan model. Lebih banyak langkah: detail lebih halus tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan angka yang direkomendasikan untuk model: model cepat (Turbo, Lightning) butuh sekitar 4–8 langkah, model biasa 20–30. Angka oranye berarti Anda mengubah nilai yang direkomendasikan.
+How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.	Seberapa ketat gambar mengikuti prompt. Lebih tinggi: lebih dekat ke deskripsi tetapi kontras lebih keras dan lebih banyak artefak; lebih rendah: lebih bebas dan lembut. Model biasa bekerja baik di sekitar 3–5, model cepat (Turbo) memakai 1. Nilai di atas 1 memperlambat setiap langkah karena model menghitung dua kali (dengan dan tanpa prompt), dan hanya saat itu prompt negatif dipakai.
+A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license.	LoRA adalah file .safetensors kecil yang mengubah gaya model atau mengajarinya karakter, objek, atau tampilan. Hanya file yang dilatih untuk model yang sama yang cocok (LoRA untuk model lain tidak akan berfungsi). Tambahkan sebanyak yang Anda perlukan: masing-masing punya sakelar dan kekuatan sendiri (1.00 adalah pengaturan pembuatnya, lebih rendah lebih lemah, lebih tinggi lebih kuat). LoRA digabungkan ke model saat dimuat, jadi gambar pertama dengan set atau kekuatan baru butuh waktu sedikit lebih lama. Penggunaan LoRA tunduk pada lisensi pembuatnya.
+Prompt templates	Templat prompt
+Negative prompt templates	Templat prompt negatif
+Save the current negative prompt	Simpan prompt negatif saat ini
+Clear all	Hapus semua
+Clear the prompt history? Pictures in the gallery stay.	Hapus riwayat prompt? Gambar di galeri tetap ada.
+Pack all	Kemas semua
+Nothing to pack	Tidak ada yang dikemas
+Packing %d of %d…	Mengemas %d dari %d…
+The archive is saved in Downloads: %d pictures, %.1f MB	Arsip disimpan di Unduhan: %d gambar, %.1f MB
+Archive name	Nama arsip
+Saved to: %s (.zip)	Disimpan di: %s (.zip)
+Pack	Kemas
+The archive is saved: %d pictures, %.1f MB	Arsip disimpan: %d gambar, %.1f MB
+Downloads	Unduhan
+Internal storage	Penyimpanan internal
+Where to save archives	Tempat menyimpan arsip
+Choose a folder…	Pilih folder…
+Could not open the picture: %s	Tidak bisa membuka gambar: %s
+Wallpaper	Wallpaper
+Own	Sendiri
+Choose a picture…	Pilih gambar…
+Remove the wallpaper	Hapus wallpaper
+Block transparency	Transparansi blok
+Wallpaper dimming	Peredupan wallpaper
+Pinch to zoom, drag to move	Cubit untuk memperbesar, geser untuk memindahkan
+Position and scale	Posisi dan skala
+Loaded	Dimuat
+Unloaded	Tidak dimuat
+The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Model ini didistribusikan di bawah MiniMax-H3-Image Community License Agreement (teks lisensi diunduh bersama file). Tidak boleh digunakan di Amerika Serikat, Uni Eropa, Inggris, atau Korea Selatan, dan hasilnya tidak boleh dipakai untuk meningkatkan model AI lain. Ukuran: %s GB. Unduh?
+Accept and download	Terima dan unduh

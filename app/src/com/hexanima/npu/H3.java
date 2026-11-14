@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /** MiniMax-H3-Image (33B DiT + 25B text encoder, INT8-ConvRot, 6 steps, no CFG) on the NPU: files under files/h3 (model/ te/ vae/ tok_*.txt), one picture per h3.sh call.
- *  Not in the catalog (MiniMax community licence: not for the US, EU, UK and Korea, needs the licence text with every copy): the pack is put into files/h3 by hand. */
+ *  In the catalog from 1.6.0 (pack in the public repo ayanoby/hexanima-h3; MiniMax community licence: not for the US, EU, UK and Korea, the licence text is part of the pack and the app asks for consent before the download). */
 final class H3 {
     static final String ID = "minimax-h3-image";
     static boolean is(String id) { return id != null && id.startsWith("minimax-h3"); }

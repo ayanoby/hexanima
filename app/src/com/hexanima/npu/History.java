@@ -42,7 +42,9 @@ public class History extends Base {
         cell = (getResources().getDisplayMetrics().widthPixels - dp(40)) / 3;   // the screen padding is 20 dp on each side
         selBtn = button(L.s("Выбрать", "Select"), CARD, TXT); selBtn.setTextSize(13);
         selBtn.setOnClickListener(v -> setSelecting(!selecting));
-        LinearLayout col = screen(L.s("История", "History"), selBtn);
+        Button packBtn = button(L.s("Упаковать все", "Pack all"), CARD, TXT); packBtn.setTextSize(13); packBtn.setOnClickListener(v -> packAll());
+        LinearLayout hb = new LinearLayout(this); hb.addView(packBtn, new LinearLayout.LayoutParams(-2, -1)); LinearLayout.LayoutParams sbl = new LinearLayout.LayoutParams(-2, -1); sbl.leftMargin = dp(8); hb.addView(selBtn, sbl);
+        LinearLayout col = screen(L.s("История", "History"), hb);
         tabs = new LinearLayout(this); tabs.setPadding(0, 0, 0, dp(6));
         col.addView(tabs);
         chips = new LinearLayout(this); chips.setPadding(0, 0, 0, dp(8));
@@ -105,6 +107,37 @@ public class History extends Base {
         Button b = button(s, FIELD, TXT); b.setTextSize(13); b.setOnClickListener(v -> r.run());
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), w); lp.rightMargin = dp(6);
         barBtns.addView(b, lp);
+    }
+
+    /** all pictures of the open tab (and model filter) into one ZIP in Downloads, with progress and a Stop button; afterwards the file can be shared */
+    void packAll() {
+        final File[] src = cur == null ? new File[0] : cur;
+        if (mode == Gallery.TRASH || src.length == 0) { Toast.makeText(this, L.s("Нечего упаковывать", "Nothing to pack"), Toast.LENGTH_SHORT).show(); return; }
+        final EditText nameE = new EditText(this); nameE.setSingleLine(true); nameE.setText(Gallery.zipName()); nameE.setSelectAllOnFocus(true); nameE.setTextColor(TXT);
+        final LinearLayout nb = new LinearLayout(this); nb.setPadding(dp(20), dp(8), dp(20), 0); nb.addView(nameE, new LinearLayout.LayoutParams(-1, -2));
+        builder().setTitle(L.s("Название архива", "Archive name")).setMessage(L.f("Сохранится: %s (.zip)", "Saved to: %s (.zip)", Settings.archiveDirLabel(this))).setView(nb).setNegativeButton(L.s("Отмена", "Cancel"), null)
+            .setPositiveButton(L.s("Упаковать", "Pack"), (d0, w0) -> runPack(src, nameE.getText().toString())).show();
+    }
+
+    void runPack(final File[] src, final String name) {
+        final boolean[] stop = {false};
+        final AlertDialog dlg = builder().setMessage(L.f("Упаковываю %d из %d…", "Packing %d of %d…", 0, src.length)).setNegativeButton(L.s("Отмена", "Cancel"), (d, w) -> stop[0] = true).setCancelable(false).show();
+        final android.net.Uri tree = Settings.archiveDir(this);
+        io.submit(() -> {
+            String err = null; android.net.Uri out = null;
+            try { out = Gallery.packZip(this, src, name, tree, (i, n) -> { ui.post(() -> dlg.setMessage(L.f("Упаковываю %d из %d…", "Packing %d of %d…", i + 1, n))); return !stop[0]; }); }
+            catch (Exception e) { err = String.valueOf(e.getMessage()); }
+            final android.net.Uri u = out; final String er = err;
+            ui.post(() -> {
+                dlg.dismiss();
+                if (er != null) { Toast.makeText(this, L.f("Ошибка: %s", "Error: %s", er), Toast.LENGTH_LONG).show(); return; }
+                if (u == null) return;
+                long sz = 0; try (android.content.res.AssetFileDescriptor fd = getContentResolver().openAssetFileDescriptor(u, "r")) { sz = fd.getLength(); } catch (Exception ignored) { }
+                builder().setMessage(L.f("Архив сохранён: %d картинок, %.1f МБ", "The archive is saved: %d pictures, %.1f MB", src.length, sz / 1e6))
+                    .setPositiveButton(L.s("Поделиться", "Share"), (d, w) -> startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("application/zip").putExtra(Intent.EXTRA_STREAM, u).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), L.s("Поделиться", "Share"))))
+                    .setNegativeButton("OK", null).show();
+            });
+        });
     }
 
     void confirm(String msg, Runnable ok) { builder().setMessage(msg).setPositiveButton(L.s("Да", "Yes"), (x, y) -> ok.run()).setNegativeButton(L.s("Отмена", "Cancel"), null).show(); }

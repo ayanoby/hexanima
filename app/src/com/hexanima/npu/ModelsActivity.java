@@ -10,6 +10,7 @@ import android.widget.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONObject;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +31,7 @@ public class ModelsActivity extends Base {
     TextView info;
     EditText url;
     List<Models.Item> items = new ArrayList<>();
+    org.json.JSONObject staleM; long staleN;   // the shared Anima files that differ from the catalog (null: up to date or not checked)
     final java.util.Map<String, ProgressBar> bars = new java.util.HashMap<>();
     final java.util.Map<String, TextView> msgs = new java.util.HashMap<>();
     boolean wasDownloading;
@@ -97,7 +99,8 @@ public class ModelsActivity extends Base {
         final String base = url.getText().toString().trim().replaceAll("/*$", "") + "/";
         getSharedPreferences("anima", 0).edit().putString("base", base).apply();
         io.submit(() -> {
-            try { final List<Models.Item> cat = store.catalog(base); for (Models.Item it : cat) store.refreshMeta(it); ui.post(() -> { items = cat; render(); }); }
+            try { final List<Models.Item> cat = store.catalog(base); for (Models.Item it : cat) store.refreshMeta(it); ui.post(() -> { items = cat; render(); });
+                if (store.commonInstalled() && !downloading) try { JSONObject m = store.commonManifest(base); List<Object[]> st = store.commonStale(m); ui.post(() -> { staleM = st.isEmpty() ? null : m; staleN = Models.staleBytes(st); render(); }); } catch (Exception ignored) { } }
             catch (Exception e) { ui.post(() -> { list.removeAllViews(); list.addView(text(L.f("Каталог недоступен: %s", "Catalog unavailable: %s", e.getMessage()), 13, BAD, false)); }); }
         });
     }
@@ -116,7 +119,7 @@ public class ModelsActivity extends Base {
     /** one line of the catalog: a model with its variants (Anima turbo + base, Qwen 4 step + 8 step) */
     static final class Entry { String key, name, family, line = ""; final List<Models.Item> v = new ArrayList<>(); final List<String> lbl = new ArrayList<>(); }
 
-    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : "Anima"; }
+    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : it.h3 ? "MiniMax-H3" : "Anima"; }
     static String lineOf(Models.Item it) { String n = it.name; return n.contains("RealSkin") ? "RealSkin" : n.contains("3D Harem") ? "3D Harem" : "Harem"; }
 
     List<Entry> entries() {
@@ -139,9 +142,10 @@ public class ModelsActivity extends Base {
         final boolean needCommonAnima = !store.commonInstalled();
         long used = store.commonBytes(); for (Models.Item it : items) if (store.modelInstalled(it.id)) used += it.size; for (String id : store.customIds()) used += store.dirSize(store.modelDir(id));   // the catalog packs, the shared Anima files and the models converted on the phone
         info.setText(info.getText().toString().split("\n")[0] + "\n" + L.f("Моделей на телефоне: %s ГБ  ·  свободно %.1f ГБ", "Models on the phone: %s GB  ·  free %.1f GB", gb(used), getFilesDir().getUsableSpace() / 1e9));
+        addUpdate(base);
         addCustom();
         List<Entry> all = entries(); java.util.LinkedHashMap<String, List<Entry>> fams = new java.util.LinkedHashMap<>();
-        for (String f : new String[]{"Anima", "Qwen-Image", "MOSS-Image", "Mage-Flow", "Legacy"}) fams.put(f, new ArrayList<>());
+        for (String f : new String[]{"Anima", "Qwen-Image", "MOSS-Image", "Mage-Flow", "MiniMax-H3", "Legacy"}) fams.put(f, new ArrayList<>());
         for (Entry e : all) {
             boolean inst = false, ramOk = true, hit = q.isEmpty();
             for (Models.Item it : e.v) { inst |= store.modelInstalled(it.id); ramOk &= !((it.moss || it.qwen) && Compat.ramGb(this) < 10.5); hit |= (it.name + " " + it.author + " " + e.family).toLowerCase().contains(q); }
@@ -190,7 +194,7 @@ public class ModelsActivity extends Base {
             String d = L.s(f.desc, f.descEn); if (!d.isEmpty()) { TextView dv = text(d, 13, DIM, false); dv.setPadding(0, dp(8), 0, dp(2)); c.addView(dv); }
             for (int k = 0; k < e.v.size(); k++) {
                 final Models.Item it = e.v.get(k); final boolean have = store.modelInstalled(it.id), busy = downloading && it.id.equals(dlId);
-                final boolean needCommon = needCommonAnima && !it.moss && !it.qwen && !it.mage;
+                final boolean needCommon = needCommonAnima && !it.moss && !it.qwen && !it.mage && !it.h3;
                 LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
                 vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(it.size)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
                 if (have && !busy) {
@@ -216,6 +220,44 @@ public class ModelsActivity extends Base {
 
     boolean customOpen = true; final java.util.Set<String> customE = new java.util.HashSet<>();
     /** "Own models": the checkpoints converted on the phone, each expands to its details and a delete button */
+    /** a card at the top when the shared files (text encoder, VAE) changed in the catalog: one button downloads just the changed ones */
+    void addUpdate(final String base) {
+        final boolean busy = downloading && dlId.equals("common");
+        if (staleM == null && !busy) return;
+        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setPadding(dp(16), dp(14), dp(16), dp(14)); c.setBackground(bg(CARD, 14));
+        c.addView(text(L.s("Доступно обновление общих файлов", "Update for the shared files"), 15, TXT, true));
+        TextView d = text(L.f("Текстовый энкодер и VAE в каталоге изменились (%s ГБ). Обновление исправляет, например, шум на второй картинке с длинным промптом. Модели скачивать заново не нужно.", "The text encoder / VAE changed in the catalog (%s GB). The update fixes, for example, noise on the second picture with a long prompt. The models stay as they are.", gb(staleN)), 12, DIM, false); d.setPadding(0, dp(6), 0, dp(10)); c.addView(d);
+        if (busy) {
+            ProgressBar pb = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); pb.setMax(1000); c.addView(pb, new LinearLayout.LayoutParams(-1, dp(3))); bars.put("common", pb);
+            TextView tv = text(dlMsg, 12, DIM, false); tv.setPadding(0, dp(6), 0, 0); c.addView(tv); msgs.put("common", tv);
+        } else {
+            Button bt = button(L.f("Обновить  %s ГБ", "Update  %s GB", gb(staleN)), ACC, ON_ACC); bt.setTextSize(13); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+            bt.setOnClickListener(v -> updateCommon(base)); c.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
+        }
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(10); list.addView(c, lp);
+    }
+
+    void updateCommon(final String base) {
+        if (downloading || staleM == null) return;
+        if (getFilesDir().getUsableSpace() < staleN + 300_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(staleN)), Toast.LENGTH_LONG).show(); return; }
+        final org.json.JSONObject m = staleM;
+        downloading = true; dlId = "common"; dlDone = 0; dlTotal = staleN; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        render();
+        final long[] last = {0};
+        new Thread(() -> {
+            Models.Progress pg = (dn, tot, what) -> { long now = System.currentTimeMillis(); if (now - last[0] < 300) return; last[0] = now; dlDone = dn; dlTotal = tot; dlMsg = L.f("%s / %s ГБ  ·  %s", "%s / %s GB  ·  %s", gb(dn), gb(tot), what); };
+            String err = null;
+            try { store.updateCommon(base, m, pg, cancel); staleM = null; }
+            catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: можно продолжить", "Cancelled: you can resume"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
+            final String msg = err; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); else Toast.makeText(app, L.s("Общие файлы обновлены", "Shared files updated"), Toast.LENGTH_LONG).show(); render(); });
+        }).start();
+    }
+
     void addCustom() {
         final List<String> cs = store.customIds();
         if (cs.isEmpty()) { TextView e = text(L.s("Свои модели: пока нет. Кнопка «＋ Свой чекпоинт Anima» выше сконвертирует файл .safetensors прямо на телефоне.", "Own models: none yet. The “＋ Own Anima checkpoint” button above converts a .safetensors file on the phone."), 12, DIM, false); e.setPadding(dp(4), dp(10), 0, dp(10)); list.addView(e); return; }
@@ -239,12 +281,17 @@ public class ModelsActivity extends Base {
         }
     }
 
-    boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen && !it.mage) return true; return false; }
+    boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen && !it.mage && !it.h3) return true; return false; }
 
     void start(String base, Models.Item it, boolean needCommon) {
         if (!Compat.chipAllowed(this)) {   // an unsupported chip: the models will not run, so ask before 4 GB are downloaded
             builder().setMessage(L.f("Чип %s не поддерживается: модели рассчитаны на Snapdragon 8 Gen 1 / 8+ Gen 1. Всё равно скачать?", "Chip %s is not supported: the models are built for Snapdragon 8 Gen 1 / 8+ Gen 1. Download anyway?", Compat.soc()))
                 .setPositiveButton(L.s("Скачать", "Download"), (d, w) -> { Compat.allowChip(this); begin(base, it, needCommon); }).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+            return;
+        }
+        if (it.h3) {   // the MiniMax licence has to be seen before the download: territories, outputs, notices
+            builder().setTitle("MiniMax-H3-Image").setMessage(L.f("Модель распространяется по MiniMax-H3-Image Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size)))
+                .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
             return;
         }
         if ((it.moss || it.qwen) && Compat.ramGb(this) < 10.5) {   // text encoder 6 GB and the DiT stream through RAM: 12 GB phones only
@@ -271,7 +318,7 @@ public class ModelsActivity extends Base {
                 dlDone = d; dlTotal = tot; dlMsg = L.f("%s / %s ГБ  ·  %s", "%s / %s GB  ·  %s", gb(d), gb(tot), what);
             };
             String err = null;
-            try { if (!it.moss && !it.qwen && !it.mage) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
+            try { if (!it.moss && !it.qwen && !it.mage && !it.h3) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
             catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: файлы сохранены, можно продолжить", "Cancelled: the files are kept, you can resume"); }
             catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
             final String msg = err;

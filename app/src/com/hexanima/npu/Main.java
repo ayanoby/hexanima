@@ -84,7 +84,7 @@ public class Main extends Base {
     TextView chipName, chipDot, state, status, saved, phSize, ramTxt, tempTxt, warnTxt, sizeText;
     View placeholder; LinearLayout sizeChips, advBox; ImageView advArrow; TextView advSum;
     LinearLayout customRow, imgBox;
-    LinearLayout baseRow, stepsRow, variantRow, turboStrRow; SeekBar turboBar; TextView countVal;
+    LinearLayout cfgRow, baseRow, stepsRow, variantRow, turboStrRow; SeekBar turboBar; TextView countVal, countBadge;
     Button loadBtn, genBtn; LinearLayout baseBody;
     ImageButton dlBtn, shareBtn, favBtn, againBtn;
     MultiAutoCompleteTextView prompt;
@@ -108,7 +108,9 @@ public class Main extends Base {
         return l.length() == 0 ? "" : "LORA=" + q(l.toString()) + " ";
     }
     /** the LoRA the Anima server has loaded (changing it restarts the server, anima.sh keeps the LoRA in the server key) */
-    String servedSig = "";
+    /** line breaks, tabs, no-break and zero-width spaces (a pasted prompt often has some; the part after a break never reached the encoder) become one plain space, runs of spaces collapse */
+    static String clean(String s) { return s.replaceAll("[\\s\\u00a0\\u200b-\\u200d\\u2028\\u2029\\ufeff]+", " "); }
+    String servedSig = ""; long servedCommon = -1;
     String loraSig() { return isAnima() ? animaLoraEnv() : ""; }   // the whole LORA= value: another set, strength or turbo LoRA restarts the server
 
     GradientDrawable gradient(boolean enabled) { return bg(enabled ? ACC : CARD, 12); }
@@ -130,7 +132,7 @@ public class Main extends Base {
 
         LinearLayout frame = new LinearLayout(this);
         frame.setOrientation(LinearLayout.VERTICAL);
-        frame.setBackgroundColor(BG);
+        pageBg(frame);
         frame.setFitsSystemWindows(true);
         ScrollView sv = new ScrollView(this);
         sv.setFillViewport(true);
@@ -195,7 +197,7 @@ public class Main extends Base {
         img.setVisibility(View.GONE);
         img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
         imgBox.addView(img, new LinearLayout.LayoutParams(-1, -1));
-        int boxH = getResources().getDisplayMetrics().widthPixels - dp(40);   // a square picture area
+        int boxH = getResources().getDisplayMetrics().widthPixels - dp(40);   // the starting height; updatePlaceholder() sets it from the chosen size
         LinearLayout.LayoutParams ibl = new LinearLayout.LayoutParams(-1, boxH); ibl.topMargin = dp(8); root.addView(imgBox, ibl);
         LinearLayout resRow = new LinearLayout(this);
         resRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -214,8 +216,10 @@ public class Main extends Base {
 
         // prompt
         LinearLayout pl = new LinearLayout(this); pl.setGravity(Gravity.BOTTOM);
-        pl.addView(label(L.s("Описание", "Prompt")), new LinearLayout.LayoutParams(0, -2, 1));
-        TextView tpl = text(L.s("Шаблоны", "Templates"), 13, TXT, false); tpl.setPadding(dp(8), dp(14), 0, dp(6)); tpl.setOnClickListener(v -> templates()); pl.addView(tpl);
+        pl.addView(label(L.s("Описание", "Prompt")), new LinearLayout.LayoutParams(-2, -2));
+        tokView = text("", 12, DIM, false); tokView.setPadding(dp(10), dp(14), 0, dp(7)); tokView.setVisibility(View.GONE); pl.addView(tokView, new LinearLayout.LayoutParams(-2, -2));   // the token count sits right after the label
+        pl.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
+        ImageView tpl = new ImageView(this); tpl.setImageDrawable(vec("ic_bookmark", TXT, 22)); tpl.setScaleType(ImageView.ScaleType.CENTER); tpl.setContentDescription(L.s("Шаблоны описания", "Prompt templates")); tpl.setOnClickListener(v -> templates(false)); pl.addView(tpl, new LinearLayout.LayoutParams(dp(44), dp(40)));
         root.addView(pl);
         prompt = new MultiAutoCompleteTextView(this);   // Danbooru tag suggestions while typing, comma separated
         prompt.setHint("1girl, smile, outdoors, cherry blossoms…");
@@ -227,10 +231,14 @@ public class Main extends Base {
         prompt.setPadding(dp(14), dp(12), dp(14), dp(12));
         prompt.setThreshold(2);
         prompt.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        prompt.addTextChangedListener(new android.text.TextWatcher() {   // pasted line breaks and double spaces turn into single spaces right in the field
+            public void beforeTextChanged(CharSequence c, int a, int b, int d) { }
+            public void onTextChanged(CharSequence c, int a, int b, int d) { }
+            public void afterTextChanged(android.text.Editable e) { String o = e.toString(), n = clean(o); if (!n.equals(o)) { int sel = Math.min(prompt.getSelectionStart(), n.length()); e.replace(0, e.length(), n); prompt.setSelection(Math.min(sel, n.length())); } }
+        });
         prompt.setDropDownBackgroundDrawable(bg(CARD, 12));
         prompt.setDropDownHeight(dp(240));
         root.addView(prompt, new LinearLayout.LayoutParams(-1, -2));
-        tokView = text("", 12, DIM, false); tokView.setGravity(Gravity.END); tokView.setPadding(0, dp(6), 0, 0); tokView.setVisibility(View.GONE); root.addView(tokView, new LinearLayout.LayoutParams(-1, -2));
         prompt.addTextChangedListener(new android.text.TextWatcher() {
             public void beforeTextChanged(CharSequence a, int b, int c, int d) { }
             public void onTextChanged(CharSequence a, int b, int c, int d) { }
@@ -240,7 +248,10 @@ public class Main extends Base {
 
         // Anima base models: negative prompt
         baseBox = new LinearLayout(this); baseBox.setOrientation(LinearLayout.VERTICAL); baseBox.setVisibility(View.GONE); baseBody = baseBox;
-        baseBox.addView(label(L.s("Негативный промпт", "Negative prompt")));
+        LinearLayout nl = new LinearLayout(this); nl.setGravity(Gravity.BOTTOM); nl.addView(label(L.s("Негативный промпт", "Negative prompt")), new LinearLayout.LayoutParams(-2, -2));
+        negTokView = text("", 12, DIM, false); negTokView.setPadding(dp(10), dp(14), 0, dp(7)); nl.addView(negTokView, new LinearLayout.LayoutParams(-2, -2)); nl.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
+        ImageView ntpl = new ImageView(this); ntpl.setImageDrawable(vec("ic_bookmark", TXT, 22)); ntpl.setScaleType(ImageView.ScaleType.CENTER); ntpl.setContentDescription(L.s("Шаблоны негативного промпта", "Negative prompt templates")); ntpl.setOnClickListener(v -> templates(true)); nl.addView(ntpl, new LinearLayout.LayoutParams(dp(44), dp(40)));
+        baseBox.addView(nl);   // the negative prompt has its own counter and limit
         negEdit = field(Settings.DEFAULT_NEG); negEdit.setTextSize(14);
         negEdit.setMinLines(2); negEdit.setGravity(Gravity.TOP); negEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         negEdit.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -251,7 +262,6 @@ public class Main extends Base {
             public void afterTextChanged(android.text.Editable e) { prefs().edit().putString("base_neg", e.toString()).apply(); ui.removeCallbacks(tokTick); ui.postDelayed(tokTick, 350); }
         });
         baseBox.addView(negEdit, new LinearLayout.LayoutParams(-1, -2));
-        negTokView = text("", 12, DIM, false); negTokView.setGravity(Gravity.END); negTokView.setPadding(0, dp(6), 0, 0); baseBox.addView(negTokView, new LinearLayout.LayoutParams(-1, -2));   // the negative prompt has its own counter and limit
         root.addView(baseBox);
 
         // Qwen-Image / Mage-Flow: the photo to edit
@@ -305,21 +315,20 @@ public class Main extends Base {
         { int at = root.indexOfChild(resRow) + 1; root.removeView(customRow); root.addView(customRow, at); }   // the size row sits right under the picture area
 
         // parameters: one row each, label on the left, the control on the right
-        root.addView(label(L.s("Параметры", "Settings")));
         LinearLayout pcard = new LinearLayout(this); pcard.setOrientation(LinearLayout.VERTICAL); pcard.setBackground(bg(CARD, 14)); pcard.setPadding(dp(16), 0, dp(12), 0);
-        root.addView(pcard, new LinearLayout.LayoutParams(-1, -2));
+        LinearLayout.LayoutParams pcl = new LinearLayout.LayoutParams(-1, -2); pcl.topMargin = dp(14); root.addView(pcard, pcl);
         baseRow = new LinearLayout(this); baseRow.setOrientation(LinearLayout.VERTICAL); baseRow.setVisibility(View.GONE);
         stepsVal = text("", 15, TXT, false); cfgVal = text("", 15, TXT, false);
         stepsRow = new LinearLayout(this); stepsRow.setOrientation(LinearLayout.VERTICAL);
-        stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0))); stepsRow.addView(divider());
+        stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0), L.s("Сколько шагов очистки от шума делает модель. Больше шагов: тоньше детали, но картинка дольше, и только до определённого предела. Берите число, рекомендованное для модели: быстрым (Turbo, Lightning) нужно около 4–8 шагов, обычным 20–30. Оранжевое число значит, что вы изменили рекомендованное значение.", "How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value."))); stepsRow.addView(divider());
         pcard.addView(stepsRow);
-        baseRow.addView(paramRow("CFG", stepper(cfgVal, 1))); baseRow.addView(divider());
+        cfgRow = paramRow("CFG", stepper(cfgVal, 1), L.s("Насколько строго картинка следует промпту. Выше: ближе к описанию, но жёстче контраст и больше артефактов; ниже: свободнее и мягче. Обычные модели хорошо работают примерно на 3–5, у быстрых (Turbo) моделей CFG равен 1. Значение больше 1 замедляет каждый шаг, потому что модель считает дважды (с промптом и без него), и только тогда учитывается негативный промпт.", "How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.")); baseRow.addView(cfgRow); baseRow.addView(divider());
         samplerVal = text("", 15, TXT, false); samplerVal.setOnClickListener(v -> builder().setTitle(L.s("Сэмплер", "Sampler")).setSingleChoiceItems(Settings.SAMPLERS, java.util.Arrays.asList(Settings.SAMPLERS).indexOf(smp()), (d, i) -> { d.dismiss(); prefs().edit().putString("sampler", Settings.SAMPLERS[i]).apply(); refreshBaseUi(); }).show());
         schedVal = text("", 15, TXT, false); schedVal.setOnClickListener(v -> { String[] sn = Settings.SCHEDULERS.clone(); sn[0] = L.s("по умолчанию", "default");
             builder().setTitle(L.s("Шедулер", "Scheduler")).setSingleChoiceItems(sn, java.util.Arrays.asList(Settings.SCHEDULERS).indexOf(sch()), (d, i) -> { d.dismiss(); prefs().edit().putString("scheduler", Settings.SCHEDULERS[i]).apply(); refreshBaseUi(); }).show(); });
         for (TextView t : new TextView[]{samplerVal, schedVal}) { t.setGravity(Gravity.END); t.setPadding(dp(12), dp(10), dp(4), dp(10)); }
-        baseRow.addView(paramRow(L.s("Сэмплер", "Sampler"), samplerVal)); baseRow.addView(divider());
-        baseRow.addView(paramRow(L.s("Шедулер", "Scheduler"), schedVal)); baseRow.addView(divider());
+        baseRow.addView(paramRow(L.s("Сэмплер", "Sampler"), samplerVal, L.s("Алгоритм, которым модель идёт от шума к картинке. Разные сэмплеры дают чуть разный вид и скорость. euler — надёжный вариант по умолчанию, euler_a и dpm++ добавляют больше вариативности, lcm нужен для моделей с очень малым числом шагов.", "The algorithm the model uses to walk from noise to the picture. Different samplers give a slightly different look and speed. euler is the safe default, euler_a and the dpm++ variants add more variation, lcm is for models made for very few steps."))); baseRow.addView(divider());
+        baseRow.addView(paramRow(L.s("Шедулер", "Scheduler"), schedVal, L.s("Как шаги распределены по уровням шума. «по умолчанию» берёт то, что обычно используется с этим сэмплером. karras и exponential тратят больше шагов на мелкие детали, simple и sgm_uniform распределяют равномерно. Если не уверены, оставьте по умолчанию.", "How the steps are spread over the noise levels. “default” uses what the sampler normally takes. karras and exponential spend more steps on fine detail, simple and sgm_uniform spread them evenly. If unsure, leave it at default."))); baseRow.addView(divider());
         pcard.addView(baseRow);
         LinearLayout sr = new LinearLayout(this); sr.setGravity(Gravity.CENTER_VERTICAL);
         seed = field("-1"); seed.setText("-1"); seed.setGravity(Gravity.END); seed.setBackground(null); seed.setPadding(0, 0, dp(4), 0);
@@ -328,10 +337,9 @@ public class Main extends Base {
         TextView dice = text("↻", 18, DIM, false); dice.setGravity(Gravity.CENTER); dice.setContentDescription(L.s("Случайный", "Random"));
         dice.setOnClickListener(v -> seed.setText("-1"));
         sr.addView(dice, new LinearLayout.LayoutParams(dp(36), dp(36)));
-        pcard.addView(paramRow(L.s("Seed  (−1 = случайный)", "Seed  (−1 = random)"), sr)); pcard.addView(divider());
+        pcard.addView(paramRow(L.s("Seed  (−1 = случайный)", "Seed  (−1 = random)"), sr, L.s("Число, которое задаёт случайный шум, с которого начинается картинка. Тот же seed с тем же промптом и настройками даёт ту же картинку. −1 каждый раз выбирает новый случайный; введите число, чтобы повторить или подправить удачный результат.", "The number that fixes the random noise the picture starts from. The same seed with the same prompt and settings gives the same picture. −1 picks a new random one every time; type a number to repeat or fine-tune a result.")));
         count = Math.max(1, Math.min(4, prefs().getInt("count", 1)));
-        countVal = text(String.valueOf(count), 15, TXT, false);
-        pcard.addView(paramRow(L.s("Картинок за раз", "Pictures per run"), stepper(countVal, 2)));
+        countVal = text(String.valueOf(count), 15, TXT, false);   // the pictures-per-run control lives beside the Generate button now (countBtn)
 
         // LoRA (Anima, MOSS-Image)
         loraBox = new LinearLayout(this); loraBox.setOrientation(LinearLayout.VERTICAL);
@@ -342,7 +350,7 @@ public class Main extends Base {
         lr.addView(loraPick, new LinearLayout.LayoutParams(-2, dp(36)));
         loraDrop = button("✕", BG, DIM); loraDrop.setBackground(null); loraDrop.setOnClickListener(v -> dropLora());
         lr.addView(loraDrop, new LinearLayout.LayoutParams(dp(36), dp(36)));
-        loraBox.addView(divider()); loraBox.addView(paramRow("LoRA", lr));
+        loraBox.addView(divider()); loraBox.addView(paramRow("LoRA", lr, animaLoraHint()));
         loraInfo = text("", 12, DIM, false); loraInfo.setPadding(0, 0, 0, dp(8)); loraBox.addView(loraInfo);
         LinearLayout sr2 = new LinearLayout(this); sr2.setGravity(Gravity.CENTER_VERTICAL); sr2.setPadding(0, 0, 0, dp(8));
         sr2.addView(text(L.s("Сила", "Strength"), 15, TXT, false));
@@ -361,7 +369,9 @@ public class Main extends Base {
         // Anima: any number of LoRA files, each with a switch and a strength
         aloraBox = new LinearLayout(this); aloraBox.setOrientation(LinearLayout.VERTICAL);
         LinearLayout ah = new LinearLayout(this); ah.setGravity(Gravity.CENTER_VERTICAL);
-        ah.addView(text("LoRA", 15, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        ah.addView(text("LoRA", 15, TXT, false), new LinearLayout.LayoutParams(-2, -2));
+        ImageView ainfo = new ImageView(this); ainfo.setImageDrawable(vec("ic_info", DIM, 14)); ainfo.setAlpha(0.45f); ainfo.setScaleType(ImageView.ScaleType.CENTER); ainfo.setOnClickListener(v -> new android.app.AlertDialog.Builder(this).setTitle("LoRA").setMessage(animaLoraHint()).setPositiveButton("OK", null).show());   // the explanation lives behind a small info icon
+        ah.addView(ainfo, new LinearLayout.LayoutParams(dp(34), dp(34))); ah.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
         Button aadd = button(L.s("＋ Добавить", "＋ Add"), BG, TXT); aadd.setTextSize(14); aadd.setBackground(null); aadd.setOnClickListener(v -> pickLora());
         ah.addView(aadd, new LinearLayout.LayoutParams(-2, dp(40)));
         aloraBox.addView(divider()); LinearLayout.LayoutParams ahl = new LinearLayout.LayoutParams(-1, dp(48)); aloraBox.addView(ah, ahl);
@@ -386,7 +396,7 @@ public class Main extends Base {
         // bottom: progress, status, Generate
         LinearLayout bottom = new LinearLayout(this);
         bottom.setOrientation(LinearLayout.VERTICAL);
-        bottom.setBackgroundColor(BG);
+        bottom.setBackgroundColor(barBg());
         bottom.setPadding(dp(20), dp(8), dp(20), dp(14));
         bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
@@ -402,7 +412,15 @@ public class Main extends Base {
         genBtn = button("", ACC, ON_ACC);
         genBtn.setTextSize(16);
         genBtn.setOnClickListener(v -> { if (busy) cancel(); else generate(false); });
-        bottom.addView(genBtn, new LinearLayout.LayoutParams(-1, dp(52)));
+        LinearLayout genRow = new LinearLayout(this);
+        genRow.addView(genBtn, new LinearLayout.LayoutParams(0, dp(52), 1));
+        // pictures per run: one icon next to Generate with the number on it; a tap opens − / + and a typed number
+        FrameLayout cb = new FrameLayout(this); cb.setBackground(bg(CARD, 12));
+        ImageView ci = new ImageView(this); ci.setImageDrawable(vec("ic_layers", TXT, 24)); cb.addView(ci, new FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER));
+        countBadge = text("×" + count, 11, count > 1 ? TXT : DIM, true); countBadge.setPadding(0, 0, dp(7), dp(4)); cb.addView(countBadge, new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.END));
+        cb.setContentDescription(L.s("Картинок за раз", "Pictures per run")); cb.setOnClickListener(v -> countDialog());
+        LinearLayout.LayoutParams cbl = new LinearLayout.LayoutParams(dp(52), dp(52)); cbl.leftMargin = dp(8); genRow.addView(cb, cbl);
+        bottom.addView(genRow, new LinearLayout.LayoutParams(-1, dp(52)));
         frame.addView(divider());
         frame.addView(bottom, new LinearLayout.LayoutParams(-1, -2));
 
@@ -647,14 +665,15 @@ public class Main extends Base {
     void refreshAnimaInfo(java.util.List<AnimaLoras.Item> ls) {
         int act = 0; for (AnimaLoras.Item it : ls) if (AnimaLoras.active(it)) act++;
         aloraInfo.setTextColor(DIM);
-        aloraInfo.setText(ls.isEmpty() ? L.s("Файлы .safetensors для Anima (kohya, diffusers/PEFT, LoKr, LoHa): добавляйте сколько нужно. У каждого свой выключатель и сила. LoRA вливаются в модель при загрузке, поэтому первая картинка с новым набором на 10-15 секунд дольше.", "Own .safetensors files for Anima (kohya, diffusers/PEFT, LoKr, LoHa): add as many as you need, each with its own switch and strength. They are folded into the model when it loads, so the first picture with a new set takes 10-15 seconds longer.")
-            : L.f("Включено: %d из %d. Новый набор или сила: первая картинка на 10-15 секунд дольше.", "Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.", act, ls.size()));
+        aloraInfo.setText(ls.isEmpty() ? "" : L.f("Включено: %d из %d. Новый набор или сила: первая картинка на 10-15 секунд дольше.", "Active: %d of %d. A new set or strength makes the first picture 10-15 seconds slower.", act, ls.size()));
+        aloraInfo.setVisibility(ls.isEmpty() ? View.GONE : View.VISIBLE);
     }
+    String animaLoraHint() { return L.s("LoRA — небольшой файл .safetensors, который меняет стиль модели или учит её персонажу, объекту или манере. Подходят только файлы, обученные для той же модели (LoRA от другой модели не сработает). Добавляйте сколько нужно: у каждого свой выключатель и сила (1.00 — как задумал автор, меньше — слабее, больше — сильнее). LoRA вливается в модель при загрузке, поэтому первая картинка с новым набором или новой силой занимает чуть дольше. Использование LoRA подчиняется лицензии её автора.", "A LoRA is a small .safetensors file that changes a model's style or teaches it a character, object or look. Only files trained for the same model fit (a LoRA made for another model will not work). Add as many as you need: each has its own switch and strength (1.00 is the author's setting, lower is weaker, higher is stronger). A LoRA is merged into the model while it loads, so the first picture with a new set or strength takes a little longer. Using a LoRA is subject to its author's license."); }
     void importAnimaLora(Uri uri) {
         String nm = "LoRA";
         try (android.database.Cursor c = getContentResolver().query(uri, null, null, null, null)) { if (c != null && c.moveToFirst()) { int i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME); if (i >= 0) nm = c.getString(i); } } catch (Exception ignored) { }
         final String name = nm;
-        aloraInfo.setTextColor(WARN); aloraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
+        aloraInfo.setVisibility(View.VISIBLE); aloraInfo.setTextColor(WARN); aloraInfo.setText(L.s("Проверяю файл…", "Checking the file…"));
         ex2.submit(() -> {
             final File dir = AnimaLoras.dir(getFilesDir()); dir.mkdirs(); final File tmp = new File(dir, "new.tmp");
             try (InputStream in = getContentResolver().openInputStream(uri); FileOutputStream o = new FileOutputStream(tmp)) {
@@ -795,24 +814,28 @@ public class Main extends Base {
     void openModels() { if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; } startActivity(new Intent(this, ModelsActivity.class)); }
 
     /** saved and recent prompts: tap to use; saved ones can be removed with ✕ */
-    void templates() {
+    void templates(final boolean neg) {
         final LinearLayout box = new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(14), dp(14), dp(14), dp(10));
         final AlertDialog[] dlg = new AlertDialog[1];
         final Runnable[] fill = new Runnable[1];
         fill[0] = () -> {
             box.removeAllViews();
-            Button save = button(L.s("Сохранить текущее описание", "Save the current prompt"), CARD, TXT); save.setTextSize(14);
+            Button save = button(neg ? L.s("Сохранить текущий негативный промпт", "Save the current negative prompt") : L.s("Сохранить текущее описание", "Save the current prompt"), CARD, TXT); save.setTextSize(14);
             save.setOnClickListener(v -> {
-                String t = prompt.getText().toString().trim();
+                String t = clean((neg ? negEdit : prompt).getText().toString()).trim();
                 if (t.isEmpty()) { Toast.makeText(this, L.s("Введите описание", "Enter a prompt"), Toast.LENGTH_SHORT).show(); return; }
-                List<String> l = savedPrompts(); l.remove(t); l.add(0, t); while (l.size() > 30) l.remove(l.size() - 1);
-                prefs().edit().putString("saved", new JSONArray(l).toString()).apply(); fill[0].run();
+                List<String> l = savedPrompts(neg); l.remove(t); l.add(0, t);
+                prefs().edit().putString(neg ? "saved_neg" : "saved", new JSONArray(l).toString()).apply(); fill[0].run();
             });
             box.addView(save, new LinearLayout.LayoutParams(-1, dp(44)));
-            List<String> sv = savedPrompts();
-            if (!sv.isEmpty()) { box.addView(sect(L.s("Сохранённые", "Saved"))); for (String t : sv) box.addView(promptRow(t, true, dlg, fill)); }
-            List<String> rc = recentPrompts();
-            if (!rc.isEmpty()) { box.addView(sect(L.s("Недавние", "Recent"))); for (String t : rc) box.addView(promptRow(t, false, dlg, fill)); }
+            List<String> sv = savedPrompts(neg);
+            if (!sv.isEmpty()) { box.addView(sect(L.s("Сохранённые", "Saved"))); for (String t : sv) box.addView(promptRow(t, true, neg, dlg, fill)); }
+            List<String> rc = neg ? new ArrayList<String>() : recentPrompts();
+            if (!rc.isEmpty()) {
+                LinearLayout rh = new LinearLayout(this); rh.setGravity(Gravity.CENTER_VERTICAL); rh.addView(sect(L.s("Недавние", "Recent")), new LinearLayout.LayoutParams(0, -2, 1));
+                TextView clr = text(L.s("Очистить все", "Clear all"), 13, DIM, false); clr.setPadding(dp(8), dp(14), dp(4), dp(6));
+                clr.setOnClickListener(v -> new AlertDialog.Builder(this).setMessage(L.s("Очистить историю промптов? Картинки в галерее останутся.", "Clear the prompt history? Pictures in the gallery stay.")).setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton(L.s("Очистить", "Clear"), (d, w) -> { prefs().edit().putString("recent", "[]").apply(); fill[0].run(); }).show());
+                rh.addView(clr); box.addView(rh); for (String t : rc) box.addView(promptRow(t, false, neg, dlg, fill)); }
         };
         fill[0].run();
         ScrollView s = new ScrollView(this); s.addView(box);
@@ -821,32 +844,47 @@ public class Main extends Base {
 
     TextView sect(String s) { TextView t = text(s, 12, DIM, true); t.setPadding(dp(4), dp(14), 0, dp(6)); return t; }
 
-    View promptRow(String t, boolean removable, AlertDialog[] dlg, Runnable[] fill) {
+    View promptRow(String t, boolean removable, final boolean neg, AlertDialog[] dlg, Runnable[] fill) {
         LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(dp(4), dp(12), dp(4), dp(12));
         TextView tv = text(t, 13, TXT, false); tv.setMaxLines(2); tv.setEllipsize(android.text.TextUtils.TruncateAt.END);
         r.addView(tv, new LinearLayout.LayoutParams(0, -2, 1));
         if (removable) {
             TextView x = text("✕", 16, DIM, false); x.setPadding(dp(12), dp(4), dp(8), dp(4));
-            x.setOnClickListener(v -> { List<String> l = savedPrompts(); l.remove(t); prefs().edit().putString("saved", new JSONArray(l).toString()).apply(); fill[0].run(); });
+            x.setOnClickListener(v -> { List<String> l = savedPrompts(neg); l.remove(t); prefs().edit().putString(neg ? "saved_neg" : "saved", new JSONArray(l).toString()).apply(); fill[0].run(); });
             r.addView(x);
         }
-        r.setOnClickListener(v -> { prompt.setText(t); prompt.setSelection(t.length()); dlg[0].dismiss(); });
+        if (!removable) {   // recent: a star saves it (the same as "Save the current prompt"); a filled star means it is saved, a tap removes it again
+            final boolean saved = savedPrompts(neg).contains(t);
+            TextView st = text(saved ? "★" : "☆", 20, saved ? WARN : DIM, false); st.setPadding(dp(12), dp(4), dp(8), dp(4));
+            st.setOnClickListener(v -> { List<String> l = savedPrompts(neg); if (l.contains(t)) l.remove(t); else l.add(0, t); prefs().edit().putString(neg ? "saved_neg" : "saved", new JSONArray(l).toString()).apply(); fill[0].run(); });
+            r.addView(st);
+        }
+        r.setOnClickListener(v -> { EditText tg = neg ? negEdit : prompt; tg.setText(t); tg.setSelection(t.length()); dlg[0].dismiss(); });
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(4);
         r.setLayoutParams(lp);
         return r;
     }
 
-    List<String> savedPrompts() {
+    List<String> savedPrompts(boolean neg) {
         List<String> l = new ArrayList<>();
-        try { JSONArray a = new JSONArray(prefs().getString("saved", "[]")); for (int i = 0; i < a.length(); i++) l.add(a.getString(i)); } catch (Exception ignored) { }
+        try { JSONArray a = new JSONArray(prefs().getString(neg ? "saved_neg" : "saved", "[]")); for (int i = 0; i < a.length(); i++) l.add(a.getString(i)); } catch (Exception ignored) { }
         return l;
     }
 
+    /** every prompt that was run, newest first (prefs "recent"; the first time it is filled from the gallery's pictures); "Clear all" empties it without touching the pictures */
     List<String> recentPrompts() {
         List<String> l = new ArrayList<>();
-        File[] fs = Gallery.list(this, Gallery.ALL);
-        for (int i = 0; i < fs.length && l.size() < 10 && i < 60; i++) { String p = Gallery.meta(fs[i]).optString("prompt").trim(); if (!p.isEmpty() && !l.contains(p)) l.add(p); }
+        if (!prefs().contains("recent")) {
+            File[] fs = Gallery.list(this, Gallery.ALL);
+            for (File f : fs) { String p = Gallery.meta(f).optString("prompt").trim(); if (!p.isEmpty() && !l.contains(p)) l.add(p); }
+            prefs().edit().putString("recent", new JSONArray(l).toString()).apply(); return l;
+        }
+        try { JSONArray a = new JSONArray(prefs().getString("recent", "[]")); for (int i = 0; i < a.length(); i++) l.add(a.getString(i)); } catch (Exception ignored) { }
         return l;
+    }
+    void rememberPrompt(String pr) {
+        List<String> l = recentPrompts(); l.remove(pr); l.add(0, pr);
+        prefs().edit().putString("recent", new JSONArray(l).toString()).apply();
     }
 
     static int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
@@ -892,7 +930,7 @@ public class Main extends Base {
     // the picture settings live in prefs() (the "lab" file in lab mode), not in Settings.prefs(): read them from the same place they are written
     String smp() { String v = prefs().getString("sampler", "euler"); return java.util.Arrays.asList(Settings.SAMPLERS).contains(v) ? v : "euler"; }
     String sch() { String v = prefs().getString("scheduler", ""); return java.util.Arrays.asList(Settings.SCHEDULERS).contains(v) ? v : ""; }
-    String negStr() { String n = prefs().getString("base_neg", Settings.DEFAULT_NEG).trim(); return n.isEmpty() ? Settings.DEFAULT_NEG : n; }
+    String negStr() { String n = clean(prefs().getString("base_neg", Settings.DEFAULT_NEG)).trim(); return n.isEmpty() ? Settings.DEFAULT_NEG : n; }
     String cfgKey() { return base() ? "base_cfg" : "turbo_cfg"; }
     String cfgStr() { return prefs().getString(cfgKey(), base() ? "4" : "1"); }
     boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3(); }
@@ -909,6 +947,7 @@ public class Main extends Base {
     void refreshBaseUi() {
         if (stepsVal != null) { int st = steps(); stepsVal.setText(String.valueOf(st)); stepsVal.setTextColor(st == stepsDef() ? TXT : WARN); }   // an orange number: not the recipe of the model
         if (cfgVal != null) cfgVal.setText(cfgStr());
+        if (cfgRow != null) cfgRow.setAlpha(base() ? 1f : 0.4f);   // a turbo model / turbo LoRA is distilled for CFG 1: the row stays usable but is dimmed
         if (samplerVal != null) samplerVal.setText(smp() + "  ▾");
         if (schedVal != null) { String sc = sch(); schedVal.setText((sc.isEmpty() ? L.s("по умолчанию", "default") : sc) + "  ▾"); }
         updateChips();
@@ -1130,6 +1169,8 @@ public class Main extends Base {
 
     void updatePlaceholder() {
         if (placeholder == null || phSize == null) return;
+        int cw = getResources().getDisplayMetrics().widthPixels - dp(40); double r = Math.max(0.5, Math.min(1.5, (double) resH / Math.max(1, resW)));   // the picture area takes the shape of the chosen size (the picture is fitted inside it)
+        ViewGroup.LayoutParams lp = imgBox.getLayoutParams(); if (lp != null && lp.height != (int) (cw * r)) { lp.height = (int) (cw * r); imgBox.setLayoutParams(lp); }
         phSize.setText(resW + " × " + resH);
     }
 
@@ -1195,7 +1236,7 @@ public class Main extends Base {
         final int lim = tokLimit();
         if (tokView == null) return;
         if (lim == 0) { tokOver = false; tokView.setVisibility(View.GONE); if (negTokView != null) negTokView.setVisibility(View.GONE); return; }
-        final String pr = prompt.getText().toString().trim(), neg = base() ? negStr() : "";
+        final String pr = clean(prompt.getText().toString()).trim(), neg = base() ? negStr() : "";
         final String full = isAnima() ? Settings.prefix(this) + pr : pr; final boolean an = isAnima();
         new Thread(() -> {
             int n = 0, nn = 0;
@@ -1204,10 +1245,10 @@ public class Main extends Base {
             ui.post(() -> {
                 if (tokLimit() != lim) return;
                 tokOver = a > lim || b > lim;
-                String t = L.f("Токенов: %d / %d", "Tokens: %d / %d", a, lim);
+                String t = a + " / " + lim;
                 tokView.setText(a > lim ? t + L.s("  ·  слишком длинно", "  ·  too long") : t); tokView.setTextColor(a > lim ? BAD : DIM); tokView.setVisibility(View.VISIBLE);
                 if (negTokView != null) {
-                    String tn = L.f("Токенов: %d / %d", "Tokens: %d / %d", b, lim);
+                    String tn = b + " / " + lim;
                     negTokView.setText(b > lim ? tn + L.s("  ·  слишком длинно", "  ·  too long") : tn); negTokView.setTextColor(b > lim ? BAD : DIM);
                 }
             });
@@ -1224,7 +1265,7 @@ public class Main extends Base {
             if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
             if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
             applyFamily(); updateTokens();
-            state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена в NPU, генерация стартует сразу", "Loaded on the NPU, generation starts at once") : L.s("Выгружена · загрузится сама при генерации (~5 с)", "Unloaded · loads itself when you generate (~5 s)"));
+            state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена", "Loaded") : L.s("Выгружена", "Unloaded"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
             loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3());
             loadBtn.setVisibility(loadBtn.isEnabled() || (isLoaded && isAnima()) ? View.VISIBLE : View.GONE);
@@ -1365,8 +1406,9 @@ public class Main extends Base {
         String bad = isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
         if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
         if (cw != resW || ch != resH) setRes(cw, ch);
-        final String pr = prompt.getText().toString().trim();
+        final String pr = clean(prompt.getText().toString()).trim();
         if (pr.isEmpty()) { Toast.makeText(this, L.s("Введите описание", "Enter a prompt"), Toast.LENGTH_SHORT).show(); return; }
+        rememberPrompt(pr);
         if (tokLimit() > 0) {   // counted here again (the counter on screen may be a keystroke behind)
             int n; try { n = tokCount(isAnima() ? Settings.prefix(this) + pr : pr); if (base()) n = Math.max(n, tokCount(negStr())); } catch (Exception e) { n = 0; }
             if (n > tokLimit()) { updateTokens(); Toast.makeText(this, L.f("Слишком длинный промпт: %d токенов, максимум %d. Сократите описание.", "Prompt too long: %d tokens, the limit is %d. Shorten it.", n, tokLimit()), Toast.LENGTH_LONG).show(); return; }
@@ -1441,6 +1483,9 @@ public class Main extends Base {
         if (isQwen()) return runOneQwen(pr, seedS, w, h, t0);
         if (isMoss()) return runOneMoss(pr, seedS, w, h, t0);
         final String sig = loraSig();
+        final long cv = store.commonRec().lastModified();
+        if (loaded && cv != servedCommon) { su("sh " + D + "/anima.sh stop < /dev/null >/dev/null 2>&1", false); loaded = false; }   // the shared files were updated (Models screen): the running server still holds the old ones
+        servedCommon = cv;
         if (!loaded || !sig.equals(servedSig)) {   // a new LoRA (or none) restarts the server: megarun folds it into the blocks while loading
             setProgressUi(0, !animaLoraEnv().isEmpty() ? L.s("Подготавливаю LoRA… (один раз для этого набора)", "Preparing the LoRA… (once for this set)") : loaded ? L.s("Загружаю LoRA…", "Loading the LoRA…") : L.s("Загружаю модель…", "Loading the model…"), t0);
             su("rm -f " + D + "/cancel; " + mp() + "sh " + D + "/anima.sh load < /dev/null >/dev/null 2>&1", false);
@@ -1696,9 +1741,18 @@ public class Main extends Base {
         t.setCompoundDrawablePadding(dp(4)); t.setCompoundDrawablesRelative(vec(icon, TXT, 16), null, null, null); return t;
     }
     /** label on the left, the control on the right, one line */
-    LinearLayout paramRow(String label, View control) {
+    LinearLayout paramRow(String label, View control) { return paramRow(label, control, null); }
+    /** with ru/en help text a faint "i" follows the label; a tap opens the explanation */
+    LinearLayout paramRow(String label, View control, String help) {
         LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setMinimumHeight(dp(52));
-        r.addView(text(label, 15, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        if (help == null) r.addView(text(label, 15, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        else {
+            r.addView(text(label, 15, TXT, false), new LinearLayout.LayoutParams(-2, -2));
+            ImageView i = new ImageView(this); i.setImageDrawable(vec("ic_info", DIM, 14)); i.setAlpha(0.45f); i.setScaleType(ImageView.ScaleType.CENTER);   // small and faint: it should not draw the eye
+            final String ttl = label.replaceAll("\\s+\\(.*$", "");
+            i.setOnClickListener(v -> new android.app.AlertDialog.Builder(this).setTitle(ttl).setMessage(help).setPositiveButton("OK", null).show());
+            r.addView(i, new LinearLayout.LayoutParams(dp(34), dp(34))); r.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
+        }
         r.addView(control);
         return r;
     }
@@ -1741,6 +1795,12 @@ public class Main extends Base {
         if (baseRow != null) baseRow.setVisibility(isAnima() ? View.VISIBLE : View.GONE);
         if (stepsRow != null) stepsRow.setVisibility(model.isEmpty() ? View.GONE : View.VISIBLE);
         if (countVal != null) countVal.setText(String.valueOf(count));
+        if (countBadge != null) { countBadge.setText("×" + count); countBadge.setTextColor(count > 1 ? TXT : DIM); }
+    }
+    void countDialog() {
+        countVal = text(String.valueOf(count), 20, TXT, true);
+        LinearLayout box = new LinearLayout(this); box.setGravity(Gravity.CENTER); box.setPadding(dp(20), dp(16), dp(20), dp(6)); box.addView(stepper(countVal, 2));
+        builder().setTitle(L.s("Картинок за раз", "Pictures per run")).setView(box).setPositiveButton("OK", null).show();
     }
     void setProgressUi(int pct, String msg, long t0) {
         final int all = (curIdx * 100 + pct) / curN;

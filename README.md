@@ -18,12 +18,14 @@ about 30 s for 512x768 and about 80 s for 1 Mpx; any size with sides that are mu
 And **Qwen-Image 2.1 Turbo** (Qwen team; with the 4-step Lightning LoRA by LightX2V or without it, 8 steps): it draws legible text inside pictures, follows long prompts, and **edits your photos by a prompt** ("make the sky a sunset"). The text encoder (Qwen3-VL-8B), its vision tower, the 7B transformer and the VAE all run on the NPU.
 About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below.
 And **Mage-Flow-Edit-Turbo** (Microsoft, MIT): a 4B model that draws and **edits photos by a prompt** in about 12 seconds a picture (a text encoder, a ViT, a 12-block transformer and the VAE, all on the NPU). The weights are about 8.7 GB (optional download) and are streamed from storage for every picture.
+And **MiniMax-H3-Image** (MiniMax, 33B transformer and a Qwen3-VL text encoder, INT8-ConvRot, 6 steps without CFG, or 2 with the pDMD LoRA): sizes from 512 to 2048, about 2 minutes for 512x768 (the weights stream from storage for every picture). It is an optional 48 GB download from its own public repository `ayanoby/hexanima-h3`; **MiniMax community licence: not for the US, EU, UK and South Korea, outputs must not be used to improve other AI models** (the app asks for consent first). Powered by MiniMax-H3-Image.
 
 ## Features
 
 - Fully offline after the models are downloaded; nothing leaves the phone.
 - Base models only, speed from a LoRA file you pick: a **Turbo LoRA** row under every model (any compatible `.safetensors`, a strength slider, a check at once) and the **number of steps entered by hand** (the LoRA's own step count, usually 4 or 8). Anima, Qwen-Image 2.1 Turbo and MOSS-Image all work this way.
 - Anima: MiaoMiao models in 2B and 2.9B, base checkpoints with CFG and a negative prompt, or with a Turbo LoRA (Anima Turbo v1.1, TURBO V4 and others) for 4 steps; one-tap model manager with search, resumable downloads, sha256 verification, delete to free space.
+- Own wallpaper with adjustable block transparency; a ZIP of the whole History in one tap; unlimited prompt history with saved prompts.
 - Size picker with portrait / landscape / square presets (all multiples of 16) and custom sizes, seed, batch of several pictures, stop button.
 - History with favourites, trash, multi-select, share and save; settings are stored in the PNG, so any picture can be reopened with its prompt and seed.
 - Prompt tag suggestions (Danbooru tags), templates, quality-tag prefix (Anima models only; MOSS-Image takes plain sentences and gets no tags).
@@ -142,7 +144,7 @@ Limits worth knowing: about 8.7 GB of storage, tested on a 12 GB phone only, pic
 2. Open the app and pick a model in **Models**. The files are downloaded from Hugging Face (`ayanoby/anima-npu-packs`) the first time.
 3. Type a prompt (Danbooru-style tags work best), press **Generate**.
 
-MOSS-Image, Qwen-Image and Mage-Flow are separate downloads in the same manager (each lives in its own Hugging Face repository with its own `LICENSE` and `NOTICE.md`).
+MOSS-Image, Qwen-Image, Mage-Flow and MiniMax-H3-Image are separate downloads in the same manager (each lives in its own Hugging Face repository with its own `LICENSE` and `NOTICE.md`).
 
 Tips: download a base model, pick a Turbo LoRA file under it and set the steps the LoRA was made for (usually 4 or 8); without a Turbo LoRA use more steps (Anima base also takes CFG and a negative prompt). See **Info** in the app for the other notes. Versions before 1.5.0 shipped merged Turbo checkpoints; they are replaced by base + LoRA and can be deleted in the manager.
 

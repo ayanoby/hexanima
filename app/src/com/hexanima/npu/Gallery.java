@@ -87,6 +87,45 @@ final class Gallery {
         return u;
     }
 
+    interface Pack { boolean on(int done, int total); }   // false = stop
+
+    /** every picture into one ZIP in Downloads (PNG is already compressed, so ZIP costs almost nothing and opens everywhere); null when stopped. The metadata stays in each PNG. */
+    static String zipName() { return "HexAnima_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmm", java.util.Locale.US).format(new java.util.Date()); }
+    /** the archive goes to the folder picked in Settings (tree = its URI) or, by default, to Downloads; name = file name with or without ".zip" */
+    static Uri packZip(Context c, File[] pngs, String name, Uri tree, Pack cb) throws IOException {
+        name = name.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_").trim(); if (name.isEmpty()) name = zipName(); if (!name.toLowerCase(java.util.Locale.ROOT).endsWith(".zip")) name += ".zip";
+        Uri u;
+        if (tree != null) {
+            try { u = android.provider.DocumentsContract.createDocument(c.getContentResolver(), android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, android.provider.DocumentsContract.getTreeDocumentId(tree)), "application/zip", name); }
+            catch (Exception e) { throw new IOException(e.getMessage()); }
+            if (u == null) throw new IOException("cannot create the file");
+        } else {
+            ContentValues cv = new ContentValues();
+            cv.put(MediaStore.Downloads.DISPLAY_NAME, name);
+            cv.put(MediaStore.Downloads.MIME_TYPE, "application/zip");
+            cv.put(MediaStore.Downloads.RELATIVE_PATH, "Download");
+            cv.put(MediaStore.Downloads.IS_PENDING, 1);
+            u = c.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+        }
+        final boolean viaTree = tree != null;
+        boolean ok = false;
+        try {
+            try (java.util.zip.ZipOutputStream z = new java.util.zip.ZipOutputStream(new BufferedOutputStream(c.getContentResolver().openOutputStream(u), 1 << 16))) {
+                java.util.HashSet<String> used = new java.util.HashSet<>(); byte[] b = new byte[1 << 16];
+                for (int i = 0; i < pngs.length; i++) {
+                    if (cb != null && !cb.on(i, pngs.length)) return null;
+                    JSONObject m = meta(pngs[i]); String nm = "anima_" + m.optInt("w") + "x" + m.optInt("h") + "_" + m.optString("seed", "0") + "_" + pngs[i].getName();
+                    if (!used.add(nm)) continue;
+                    java.util.zip.ZipEntry e = new java.util.zip.ZipEntry(nm); e.setTime(pngs[i].lastModified()); z.putNextEntry(e);
+                    try (InputStream in = new FileInputStream(pngs[i])) { for (int n; (n = in.read(b)) > 0; ) z.write(b, 0, n); }
+                    z.closeEntry();
+                }
+            }
+            if (!viaTree) { ContentValues done = new ContentValues(); done.put(MediaStore.Downloads.IS_PENDING, 0); c.getContentResolver().update(u, done, null, null); }
+            ok = true; return u;
+        } finally { if (!ok) try { if (viaTree) android.provider.DocumentsContract.deleteDocument(c.getContentResolver(), u); else c.getContentResolver().delete(u, null, null); } catch (Exception ignored) { } }   // stopped or failed: no half-written archive stays
+    }
+
     static Uri uri(File png) { return Uri.parse("content://" + AUTH + "/" + png.getName()); }
 
     static void share(Context c, List<File> pngs) {

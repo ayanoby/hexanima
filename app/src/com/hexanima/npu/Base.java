@@ -19,6 +19,53 @@ abstract class Base extends Activity {
     /** palette: set by applyTheme() before any view is built. CARD and FIELD are the same flat surface (inputs, chips, the picture frame). */
     static int LINE, BG, CARD, FIELD, ACC, ACC2, ON_ACC, TXT, DIM, OK, BAD, WARN;
     static boolean dark = true;
+
+    // ---- own wallpaper: files/wallpaper.jpg behind every screen; the blocks (CARD / FIELD) get an alpha so it shows through ----
+    static java.io.File wallFile(Context c) { return new java.io.File(c.getFilesDir(), "wallpaper.jpg"); }
+    static boolean hasWall(Context c) { return wallFile(c).exists(); }
+    static int cardTrans(Context c) { return c.getSharedPreferences("anima", 0).getInt("card_trans", 35); }   // 0..90 % of see-through
+    static int wallDim(Context c) { return c.getSharedPreferences("anima", 0).getInt("wall_dim", 35); }      // 0..80 % darkening (lightening in the light theme)
+    static android.graphics.Bitmap wallBm; static long wallBmTs = -1;
+    static float wZoom = 1f, wX = .5f, wY = .5f;   // the wallpaper's scale (1 = just covers the screen) and the point of it at the screen centre (0..1); live values while an editor is open
+    static int dimNow = -1;                        // the dimming being previewed while a slider moves (-1: the saved one)
+    static void loadWallParams(Context c) { android.content.SharedPreferences p = c.getSharedPreferences("anima", 0); wZoom = p.getFloat("wall_zoom", 1f); wX = p.getFloat("wall_x", .5f); wY = p.getFloat("wall_y", .5f); }
+    static void saveWallParams(Context c) { c.getSharedPreferences("anima", 0).edit().putFloat("wall_zoom", wZoom).putFloat("wall_x", wX).putFloat("wall_y", wY).apply(); }
+    /** screen pixels per wallpaper pixel for a view of this size */
+    static float wallScale(int bw, int bh) { return Math.max((float) bw / wallBm.getWidth(), (float) bh / wallBm.getHeight()) * wZoom; }
+    /** keep the visible part inside the picture */
+    static void wallClamp(int bw, int bh) {
+        if (wallBm == null) return; float sc = wallScale(bw, bh), hx = bw / sc / 2 / wallBm.getWidth(), hy = bh / sc / 2 / wallBm.getHeight();
+        wX = Math.max(hx, Math.min(1 - hx, wX)); wY = Math.max(hy, Math.min(1 - hy, wY));
+    }
+    /** the wallpaper at the chosen scale and position, with the dimming layer on top */
+    static final class WallDrawable extends Drawable {
+        final android.graphics.Paint pt = new android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG); final int dimPref;
+        WallDrawable(Context c) {
+            long ts = c.getSharedPreferences("anima", 0).getLong("wall_ts", 0);
+            if (wallBm == null || wallBmTs != ts) { wallBm = android.graphics.BitmapFactory.decodeFile(wallFile(c).getPath()); wallBmTs = ts; }
+            loadWallParams(c); dimPref = wallDim(c);
+        }
+        @Override public void draw(android.graphics.Canvas cv) {
+            android.graphics.Rect b = getBounds(); if (b.isEmpty()) return;
+            if (wallBm != null) {
+                wallClamp(b.width(), b.height()); float sc = wallScale(b.width(), b.height()), vw = b.width() / sc, vh = b.height() / sc, cx = wX * wallBm.getWidth(), cy = wY * wallBm.getHeight();
+                cv.drawBitmap(wallBm, new android.graphics.Rect((int) (cx - vw / 2), (int) (cy - vh / 2), (int) (cx + vw / 2), (int) (cy + vh / 2)), b, pt);
+            }
+            cv.drawColor(((int) (255 * (dimNow >= 0 ? dimNow : dimPref) / 100f) << 24) | (dark ? 0x000000 : 0xFFFFFF));
+        }
+        @Override public void setAlpha(int a) { } @Override public void setColorFilter(android.graphics.ColorFilter f) { }
+        @Override public int getOpacity() { return android.graphics.PixelFormat.OPAQUE; }
+    }
+    /** the surfaces drawn with the block colour, so the see-through can be previewed live while a slider moves */
+    static final java.util.ArrayList<java.lang.ref.WeakReference<GradientDrawable>> cardDrawables = new java.util.ArrayList<>();
+    static void liveTrans(int trans) {
+        CARD = (CARD & 0xFFFFFF) | ((255 - 255 * trans / 100) << 24); FIELD = CARD;
+        for (java.lang.ref.WeakReference<GradientDrawable> r : cardDrawables) { GradientDrawable g = r.get(); if (g != null) g.setColor(CARD); }
+    }
+    /** the page background: the wallpaper when one is set, else the plain page colour */
+    void pageBg(View v) { if (hasWall(this) && !isFinishing()) v.setBackground(new WallDrawable(this)); else v.setBackgroundColor(BG); }
+    /** the page colour with the blocks' see-through (bars that sit over scrolling content) */
+    int barBg() { return hasWall(this) ? (BG & 0xFFFFFF) | (CARD & 0xFF000000) : BG; }
     String uiKey = "";
 
     static boolean isDark(Context c) {
@@ -27,11 +74,12 @@ abstract class Base extends Activity {
     }
 
     static void applyTheme(Context c) {
-        dark = isDark(c);
+        dark = isDark(c); dimNow = -1;
         if (dark) { BG = 0xFF111113; CARD = 0xFF1C1C1F; LINE = 0xFF36363C; TXT = 0xFFEDEDEF; DIM = 0xFF8E8E96; OK = 0xFF6BCB8B; BAD = 0xFFF07178; WARN = 0xFFE5B567; }
         else { BG = 0xFFFAFAFA; CARD = 0xFFF0F0F2; LINE = 0xFFE4E4E7; TXT = 0xFF18181B; DIM = 0xFF71717A; OK = 0xFF15803D; BAD = 0xFFDC2626; WARN = 0xFFB45309; }
         android.content.SharedPreferences p = c.getSharedPreferences("anima", 0);
         if (dark && p.getString("theme", "system").equals("amoled")) { BG = 0xFF000000; CARD = 0xFF151517; LINE = 0xFF303036; }   // true black for OLED screens
+        if (hasWall(c)) CARD = (CARD & 0xFFFFFF) | ((255 - 255 * cardTrans(c) / 100) << 24);   // see-through blocks over the wallpaper
         FIELD = CARD; ACC = TXT; ACC2 = TXT; ON_ACC = BG;   // the accent is the text colour: a white (or black) primary button and selection
         if (android.os.Build.VERSION.SDK_INT >= 31 && p.getBoolean("dyn_accent", false)) {   // the system (wallpaper) accent colour
             ACC = c.getColor(dark ? android.R.color.system_accent1_200 : android.R.color.system_accent1_600); ACC2 = ACC; ON_ACC = dark ? 0xFF111113 : 0xFFFFFFFF;
@@ -54,7 +102,7 @@ abstract class Base extends Activity {
     @Override public void startActivityForResult(android.content.Intent i, int rc) { super.startActivityForResult(i, rc); overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out); }
     @Override public void finish() { super.finish(); overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out); }
 
-    String themeKey() { android.content.SharedPreferences p = getSharedPreferences("anima", 0); return L.lang + isDark(this) + p.getString("theme", "system") + p.getBoolean("dyn_accent", false); }
+    String themeKey() { android.content.SharedPreferences p = getSharedPreferences("anima", 0); return L.lang + isDark(this) + p.getString("theme", "system") + p.getBoolean("dyn_accent", false) + "w" + hasWall(this) + p.getLong("wall_ts", 0) + cardTrans(this) + "," + wallDim(this) + "," + p.getFloat("wall_zoom", 1f) + "," + p.getFloat("wall_x", .5f) + "," + p.getFloat("wall_y", .5f); }
 
     /** language or theme changed on another screen: rebuild this one */
     @Override protected void onResume() {
@@ -73,7 +121,7 @@ abstract class Base extends Activity {
 
     /** the page colour with the thin outline: dialogs and sheets */
     GradientDrawable framed(float radius) { GradientDrawable g = bg(BG, radius); g.setStroke(dp(1), LINE); return g; }
-    GradientDrawable bg(int color, float radius) { GradientDrawable g = new GradientDrawable(); g.setColor(color); g.setCornerRadius(dp(radius)); if (color == CARD) g.setStroke(dp(1), LINE); return g; }   // surfaces carry a thin outline
+    GradientDrawable bg(int color, float radius) { GradientDrawable g = new GradientDrawable(); g.setColor(color); if (color == CARD) { if (cardDrawables.size() > 600) cardDrawables.removeIf(r -> r.get() == null); cardDrawables.add(new java.lang.ref.WeakReference<>(g)); } g.setCornerRadius(dp(radius)); if (color == CARD) g.setStroke(dp(1), LINE); return g; }   // surfaces carry a thin outline
 
     Drawable vec(String name, int tint, int sizeDp) { Drawable d = getResources().getDrawable(getResources().getIdentifier(name, "drawable", getPackageName()), getTheme()).mutate(); d.setBounds(0, 0, dp(sizeDp), dp(sizeDp)); d.setTint(tint); return d; }
 
@@ -146,7 +194,7 @@ abstract class Base extends Activity {
 
     /** screen skeleton: ← title [extra view] on top, a scrolling column below; returns the column */
     LinearLayout screen(String title, android.view.View extra) {
-        LinearLayout frame = new LinearLayout(this); frame.setOrientation(LinearLayout.VERTICAL); frame.setBackgroundColor(BG); frame.setFitsSystemWindows(true);
+        LinearLayout frame = new LinearLayout(this); frame.setOrientation(LinearLayout.VERTICAL); pageBg(frame); frame.setFitsSystemWindows(true);
         LinearLayout head = new LinearLayout(this); head.setGravity(Gravity.CENTER_VERTICAL); head.setPadding(dp(8), dp(6), dp(16), dp(6));
         TextView back = text("←", 22, TXT, false); back.setGravity(Gravity.CENTER); back.setOnClickListener(v -> onBackPressed());
         head.addView(back, new LinearLayout.LayoutParams(dp(44), dp(44)));

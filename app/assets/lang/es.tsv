@@ -53,13 +53,13 @@ Too large: at most 6144 patches (e.g. 1536×960)	Demasiado grande: máximo 6144 
 Get a model	Obtener un modelo
 Generate  ·  ~%d s	Generar  ·  ~%d s
 Model is loaded on the NPU, generation starts at once	El modelo está cargado en la NPU; la generación empieza al instante
-Model is unloaded: it loads itself when you generate (~5 s)	El modelo está descargado: se cargará solo al generar (~5 s)
-Unload	Descargar de memoria
+Model is unloaded: it loads itself when you generate (~5 s)	El modelo no está en memoria: se cargará solo al generar (~5 s)
+Unload	Liberar memoria
 Generating…	Generando…
 Shell does not start: %s	No se puede iniciar el shell: %s
 Switching model…	Cambiando de modelo…
 Loading the model…	Cargando el modelo…
-Unloading the model…	Descargando el modelo de la memoria…
+Unloading the model…	Liberando el modelo de la memoria…
 Enter a prompt	Escribe una descripción
 Starting…	Iniciando…
 Saving…	Guardando…
@@ -98,8 +98,8 @@ Seed	Seed
 -1 is random every time. A number repeats the same picture with the same prompt, size and model. The seed used is shown under the picture and in the history.	-1 es aleatoria cada vez. Un número repite la misma imagen con la misma descripción, tamaño y modelo. La seed usada aparece bajo la imagen y en el historial.
 Why the first steps are faster	Por qué los primeros pasos son más rápidos
 The first two steps run at reduced resolution (overall composition), the last two at full resolution, so details are kept. On some unusual sizes this switches off automatically.	Los dos primeros pasos se ejecutan a resolución reducida (composición general) y los dos últimos a resolución completa, así se conservan los detalles. En algunos tamaños poco habituales se desactiva automáticamente.
-Loading and unloading	Cargar y descargar de memoria
-A loaded model holds several gigabytes of RAM. If the phone slows down or you are done, tap Unload. It loads itself when you generate (~5 s).	Un modelo cargado ocupa varios gigabytes de RAM. Si el teléfono va lento o has terminado, pulsa «Descargar de memoria». Se carga solo al generar (~5 s).
+Loading and unloading	Cargar y liberar memoria
+A loaded model holds several gigabytes of RAM. If the phone slows down or you are done, tap Unload. It loads itself when you generate (~5 s).	Un modelo cargado ocupa varios gigabytes de RAM. Si el teléfono va lento o has terminado, pulsa «Liberar memoria». Se carga solo al generar (~5 s).
 Where pictures are stored	Dónde se guardan las imágenes
 Only inside the app. A picture goes to the phone gallery (Pictures/Anima) after Download. Deleted pictures go to the trash and stay there for 30 days.	Solo dentro de la app. Una imagen llega a la galería del teléfono (Pictures/Anima) tras pulsar «Descargar». Las imágenes eliminadas van a la papelera y permanecen 30 días.
 Supported phones	Teléfonos compatibles
@@ -147,7 +147,7 @@ Load the model at start	Cargar el modelo al iniciar
 The first picture is faster, but the model holds RAM	La primera imagen es más rápida, pero el modelo ocupa RAM
 Never	Nunca
 %d min	%d min
-Unload when idle	Descargar de memoria al estar inactivo
+Unload when idle	Liberar memoria al estar inactivo
 Frees RAM when you have not generated anything for a while	Libera RAM cuando llevas un rato sin generar nada
 Keep the screen on while generating	Mantener la pantalla encendida al generar
 Quality tags before the prompt	Etiquetas de calidad antes de la descripción
@@ -333,7 +333,7 @@ Tokens: %d / %d	Tokens: %d / %d
   ·  negative: %d	  ·  negativo: %d
   ·  too long	  ·  demasiado largo
 Loaded on the NPU, generation starts at once	Cargado en la NPU, la generación empieza al instante
-Unloaded · loads itself when you generate (~5 s)	Descargado · se carga solo al generar (~5 s)
+Unloaded · loads itself when you generate (~5 s)	No está en memoria · se carga solo al generar (~5 s)
 Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt demasiado largo: %d tokens, el límite es %d. Acórtalo.
 Preparing the LoRA… (once for this set)	Preparando la LoRA… (una vez para este conjunto)
 Preparing the turbo LoRA…	Preparando la LoRA turbo…
@@ -465,6 +465,6 @@ Wallpaper dimming	Oscurecimiento del fondo
 Pinch to zoom, drag to move	Pellizca para ampliar, arrastra para mover
 Position and scale	Posición y escala
 Loaded	Cargado
-Unloaded	Descargado
+Unloaded	No está en memoria
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	El modelo se distribuye bajo la MiniMax-H3-Image Community License Agreement (el texto de la licencia se descarga con los archivos). No debe usarse en Estados Unidos, la Unión Europea, el Reino Unido ni Corea del Sur, y sus resultados no deben usarse para mejorar otros modelos de IA. Tamaño: %s GB. ¿Descargar?
 Accept and download	Aceptar y descargar

@@ -100,5 +100,8 @@ final class MossLora {
         } catch (Exception e) { msg[0] = String.valueOf(e); deleteTree(out); return null; }
     }
 
-    static void deleteTree(File f) { File[] k = f.listFiles(); if (k != null) for (File c : k) deleteTree(c); f.delete(); }
+    static void deleteTree(File f) {
+        if (java.nio.file.Files.isSymbolicLink(f.toPath())) { f.delete(); return; }   // never walk into a link
+        File[] k = f.listFiles(); if (k != null) for (File c : k) deleteTree(c); f.delete();
+    }
 }

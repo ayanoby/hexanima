@@ -266,7 +266,10 @@ final class Models {
     }
     long dirSize(File d) { long n = 0; File[] fs = d.listFiles(); if (fs != null) for (File f : fs) n += f.isDirectory() ? dirSize(f) : f.length(); return n; }
 
-    static void deleteTree(File f) { File[] fs = f.listFiles(); if (fs != null) for (File c : fs) deleteTree(c); f.delete(); }
+    static void deleteTree(File f) {
+        if (java.nio.file.Files.isSymbolicLink(f.toPath())) { f.delete(); return; }   // remove the link itself, never what it points to (a MOSS variant links to the base model's te/ and vae/)
+        File[] fs = f.listFiles(); if (fs != null) for (File c : fs) deleteTree(c); f.delete();
+    }
 
     /** sparse stub of a safetensors file: the real header, then a hole up to the real size (sd.cpp maps the file but never touches tensor data when the DiT/LLM run on the NPU) */
     static void stub(File hdr, File out, long size) throws IOException {

@@ -315,7 +315,7 @@
 327	Beschreibungen in normalen Sätzen, Text im Bild
 328	Fotobearbeitung, bis zu 3 Bilder
 329	4 Schritte · Fotobearbeitung
-330	Zu groß: höchstens 6912 Patches (z. B. 1152×1536)
+330	Zu groß: höchstens 65536 Patches (z. B. 4096×4096)
 331	Token: %d / %d
 332	  ·  negativ: %d
 333	  ·  zu lang
@@ -533,3 +533,6 @@
 534	Beide Seiten sind Vielfache von 16, die Anzahl der Patches (Breite/16 × Höhe/16) ist durch 32 teilbar und höchstens 6144 (zum Beispiel 1536×1024), mindestens 256 pro Seite. Schreiben Sie den Prompt ausführlich, als zusammenhängenden Absatz.
 535	LTX-2.5 (Lightricks, 22B, destilliert) erzeugt ein kurzes Video aus einem Prompt: 17–97 Frames (standardmäßig 17), eine frei wählbare Bildrate für das MP4, ohne Ton. Der Gemma-Textencoder, die 48 DiT-Blöcke (8 Schritte, ohne CFG) und der VAE laufen auf der NPU; ein ganzer Clip dauert etwa anderthalb Minuten. Das Modell ist im Download-Katalog (etwa 31 GB; LTX-2 Community License). Das Ergebnis ist ein MP4 neben einem Vorschaubild im Verlauf (die ▶-Schaltfläche).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) ist ein fotorealistisches Modell, das lange, in normalen Sätzen geschriebene Prompts versteht und Text zeichnet. 16 Schritte, ohne CFG: etwa eine Minute für 512×512, 3–4 Minuten für 1024×1024. Der Textencoder, der Transformer und der Decoder laufen auf der NPU. Das Modell ist im Download-Katalog (etwa 9 GB). FLUX-Kommunity-Lizenz: nur nichtkommerzielle Nutzung.
+537	Zu groß: höchstens %d Patches zusammen mit den Bildern
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT-Lizenz) zeichnet Bilder und bearbeitet Fotos per Prompt in 4 Schritten, etwa 12 Sekunden pro Bild. Text-Encoder, ViT, Transformer und VAE laufen alle auf der NPU; der Download ist etwa 8,7 GB groß. Um ein Foto zu bearbeiten, wähle es im Block „Foto bearbeiten“ aus und beschreibe, was geändert werden soll; du kannst bis zu zwei weitere Referenzbilder hinzufügen und im Prompt auf sie verweisen („Bild 1“, „Bild 2“).
+539	Beide Seiten sind Vielfache von 16 und die Anzahl der Patches (Breite/16 × Höhe/16) ist durch 32 teilbar. Das Modell arbeitet in Fenstern, deshalb gibt es keine feste Größengrenze: Ein Bild oder eine Bearbeitung samt ihren Bildern (jedes Bild belegt so viele Patches wie das Ergebnis) darf insgesamt bis zu 24576 Patches haben, zum Beispiel 2048×2048 (etwa 3,5 Minuten) oder 1024×768 mit drei Bildern. Je größer, desto länger: Die Zeit wächst ungefähr mit dem Quadrat der Patch-Anzahl.

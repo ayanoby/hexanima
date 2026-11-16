@@ -315,7 +315,7 @@
 327	düz cümlelerle tarifler, resimde yazı
 328	fotoğraf düzenleme, en fazla 3 resim
 329	4 adım · fotoğraf düzenleme
-330	Çok büyük: en fazla 6912 yama (ör. 1152×1536)
+330	Çok büyük: en fazla 65536 yama (ör. 4096×4096)
 331	Token: %d / %d
 332	  ·  negatif: %d
 333	  ·  çok uzun
@@ -533,3 +533,6 @@
 534	İki kenar da 16'nın katı, yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünebilir ve en fazla 6144 (örneğin 1536×1024), kenar başına en az 256. İstemi ayrıntılı, tek ve bağlantılı bir paragraf olarak yazın.
 535	LTX-2.5 (Lightricks, 22B, damıtılmış) bir istemden kısa bir video üretir: 17–97 kare (varsayılan 17), MP4 için istediğiniz kare hızı, sessiz. Gemma metin kodlayıcısı, 48 DiT bloğu (8 adım, CFG yok) ve VAE NPU'da çalışır; tam bir klip yaklaşık bir buçuk dakika sürer. Model indirme kataloğunda (yaklaşık 31 GB; LTX-2 Community License). Sonuç, geçmişte bir önizleme karesinin yanındaki bir MP4'tür (▶ düğmesi).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B), düz cümlelerle yazılmış uzun istemleri izleyen ve yazı çizen fotogerçekçi bir modeldir. 16 adım, CFG yok: 512×512 için yaklaşık bir dakika, 1024×1024 için 3–4 dakika. Metin kodlayıcısı, transformer ve çözücü NPU'da çalışır. Model indirme kataloğunda (yaklaşık 9 GB). FLUX Kommunity lisansı: yalnızca ticari olmayan kullanım.
+537	Çok büyük: resimlerle birlikte en fazla %d yama
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT lisansı) 4 adımda bir prompt ile resim çizer ve fotoğraf düzenler, resim başına yaklaşık 12 saniye. Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; indirme yaklaşık 8,7 GB. Bir fotoğrafı düzenlemek için "Fotoğraf düzenle" bloğunda seçin ve neyin değişeceğini yazın; en fazla iki referans resim daha ekleyip isteminizde onlara değinebilirsiniz ("resim 1", "resim 2").
+539	İki kenar da 16'nın katı olmalı ve yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünebilmeli. Model pencereler halinde çalışır, bu yüzden boyutta kesin bir sınır yoktur: bir resim ya da resimleriyle birlikte bir düzenleme (her resim sonuçla aynı sayıda yama kullanır) toplamda en fazla 24576 yama olabilir, örneğin 2048×2048 (yaklaşık 3,5 dakika) veya üç resimli 1024×768. Boyut büyüdükçe süre uzar: süre yaklaşık olarak yama sayısının karesiyle artar.

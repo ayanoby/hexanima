@@ -26,7 +26,7 @@ And **LTX-2.5 Video** (Lightricks, 22B distilled, LTX-2 Community License): shor
 
 - Fully offline after the models are downloaded; nothing leaves the phone.
 - Base models only, speed from a LoRA file you pick: a **Turbo LoRA** row under every model (any compatible `.safetensors`, a strength slider, a check at once) and the **number of steps entered by hand** (the LoRA's own step count, usually 4 or 8). Anima, Qwen-Image 2.1 Turbo and MOSS-Image all work this way.
-- Anima: MiaoMiao models in 2B and 2.9B, base checkpoints with CFG and a negative prompt, or with a Turbo LoRA (Anima Turbo v1.1, TURBO V4 and others) for 4 steps; one-tap model manager with search, resumable downloads, sha256 verification, delete to free space.
+- Anima: MiaoMiao models in 2B and 2.9B (any size with sides that are multiples of 16 up to 65536 patches, e.g. 4096×4096: the attention is chunked and big blocks run in windows; 2560×2048 takes about 80 s per DiT step on 2B), base checkpoints with CFG and a negative prompt, or with a Turbo LoRA (Anima Turbo v1.1, TURBO V4 and others) for 4 steps; one-tap model manager with search, resumable downloads, sha256 verification, delete to free space.
 - Own wallpaper with adjustable block transparency; a ZIP of the whole History in one tap; unlimited prompt history with saved prompts.
 - Size picker with portrait / landscape / square presets (all multiples of 16) and custom sizes, seed, batch of several pictures, stop button.
 - History with favourites, trash, multi-select, share and save; settings are stored in the PNG, so any picture can be reopened with its prompt and seed.

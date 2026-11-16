@@ -315,7 +315,7 @@
 327	mô tả bằng câu thông thường, chữ trong ảnh
 328	chỉnh sửa ảnh, tối đa 3 ảnh
 329	4 bước · chỉnh sửa ảnh
-330	Quá lớn: tối đa 6912 patch (ví dụ 1152×1536)
+330	Quá lớn: tối đa 65536 patch (ví dụ 4096×4096)
 331	Token: %d / %d
 332	  ·  phủ định: %d
 333	  ·  quá dài
@@ -533,3 +533,6 @@
 534	Cả hai cạnh là bội số của 16, số patch (rộng/16 × cao/16) chia hết cho 32 và tối đa 6144 (ví dụ 1536×1024), tối thiểu 256 mỗi cạnh. Hãy viết mô tả chi tiết, thành một đoạn văn liền mạch.
 535	LTX-2.5 (Lightricks, 22B, chưng cất) tạo một video ngắn từ mô tả: 17–97 khung hình (mặc định 17), tốc độ khung hình của MP4 tùy chọn, không có âm thanh. Bộ mã hóa văn bản Gemma, 48 khối DiT (8 bước, không CFG) và VAE chạy trên NPU; một clip hoàn chỉnh mất khoảng một phút rưỡi. Mô hình có trong danh mục tải xuống (khoảng 31 GB; LTX-2 Community License). Kết quả là một MP4 cạnh khung hình xem trước trong lịch sử (nút ▶).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) là mô hình chân thực như ảnh chụp, hiểu các mô tả dài viết bằng câu thông thường và vẽ được chữ. 16 bước, không CFG: khoảng một phút cho 512×512, 3–4 phút cho 1024×1024. Bộ mã hóa văn bản, transformer và bộ giải mã chạy trên NPU. Mô hình có trong danh mục tải xuống (khoảng 9 GB). Giấy phép FLUX Kommunity: chỉ dùng phi thương mại.
+537	Quá lớn: tối đa %d patch cùng với các ảnh
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh chụp bằng prompt trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh chụp, hãy chọn ảnh trong khối "Chỉnh sửa ảnh" và mô tả điều cần thay đổi; bạn có thể thêm tối đa hai ảnh tham chiếu nữa và nhắc đến chúng trong mô tả ("ảnh 1", "ảnh 2").
+539	Cả hai cạnh là bội số của 16 và số patch (rộng/16 × cao/16) chia hết cho 32. Mô hình tính theo cửa sổ nên không có giới hạn kích thước cứng: một ảnh, hoặc một lần chỉnh sửa cùng các ảnh của nó (mỗi ảnh chiếm số patch bằng kết quả), có thể có tối đa 24576 patch tổng cộng, ví dụ 2048×2048 (khoảng 3,5 phút) hoặc 1024×768 với ba ảnh. Kích thước càng lớn càng lâu: thời gian tăng xấp xỉ theo bình phương số patch.

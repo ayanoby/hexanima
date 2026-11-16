@@ -11,6 +11,8 @@ QW=${QWEN_DIR:-qwen}; [ -f $QW/qwenrun/out/qwenrun ] && cp $QW/qwenrun/out/qwenr
 # FLUX.3 Klein, LTX-2.5 and MiniMax-H3 Ref2VA (optional, from flux3/, ltx/, h3/): runners, the shared DSP skel (built by flux3/hexagon/mega/build_skel.sh, shipped under one name per model: each model copies its own to files/<model>/dsp/libmega_skel.so), the VAE helpers
 F3=${FLUX3_DIR:-flux3}; SK=$F3/hexagon/mega/bld/v69/libmega_skel.so
 [ -f $F3/runner/out/flux3run ] && cp $F3/runner/out/flux3run $J/libflux3run.so && cp $SK $J/libflux3skel.so && cp $F3/runner/out/kup $J/libkup.so && cp $F3/runner/out/kvae $J/libkvae.so
+# Mage-Flow-Edit-Turbo (optional): the runner (mage/magerun, build.sh) and the shared DSP skel (modes 53 / 55 / 61 / 22)
+[ -f mage/magerun/out/magerun ] && cp mage/magerun/out/magerun $J/libmagerun.so && cp $SK $J/libmageskel.so
 [ -f ltx/runner/out/ltxrun ] && cp ltx/runner/out/ltxrun $J/libltxrun.so && cp $SK $J/libltxskel.so && cp ltx/vae/runner/out/lvae $J/liblvae.so
 [ -f h3/hexagon/mega/out/r2vrun ] && cp h3/hexagon/mega/out/r2vrun $J/libr2vrun.so && cp $SK $J/libr2vskel.so && cp $F3/hexagon/mega/out/vaerun $J/libr2vae.so && cp h3/vae/out/henc $J/libr2enc.so
 ls -la $J

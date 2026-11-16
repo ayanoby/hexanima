@@ -13,21 +13,28 @@ final class Mage {
     static File editDir(File home) { return new File(dir(home), "edit"); }
 
     static final int[][] PRESETS = Qwen.PRESETS;
-    /** the presets for the picker: while a photo is edited only the sizes that fit the attention with the reference (the shared list stays untouched) */
-    static java.util.List<int[]> presets(boolean edit) {
+    /** the DiT runs in windows (no limit of the attention): the limit is the phone memory and the time. All image tokens of a run (the target and every reference, each reference has the size of the target) at most MAX_TOKENS: 2048x2048 = 16384 (about 3.5 minutes, measured), 2048x3072 = 24576 */
+    static final int MAX_TOKENS = 24576, MAX_IMAGES = 3;
+    /** the presets for the picker: while pictures are edited only the sizes whose target and references together stay below the limit (the shared list stays untouched) */
+    static java.util.List<int[]> presets(int pictures) {
         java.util.List<int[]> l = new java.util.ArrayList<>();
-        for (int[] z : PRESETS) if (!edit || (z[0] / 16) * (z[1] / 16) <= MAX_EDIT_PATCHES) l.add(z);
+        for (int[] z : PRESETS) if (tokens(z[0], z[1], pictures) <= MAX_TOKENS) l.add(z);
         return l;
     }
-    static final int MAX_EDIT_PATCHES = 3200;   // target + reference tokens (2x) must fit the 8 MB VTCM attention together with the text
-    static final int MAX_PATCHES = 6144, MAX_KEYS = 6500;   // MAX_KEYS: the attention of one DiT step holds all target + reference + text tokens in the 8 MB VTCM (measured: 6244 and 6144+text work)
-    static String sizeError(int w, int h) {
+    /** image tokens of a run: the target and `pictures` references of the same size */
+    static int tokens(int w, int h, int pictures) { return (w / 16) * (h / 16) * (1 + pictures); }
+    static String sizeError(int w, int h, int pictures) {
         if (w < 256 || h < 256) return L.s("Размер: минимум 256 по каждой стороне", "Size: at least 256 on each side");
         if (w % 16 != 0 || h % 16 != 0) return L.s("Ширина и высота должны быть кратны 16", "Width and height must be multiples of 16");
         int t = (w / 16) * (h / 16);
         if (t % 32 != 0) return L.f("Число патчей (%d) должно делиться на 32, например 640×640, 1024×1024, 704×832", "Patch count (%d) must be divisible by 32, e.g. 640×640, 1024×1024, 704×832", t);
-        if (t > MAX_PATCHES) return L.s("Слишком большой размер: максимум 6144 патчей (1536×1024)", "Too large: at most 6144 patches (1536×1024)");
+        if (tokens(w, h, pictures) > MAX_TOKENS) return L.f("Слишком большой размер: вместе с картинками максимум %d патчей", "Too large: at most %d patches together with the pictures", MAX_TOKENS);
         return null;
+    }
+    /** measured on the phone (DiT 4 steps, tokens = target + references + text): 1.7k rows 1.8 s per step, 3.6k 3.8 s, 6.2k 7.7 s, 12.8k 30.6 s, 16.4k 47.4 s (windows above 6000 rows); text encoder ~3 s, ViT 0.7 s and VAE encoder 1.3 s per picture, VAE decoder ~0.6 s per 100k px */
+    static int estimate(int w, int h, int pictures, int steps) {
+        double t = tokens(w, h, pictures) + 300, step = t <= 6500 ? 1.1e-3 * t : 5.3e-4 * t + 1.46e-7 * t * t;
+        return (int) Math.round(4 + steps * step + 2 * pictures + 6.0e-6 * w * h);
     }
 
     private static void writeInts(int[] ids, File out) throws IOException {
@@ -54,31 +61,36 @@ final class Mage {
 
     static final class Edit { int drop, tokens, nm; }
 
-    /** writes EDIT_DIR/{meta.txt "gh gw h w", px.f32 (ViT patches of the vision-language copy, long edge <= 384, sides multiples of 32), ref.rgb (the photo at the target size, fp32 HWC in [-1,1])} and the ids file */
-    static Edit prepareEdit(File home, Bitmap src, String prompt, int tw, int th, File idsOut) throws Exception {
-        int w0 = src.getWidth(), h0 = src.getHeight(), m = Math.max(w0, h0);
-        double s = m > 384 ? 384.0 / m : 1;
-        int vw = Math.max(1, (int) Math.round(w0 * s)), vh = Math.max(1, (int) Math.round(h0 * s));
-        final int Wv = Math.max(32, Math.round(vw / 32f) * 32), Hv = Math.max(32, Math.round(vh / 32f) * 32), gh = Hv / 16, gw = Wv / 16;
-        int[] px = new int[Wv * Hv]; fit(src, Wv, Hv).getPixels(px, 0, Wv, 0, 0, Wv, Hv);
-        int n = Wv * Hv; float[] pv = new float[gh * gw * 1536]; int bw = gw / 2;
-        for (int p = 0; p < gh * gw; p++) {   // 16x16 patches in 2x2 merge order, each (c, t = 2 copies, 16, 16)
-            int blk = p / 4, ir = (p / 2) % 2, ic = p % 2, row = (blk / bw) * 2 + ir, col = (blk % bw) * 2 + ic, o = p * 1536;
-            for (int c = 0; c < 3; c++) for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
-                int q = px[(row * 16 + y) * Wv + col * 16 + x]; float v = (((q >> (16 - 8 * c)) & 255) / 255f - .5f) / .5f;
-                pv[o + (c * 2) * 256 + y * 16 + x] = v; pv[o + (c * 2 + 1) * 256 + y * 16 + x] = v;
+    /** writes EDIT_DIR/{meta.txt (one line "gh gw h w" per picture: the ViT grid of the vision-language copy and the size of the reference), px.f32 (ViT patches of the picture, long edge <= 384, sides multiples of 32), ref.rgb (the picture at the target size, fp32 HWC in [-1,1]); px2.f32 / ref2.rgb and px3.f32 / ref3.rgb for the extra pictures} and the ids file. srcs: the picture to edit first, then up to two references */
+    static Edit prepareEdit(File home, java.util.List<Bitmap> srcs, String prompt, int tw, int th, File idsOut) throws Exception {
+        File ed = editDir(home); ed.mkdirs(); StringBuilder meta = new StringBuilder(); int[] pads = new int[srcs.size()]; int nm = 0;
+        for (int k = 0; k < srcs.size(); k++) {
+            Bitmap src = srcs.get(k); int w0 = src.getWidth(), h0 = src.getHeight(), m = Math.max(w0, h0);
+            double s = m > 384 ? 384.0 / m : 1;
+            int vw = Math.max(1, (int) Math.round(w0 * s)), vh = Math.max(1, (int) Math.round(h0 * s));
+            final int Wv = Math.max(32, Math.round(vw / 32f) * 32), Hv = Math.max(32, Math.round(vh / 32f) * 32), gh = Hv / 16, gw = Wv / 16;
+            int[] px = new int[Wv * Hv]; fit(src, Wv, Hv).getPixels(px, 0, Wv, 0, 0, Wv, Hv);
+            float[] pv = new float[gh * gw * 1536]; int bw = gw / 2;
+            for (int p = 0; p < gh * gw; p++) {   // 16x16 patches in 2x2 merge order, each (c, t = 2 copies, 16, 16)
+                int blk = p / 4, ir = (p / 2) % 2, ic = p % 2, row = (blk / bw) * 2 + ir, col = (blk % bw) * 2 + ic, o = p * 1536;
+                for (int c = 0; c < 3; c++) for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+                    int q = px[(row * 16 + y) * Wv + col * 16 + x]; float v = (((q >> (16 - 8 * c)) & 255) / 255f - .5f) / .5f;
+                    pv[o + (c * 2) * 256 + y * 16 + x] = v; pv[o + (c * 2 + 1) * 256 + y * 16 + x] = v;
+                }
             }
+            String sfx = k == 0 ? "" : String.valueOf(k + 1);
+            writeFloats(new File(ed, "px" + sfx + ".f32"), pv);
+            int[] rp = new int[tw * th]; fit(src, tw, th).getPixels(rp, 0, tw, 0, 0, tw, th);
+            float[] ref = new float[tw * th * 3];
+            for (int i = 0; i < rp.length; i++) { int q = rp[i]; ref[3 * i] = ((q >> 16) & 255) / 127.5f - 1; ref[3 * i + 1] = ((q >> 8) & 255) / 127.5f - 1; ref[3 * i + 2] = (q & 255) / 127.5f - 1; }
+            writeFloats(new File(ed, "ref" + sfx + ".rgb"), ref);
+            meta.append(gh).append(' ').append(gw).append(' ').append(th / 16).append(' ').append(tw / 16).append('\n');
+            pads[k] = gh * gw / 4; nm += pads[k];
         }
-        File ed = editDir(home); ed.mkdirs();
-        writeFloats(new File(ed, "px.f32"), pv);
-        int[] rp = new int[tw * th]; fit(src, tw, th).getPixels(rp, 0, tw, 0, 0, tw, th);
-        float[] ref = new float[tw * th * 3];
-        for (int i = 0; i < rp.length; i++) { int q = rp[i]; ref[3 * i] = ((q >> 16) & 255) / 127.5f - 1; ref[3 * i + 1] = ((q >> 8) & 255) / 127.5f - 1; ref[3 * i + 2] = (q & 255) / 127.5f - 1; }
-        writeFloats(new File(ed, "ref.rgb"), ref);
-        try (FileWriter w = new FileWriter(new File(ed, "meta.txt"))) { w.write(gh + " " + gw + " " + th / 16 + " " + tw / 16 + "\n"); }
-        Edit e = new Edit(); e.nm = gh * gw / 4;
+        try (FileWriter w = new FileWriter(new File(ed, "meta.txt"))) { w.write(meta.toString()); }
+        Edit e = new Edit(); e.nm = nm;
         QwenTok t = new QwenTok(dir(home).getPath());
-        int[] ids = t.encodeMageEdit(prompt, e.nm); e.drop = t.dropMage(true); e.tokens = ids.length;
+        int[] ids = srcs.size() == 1 ? t.encodeMageEdit(prompt, pads[0]) : t.encodeMageEditMulti(prompt, pads); e.drop = t.dropMage(true); e.tokens = ids.length;
         writeInts(ids, idsOut);
         return e;
     }

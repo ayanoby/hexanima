@@ -315,7 +315,7 @@
 327	descripciones en frases normales, texto en las imágenes
 328	edición de fotos, hasta 3 imágenes
 329	4 pasos · edición de fotos
-330	Demasiado grande: máximo 6912 parches (p. ej. 1152×1536)
+330	Demasiado grande: máximo 65536 parches (p. ej. 4096×4096)
 331	Tokens: %d / %d
 332	  ·  negativo: %d
 333	  ·  demasiado largo
@@ -533,3 +533,6 @@
 534	Ambos lados son múltiplos de 16, el número de parches (ancho/16 × alto/16) es divisible entre 32 y como máximo 6144 (por ejemplo 1536×1024), al menos 256 por lado. Escribe la descripción con detalle, como un párrafo continuo.
 535	LTX-2.5 (Lightricks, 22B, destilado) crea un vídeo corto a partir de una descripción: 17–97 fotogramas (17 por defecto), la velocidad de fotogramas del MP4 a tu elección, sin sonido. El codificador de texto Gemma, los 48 bloques DiT (8 pasos, sin CFG) y el VAE se ejecutan en la NPU; un clip completo tarda alrededor de minuto y medio. El modelo está en el catálogo de descargas (unos 31 GB; LTX-2 Community License). El resultado es un MP4 junto a un fotograma de vista previa en el historial (el botón ▶).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) es un modelo fotorrealista que sigue descripciones largas escritas en frases normales y dibuja texto. 16 pasos, sin CFG: alrededor de un minuto para 512×512, 3–4 minutos para 1024×1024. El codificador de texto, el transformador y el decodificador se ejecutan en la NPU. El modelo está en el catálogo de descargas (unos 9 GB). Licencia FLUX Kommunity: solo uso no comercial.
+537	Demasiado grande: como máximo %d parches junto con las imágenes
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, licencia MIT) dibuja imágenes y edita fotos con un prompt en 4 pasos, unos 12 segundos por imagen. El codificador de texto, el ViT, el transformer y el VAE funcionan todos en la NPU; la descarga es de unos 8,7 GB. Para editar una foto, elígela en el bloque «Editar una foto» y describe qué cambiar; puedes añadir hasta dos imágenes de referencia más y referirte a ellas en la descripción («imagen 1», «imagen 2»).
+539	Ambos lados son múltiplos de 16 y el número de parches (ancho/16 × alto/16) es divisible entre 32. El modelo trabaja por ventanas, así que no hay un límite estricto de tamaño: una imagen, o una edición con sus imágenes (cada imagen ocupa tantos parches como el resultado), puede tener hasta 24576 parches en total, por ejemplo 2048×2048 (unos 3,5 minutos) o 1024×768 con tres imágenes. Cuanto mayor es el tamaño, más tarda: el tiempo crece aproximadamente con el cuadrado del número de parches.

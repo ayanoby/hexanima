@@ -315,7 +315,7 @@
 327	descriptions en phrases ordinaires, texte dans les images
 328	retouche de photos, jusqu’à 3 images
 329	4 étapes · retouche de photos
-330	Trop grand : 6912 patchs au maximum (p. ex. 1152×1536)
+330	Trop grand : 65536 patchs au maximum (p. ex. 4096×4096)
 331	Tokens : %d / %d
 332	  ·  négatif : %d
 333	  ·  trop long
@@ -533,3 +533,6 @@
 534	Les deux côtés sont des multiples de 16, le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32 et au plus 6144 (par exemple 1536×1024), au moins 256 par côté. Rédigez la description en détail, en un paragraphe continu.
 535	LTX-2.5 (Lightricks, 22B, distillé) crée une courte vidéo à partir d'une description : 17–97 images (17 par défaut), la fréquence d'images du MP4 au choix, sans son. L'encodeur de texte Gemma, les 48 blocs DiT (8 étapes, sans CFG) et le VAE tournent sur le NPU ; un clip complet prend environ une minute et demie. Le modèle est dans le catalogue de téléchargement (environ 31 Go ; LTX-2 Community License). Le résultat est un MP4 à côté d'une image d'aperçu dans l'historique (le bouton ▶).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) est un modèle photoréaliste qui suit de longues descriptions écrites en phrases ordinaires et dessine du texte. 16 étapes, sans CFG : environ une minute pour 512×512, 3–4 minutes pour 1024×1024. L'encodeur de texte, le transformeur et le décodeur tournent sur le NPU. Le modèle est dans le catalogue de téléchargement (environ 9 Go). Licence FLUX Kommunity : usage non commercial uniquement.
+537	Trop grand : au plus %d patchs avec les images
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, licence MIT) dessine des images et retouche des photos à partir d’un prompt en 4 étapes, environ 12 secondes par image. L’encodeur de texte, le ViT, le transformer et le VAE tournent tous sur le NPU ; le téléchargement fait environ 8,7 Go. Pour retoucher une photo, choisissez-la dans le bloc « Retoucher une photo » et décrivez ce qu’il faut changer ; vous pouvez ajouter jusqu’à deux images de référence de plus et les citer dans la description (« image 1 », « image 2 »).
+539	Les deux côtés sont des multiples de 16 et le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32. Le modèle travaille par fenêtres, il n’y a donc pas de limite stricte de taille : une image, ou une retouche avec ses images (chaque image occupe autant de patchs que le résultat), peut compter jusqu’à 24576 patchs au total, par exemple 2048×2048 (environ 3,5 minutes) ou 1024×768 avec trois images. Plus la taille est grande, plus c’est long : le temps croît à peu près comme le carré du nombre de patchs.

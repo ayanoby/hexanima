@@ -103,6 +103,12 @@ public class QwenTok {
         for (int i = 0; i < nPads; i++) sb.append("<|image_pad|>");
         return encode(sb.append("<|vision_end|>").append(prompt).append(MAGE_END).toString());
     }
+    /** Mage-Flow-Edit prompt with several pictures (up to 3): "Image k: <|vision_start|>pads<|vision_end|>" for each, then the instruction */
+    public int[] encodeMageEditMulti(String prompt, int[] nPads) {
+        StringBuilder sb = new StringBuilder(MAGE_EDIT_SYS);
+        for (int k = 0; k < nPads.length; k++) { sb.append("Image ").append(k + 1).append(": <|vision_start|>"); for (int i = 0; i < nPads[k]; i++) sb.append("<|image_pad|>"); sb.append("<|vision_end|>"); }
+        return encode(sb.append(prompt).append(MAGE_END).toString());
+    }
     /** FLUX.3 Image Klein: the plain chat template (user turn, no system message), no padding */
     public int[] encodeKlein(String prompt) { return encode("<|im_start|>user\n" + prompt + "<|im_end|>\n<|im_start|>assistant\n"); }
     public int dropMage(boolean edit) { return encode(edit ? MAGE_EDIT_SYS : MAGE_SYS).length; }

@@ -71,7 +71,7 @@ public class Main extends Base {
     int steps() { return Math.max(stepsMin(), Math.min(stepsMax(), prefs().getInt(stepsKey(), stepsDef()))); }
     void setSteps(int v) { prefs().edit().putInt(stepsKey(), Math.max(stepsMin(), Math.min(stepsMax(), v))).apply(); if (base()) prefs().edit().putInt("base_steps", steps()).apply(); refreshBaseUi(); }
     int cm() { return base() ? 2 : 1; }   // DiT passes per step
-    /** popular sizes, all valid for the NPU pipeline (multiples of 16, patch count divisible by 32, at most 6912); grouped by aspect ratio, a portrait and its landscape twin next to each other */
+    /** popular sizes, all valid for the NPU pipeline (multiples of 16, patch count divisible by 32, at most 65536); grouped by aspect ratio, a portrait and its landscape twin next to each other */
     static final int[][] SIZES = {{512, 512}, {640, 640}, {768, 768}, {1024, 1024}, {512, 768}, {768, 512}, {768, 1152}, {1152, 768}, {1024, 1536}, {1536, 1024}, {768, 1024}, {1024, 768}, {960, 1280}, {1280, 960},
         {576, 1024}, {1024, 576}, {640, 1152}, {1152, 640}, {960, 1536}, {1536, 960}, {768, 1216}, {1216, 768}, {1280, 1280}, {1152, 1536}, {1536, 1152}};
     static volatile boolean visible;   // the main screen is in front (otherwise a finished picture is announced by a notification)
@@ -542,7 +542,7 @@ public class Main extends Base {
     void refreshEdit() {
         if (editBm == null && prefs().getBoolean("qwen_edit_on", false) && Qwen.editSrc(getFilesDir()).exists()) editBm = BitmapFactory.decodeFile(Qwen.editSrc(getFilesDir()).getPath());
         if (extraBm.isEmpty() && editBm != null) for (int i = 1; i < Qwen.MAX_IMAGES; i++) { File f = Qwen.editSrc(getFilesDir(), i); Bitmap x = f.exists() ? BitmapFactory.decodeFile(f.getPath()) : null; if (x == null) break; extraBm.add(x); }
-        final Bitmap b = editBm; final boolean multi = isQwen();
+        final Bitmap b = editBm; final boolean multi = isQwen() || isMage();
         editThumb.setImageBitmap(b);
         editInfo.setText(b != null ? (multi ? L.f("Картинка 1  ·  %d×%d", "Picture 1  ·  %d×%d", b.getWidth(), b.getHeight()) : L.f("Фото  ·  %d×%d", "Photo  ·  %d×%d", b.getWidth(), b.getHeight())) : (multi ? L.s("Картинка 1", "Picture 1") : L.s("Фото", "Photo")));
         editInfo.setTextColor(b != null ? TXT : DIM);
@@ -957,7 +957,7 @@ public class Main extends Base {
     String cfgStr() { return prefs().getString(cfgKey(), base() ? "4" : "1"); }
     boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3() && !isKlein() && !isLtx() && !isR2v(); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
-    java.util.List<int[]> sizeList() { return isR2v() ? java.util.Arrays.asList(R2v.PRESETS) : isLtx() ? java.util.Arrays.asList(Ltx.PRESETS) : isKlein() ? java.util.Arrays.asList(Klein.PRESETS) : isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
+    java.util.List<int[]> sizeList() { return isR2v() ? java.util.Arrays.asList(R2v.PRESETS) : isLtx() ? java.util.Arrays.asList(Ltx.PRESETS) : isKlein() ? java.util.Arrays.asList(Klein.PRESETS) : isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null ? 1 + extraBm.size() : 0) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
 
     // ---- model state --------------------------------------------------------------------------
@@ -1173,13 +1173,13 @@ public class Main extends Base {
         }
     }
 
-    /** The NPU pipeline needs width/height multiples of 16, patch count divisible by 32 and at most 6912 patches (megarun TMAX; the attention fills the 8 MB VTCM at 7392 tokens). */
+    /** The NPU pipeline needs width/height multiples of 16, patch count divisible by 32 and at most 65536 patches (megarun TMAX is 98304; the attention streams the keys through VTCM and blocks above 16384 tokens run in windows, so only the time grows: about 2.4 s per block at 16384 tokens, 24 s at 65536). */
     static String sizeError(int w, int h) {
         if (w < 256 || h < 256) return L.s("Размер: минимум 256 по каждой стороне", "Size: at least 256 on each side");
         if (w % 16 != 0 || h % 16 != 0) return L.s("Ширина и высота должны быть кратны 16", "Width and height must be multiples of 16");
         int t = (w / 16) * (h / 16);
         if (t % 32 != 0) return L.f("Число патчей (%d) должно делиться на 32, например 640×640, 1024×1024, 704×832", "Patch count (%d) must be divisible by 32, e.g. 640×640, 1024×1024, 704×832", t);
-        if (t > 6912) return L.s("Слишком большой размер: максимум 6912 патчей (например 1152×1536)", "Too large: at most 6912 patches (e.g. 1152×1536)");
+        if (t > 65536) return L.s("Слишком большой размер: максимум 65536 патчей (например 4096×4096)", "Too large: at most 65536 patches (e.g. 4096×4096)");
         return null;
     }
 
@@ -1235,9 +1235,19 @@ public class Main extends Base {
     }
     void updatePlaceholder() {
         if (placeholder == null || phSize == null) return;
-        int cw = getResources().getDisplayMetrics().widthPixels - dp(40); double r = Math.max(0.5, Math.min(1.5, (double) resH / Math.max(1, resW)));   // the picture area takes the shape of the chosen size (the picture is fitted inside it)
-        ViewGroup.LayoutParams lp = imgBox.getLayoutParams(); if (lp != null && lp.height != (int) (cw * r)) { lp.height = (int) (cw * r); imgBox.setLayoutParams(lp); }
+        setBox(resW, resH);   // the picture area takes the shape of the chosen size (the picture is fitted inside it)
         phSize.setText(resW + " × " + resH);
+    }
+    /** the picture area gets exactly the shape of w x h: as wide as the screen allows, at most 70 % of the screen high (then narrower, centred); never smaller than 140 dp on a side */
+    void setBox(int w, int h) {
+        if (w <= 0 || h <= 0) return;
+        final android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        final double mw = dm.widthPixels - dp(40), mh = dm.heightPixels * 0.7, s = Math.min(mw / w, mh / h);
+        int bw = (int) Math.round(w * s), bh = (int) Math.round(h * s);
+        if (Math.min(bw, bh) < dp(140)) { double up = dp(140) / (double) Math.min(bw, bh); bw = (int) Math.min(mw, Math.round(bw * up)); bh = (int) Math.min(mh, Math.round(bh * up)); }
+        ViewGroup.LayoutParams lp = imgBox.getLayoutParams();
+        if (lp instanceof LinearLayout.LayoutParams) ((LinearLayout.LayoutParams) lp).gravity = Gravity.CENTER_HORIZONTAL;
+        if (lp != null && (lp.width != bw || lp.height != bh)) { lp.width = bw; lp.height = bh; imgBox.setLayoutParams(lp); }
     }
 
     /** ratio shortcuts next to the current size: for each common ratio the preset of this model whose area is closest to the current one; the last chip opens the full picker */
@@ -1273,8 +1283,11 @@ public class Main extends Base {
         if (isLtx()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", Ltx.estimate(resW, resH, ltxLf(), steps()));
         if (isKlein()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, Klein.estimate(resW, resH, steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", Klein.estimate(resW, resH, steps()));
         if (isH3()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, H3.estimate(resW, resH, h3Steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", H3.estimate(resW, resH, h3Steps()));
+        if (isMage()) { int me = Mage.estimate(resW, resH, editBm != null ? 1 + extraBm.size() : 0, steps()); return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, me * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", me); }
         if (isQwen()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, qwenEst() * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", qwenEst());
-        long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
+        // the attention grows with the square of the token count: 4.6e-9 s per block, full step and token^2 (measured: 2.35 s per block at 16384 tokens, 7.1 s at 32768, 24.3 s at 65536); the first two turbo steps run on a quarter of the tokens
+        final double tk = (resW / 16) * (resH / 16), quad = isAnima() ? (model.contains("29") ? 40 : 28) * Math.max(1.0, steps() - (base() ? 0 : 2) + (base() ? 0 : 2) / 16.0) * 4.6e-9 * Math.max(0, tk * tk - 1536.0 * 1536.0) : 0;
+        long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * tk / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1) + quad)) * count;
         return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, est) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", est);
     }
 
@@ -1480,7 +1493,7 @@ public class Main extends Base {
         if (model.isEmpty()) { openModels(); return; }
         int cw = 0, ch = 0;
         try { cw = Integer.parseInt(wEdit.getText().toString().trim()); ch = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
-        String bad = isR2v() ? R2v.sizeError(cw, ch, ltxLf()) : isLtx() ? Ltx.sizeError(cw, ch, ltxLf()) : isKlein() ? Klein.sizeError(cw, ch) : isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
+        String bad = isR2v() ? R2v.sizeError(cw, ch, ltxLf()) : isLtx() ? Ltx.sizeError(cw, ch, ltxLf()) : isKlein() ? Klein.sizeError(cw, ch) : isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch, editBm != null ? 1 + extraBm.size() : 0) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
         if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
         if (cw != resW || ch != resH) setRes(cw, ch);
         final String pr = clean(prompt.getText().toString()).trim();
@@ -1655,16 +1668,13 @@ public class Main extends Base {
     /** one Mage-Flow picture (or an edit of the picked photo): tokenise / prepare the photo here, everything else on the NPU through mage.sh */
     File runOneMage(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), M = Mage.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.rgb"); final int STEPS = steps();
-        final Bitmap src = editBm; final boolean edit = src != null;
+        final Bitmap src = editBm; final boolean edit = src != null; final java.util.List<Bitmap> srcs = new java.util.ArrayList<>(); if (edit) { srcs.add(src); srcs.addAll(extraBm); }
         setProgressUi(2, edit ? L.s("Подготовка фото…", "Preparing the photo…") : L.s("Токенизация…", "Tokenising…"), t0);
-        int drop, keys; String edArg = "";
+        int drop; String edArg = "";
         try {
             if (edit) {
-                if ((w / 16) * (h / 16) > Mage.MAX_EDIT_PATCHES) { ui.post(() -> Toast.makeText(this, L.s("Для редактирования размер не больше 1024×768", "For editing the size is at most 1024×768"), Toast.LENGTH_LONG).show()); return null; }
-                Mage.Edit e = Mage.prepareEdit(home, src, pr, w, h, new File(Mage.editDir(home), "ids.i32")); drop = e.drop; edArg = " " + q(Mage.editDir(home).getPath());
-                keys = 2 * (w / 16) * (h / 16) + e.tokens - e.drop;
-            } else { drop = Mage.writeIds(home, pr, ids); keys = (w / 16) * (h / 16) + (int) (ids.length() / 4) - drop; }
-            if (keys > Mage.MAX_KEYS) { ui.post(() -> Toast.makeText(this, L.s("Описание слишком длинное для этого размера: сократите его или выберите размер поменьше", "The prompt is too long for this size: shorten it or pick a smaller size"), Toast.LENGTH_LONG).show()); return null; }
+                Mage.Edit e = Mage.prepareEdit(home, srcs, pr, w, h, new File(Mage.editDir(home), "ids.i32")); drop = e.drop; edArg = " " + q(Mage.editDir(home).getPath());
+            } else drop = Mage.writeIds(home, pr, ids);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, "mage: " + e, Toast.LENGTH_LONG).show()); return null; }
         final boolean[] done = {false};
         final Preview pv = Preview.load(this, "mage"); final File pvf = new File(M, "prev.bin"); pvf.delete();
@@ -1693,7 +1703,7 @@ public class Main extends Base {
         try {
             byte[] png = Mage.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
-            if (edit) meta.put("edit", true);
+            if (edit) meta.put("edit", true).put("pictures", srcs.size());
             return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
@@ -1845,11 +1855,10 @@ public class Main extends Base {
     }
 
     /** shows the preview of the picture being made in place of the last result (the final picture replaces it) */
-    /** the picture area takes the shape of the picture it shows (a taller one than the screen is fitted into 70 % of the screen height) */
+    /** the picture area takes exactly the shape of the picture it shows (a taller one than the screen is fitted into 70 % of the screen height and gets narrower) */
     void fitBox(Bitmap b) {
         if (b == null || b.getWidth() == 0) return;
-        int cw = getResources().getDisplayMetrics().widthPixels - dp(40), mh = (int) (getResources().getDisplayMetrics().heightPixels * 0.7), hh = Math.min(mh, (int) ((long) cw * b.getHeight() / b.getWidth()));
-        ViewGroup.LayoutParams lp = imgBox.getLayoutParams(); if (lp != null && lp.height != hh) { lp.height = hh; imgBox.setLayoutParams(lp); }
+        setBox(b.getWidth(), b.getHeight());
     }
     void showPreview(Bitmap pb) {
         if (pb == null) return;

@@ -315,7 +315,7 @@
 327	deskripsi dengan kalimat biasa, teks di dalam gambar
 328	pengeditan foto, hingga 3 gambar
 329	4 langkah · pengeditan foto
-330	Terlalu besar: maksimal 6912 patch (mis. 1152×1536)
+330	Terlalu besar: maksimal 65536 patch (mis. 4096×4096)
 331	Token: %d / %d
 332	  ·  negatif: %d
 333	  ·  terlalu panjang
@@ -533,3 +533,6 @@
 534	Kedua sisi kelipatan 16, jumlah patch (lebar/16 × tinggi/16) habis dibagi 32 dan paling banyak 6144 (misalnya 1536×1024), minimal 256 per sisi. Tulis deskripsi secara rinci, sebagai satu paragraf yang utuh.
 535	LTX-2.5 (Lightricks, 22B, hasil distilasi) membuat video pendek dari deskripsi: 17–97 bingkai (bawaan 17), laju bingkai MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memerlukan sekitar satu setengah menit. Model ini ada di katalog unduhan (sekitar 31 GB; LTX-2 Community License). Hasilnya berupa MP4 di samping bingkai pratinjau di riwayat (tombol ▶).
 536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) adalah model fotorealistis yang mengikuti deskripsi panjang yang ditulis dengan kalimat biasa dan dapat menggambar teks. 16 langkah, tanpa CFG: sekitar satu menit untuk 512×512, 3–4 menit untuk 1024×1024. Encoder teks, transformer, dan dekoder berjalan di NPU. Model ini ada di katalog unduhan (sekitar 9 GB). Lisensi FLUX Kommunity: hanya untuk penggunaan nonkomersial.
+537	Terlalu besar: maksimal %d patch beserta gambarnya
+538	Mage-Flow-Edit-Turbo (Microsoft, 4B, lisensi MIT) menggambar dan mengedit foto lewat prompt dalam 4 langkah, sekitar 12 detik per gambar. Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; unduhannya sekitar 8,7 GB. Untuk mengedit foto, pilih di blok "Edit foto" dan jelaskan apa yang diubah; Anda dapat menambahkan hingga dua gambar referensi lagi dan merujuknya di prompt ("gambar 1", "gambar 2").
+539	Kedua sisi kelipatan 16 dan jumlah patch (lebar/16 × tinggi/16) habis dibagi 32. Model bekerja dalam jendela, jadi tidak ada batas ukuran yang kaku: satu gambar, atau suntingan beserta gambar-gambarnya (setiap gambar memakai patch sebanyak hasilnya), boleh sampai 24576 patch secara total, misalnya 2048×2048 (sekitar 3,5 menit) atau 1024×768 dengan tiga gambar. Makin besar ukurannya, makin lama: waktunya naik kira-kira sebanding kuadrat jumlah patch.

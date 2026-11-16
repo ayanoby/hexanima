@@ -33,7 +33,7 @@ extern "C" {
 
 struct dma_buf_sync_ { unsigned long long flags; };
 #define DMA_BUF_IOCTL_SYNC_ _IOW('b', 0, dma_buf_sync_)
-static const int D = 2048, NCTX = 512, TMAX = 6912;
+static const int D = 2048, NCTX = 512, TMAX = 98304;   // no real limit: windows keep the blob at 16 KB per token (98304 tokens = 1.6 GB, about what one FastRPC mapping can take); the time grows with T^2
 typedef float f32;
 static double now() { return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count(); }
 static std::vector<char> readfile(const std::string& p) {
@@ -77,20 +77,28 @@ static void to_q8(const uint8_t* src, uint8_t* dst) {
 
 struct Layout { int meta[M_NMETA]; size_t total; };
 static bool g_q8 = false;
-static Layout layout(int T) {
+// Windows (big pictures): above MEGA_WIN_MIN tokens (default 16384) a block is run in windows of MEGA_WIN tokens (default 4096): X, K, V (and the rope tables) hold all tokens,
+// the other buffers only one window, so the blob needs about 16 KB per token instead of 48 KB. Per block every window first makes its K and V (pass 1), then runs the whole block (pass 0).
+static int win_slabs(int T) {
+  int mn = getenv("MEGA_WIN_MIN") ? atoi(getenv("MEGA_WIN_MIN")) : 16384, w = getenv("MEGA_WIN") ? atoi(getenv("MEGA_WIN")) : 4096;
+  if (w < 32 || T <= mn || w >= T) return 0; return w / 32;
+}
+static Layout layout(int T, int WN = 0) {
   Layout L; memset(&L, 0, sizeof L);
+  if (const char* fc = getenv("MEGA_FORCE_CHUNK")) L.meta[M_FORCE] = atoi(fc);   // test: (QB<<16)|C
   size_t sz[M_NMETA] = {0};
   sz[M_X] = (size_t)T * D * 4; sz[M_CTX] = (size_t)NCTX * 1024 * 2; sz[M_MOD] = 9 * D * 4;
   sz[M_COS] = sz[M_SIN] = (size_t)(T / 32) * 2 * 1024 * 4;
-  sz[M_H] = sz[M_Q] = sz[M_K] = sz[M_V] = sz[M_O] = sz[M_T] = (size_t)T * D * 2;
-  sz[M_MID] = (size_t)T * 8192 * 2; sz[M_CK] = sz[M_CV] = (size_t)NCTX * D * 2;
+  const size_t Tw = WN ? (size_t)WN * 32 : (size_t)T;   // rows of the per-window buffers
+  sz[M_H] = sz[M_Q] = sz[M_O] = sz[M_T] = Tw * D * 2; sz[M_K] = sz[M_V] = (size_t)T * D * 2;
+  sz[M_MID] = Tw * 8192 * 2; sz[M_CK] = sz[M_CV] = (size_t)NCTX * D * 2;
   static const int order[] = {M_X, M_CTX, M_MOD, M_COS, M_SIN, M_H, M_Q, M_K, M_V, M_O, M_T, M_MID, M_CK, M_CV};
   size_t off = 0;
   for (int id : order) { L.meta[id] = (int)off; off += up(sz[id]); }
 #define WO(x) (g_q8 ? WQ(x) : (x))
   L.meta[M_WSQ] = WO(W_SQ); L.meta[M_WSK] = WO(W_SK); L.meta[M_WSV] = WO(W_SV); L.meta[M_WSO] = WO(W_SO); L.meta[M_WCQ] = WO(W_CQ); L.meta[M_WCK] = WO(W_CK); L.meta[M_WCV] = WO(W_CV);
   L.meta[M_WCO] = WO(W_CO); L.meta[M_WM1] = WO(W_M1); L.meta[M_WM2] = WO(W_M2); L.meta[M_GAIN] = WO(W_GAIN); L.meta[M_Q8] = g_q8;
-  L.meta[M_NTOK] = T; L.meta[M_NCTX] = NCTX; L.meta[M_NW] = 3; L.meta[M_REL] = 1; L.meta[M_FIRST] = 1;
+  L.meta[M_NTOK] = T; L.meta[M_WN] = WN; L.meta[M_NCTX] = NCTX; L.meta[M_NW] = 3; L.meta[M_REL] = 1; L.meta[M_FIRST] = 1;
   L.total = off; return L;
 }
 
@@ -269,7 +277,7 @@ int main(int argc, char** argv) {
     int mr = fastrpc_mmap(CDSP_DOMAIN_ID, fd, wts[i], 0, wmodw, FASTRPC_MAP_FD);
     if (mr) { fprintf(stderr, "fastrpc_mmap block %d rc=%d\n", first + i, mr); return 1; }
   }
-  uint8_t* blob = nullptr; int blobT = 0, blobfd = -1;   // activations: one rpcmem buffer mapped into the DSP; the CPU/DSP cache sync is done by hand (dma-buf sync here, dccleaninva on the DSP)
+  uint8_t* blob = nullptr; size_t blobCap = 0; int blobfd = -1;   // activations: one rpcmem buffer mapped into the DSP; the CPU/DSP cache sync is done by hand (dma-buf sync here, dccleaninva on the DSP)
 
   // make the CPU-written weights visible to the DSP (clean CPU caches), then map every buffer into the DSP once (extended address space: 4 GB do not fit in the normal one)
   for (int i = 0; i < nbuf; i++) {
@@ -306,7 +314,7 @@ int main(int argc, char** argv) {
   }
   printf("ready\n"); fflush(stdout);
   int cur_gh = -1, cur_gw = -1;
-  std::vector<f32> xin((size_t)D * TMAX), emb(D), lora(6144), ctxf((size_t)1024 * NCTX), mod((size_t)count * 9 * D);
+  std::vector<f32> xin, emb(D), lora(6144), ctxf((size_t)1024 * NCTX), mod((size_t)count * 9 * D);
   std::string line;
   while (std::getline(std::cin, line)) {
     std::istringstream ss(line); std::string cmd; ss >> cmd;
@@ -318,15 +326,16 @@ int main(int argc, char** argv) {
     auto xb = readfile(xi), eb = readfile(em), lb = readfile(lo), cb = readfile(cx);
     if (T % 32 || T > TMAX || xb.size() != (size_t)D * T * 4 || eb.size() != D * 4 || lb.size() != 6144 * 4 || cb.size() != (size_t)1024 * NCTX * 4) { fprintf(stderr, "bad input T=%d\n", T); printf("error\n"); fflush(stdout); continue; }
     double ts = now(), t_in = ts;
-    if (T > blobT) {
-      if (blob) { fastrpc_munmap(CDSP_DOMAIN_ID, blobfd, blob, 0); rpcmem_free(blob); }
-      Layout Lb = layout(T); blobT = T;
+    const int WN = win_slabs(T);
+    if (layout(T, WN).total > blobCap) {
+      if (blob) { fastrpc_munmap(CDSP_DOMAIN_ID, blobfd, blob, 0); rpcmem_free(blob); blob = nullptr; }
+      Layout Lb = layout(T, WN); blobCap = Lb.total;
       blob = (uint8_t*)rpcmem_alloc(RPCMEM_HEAP_ID_SYSTEM, RPCMEM_DEFAULT_FLAGS, Lb.total);
       if (!blob) { fprintf(stderr, "blob alloc failed\n"); printf("error\n"); fflush(stdout); continue; }
       blobfd = rpcmem_to_fd(blob); memset(blob, 0, Lb.total); cur_gh = -1;
       if (fastrpc_mmap(CDSP_DOMAIN_ID, blobfd, blob, 0, Lb.total, FASTRPC_MAP_FD)) { fprintf(stderr, "blob mmap failed\n"); printf("error\n"); fflush(stdout); continue; }
     }
-    Layout L = layout(T);
+    Layout L = layout(T, WN);
     if (gh != cur_gh || gw != cur_gw) { make_rope(gh, gw, (f32*)(blob + L.meta[M_COS]), (f32*)(blob + L.meta[M_SIN])); cur_gh = gh; cur_gw = gw; }
     to_ctx16((const f32*)cb.data(), (__fp16*)(blob + L.meta[M_CTX]));
     bool xin32 = xi.size() > 4 && xi.compare(xi.size() - 4, 4, ".x32") == 0;
@@ -372,9 +381,14 @@ int main(int argc, char** argv) {
       if (!stream) while (mdone.load(std::memory_order_acquire) <= k) {}
       else { std::unique_lock<std::mutex> lk(smu); scv.wait(lk, [&] { return sready >= oi || sfail.load(); }); if (sfail) { ok = false; break; } }
       uint8_t* wk = stream ? wts[oi % nbuf] : wts[k];
-      L.meta[M_FIRST] = k == firstRun; L.meta[M_REL] = k == lastRun;   // VTCM, pool and power votes are held across the blocks of one run, released after the last
       double tm1 = now();
-      int rc = 0; int rr = mega_block(h, L.meta, M_NMETA, rpcmem_to_fd(wk), blobfd, (const uint8_t*)&mod[(size_t)k * 9 * D], 9 * D * 4, times, 32, &rc);
+      int rc = 0, rr = 0; const int S = T / 32, nwin = WN ? (S + WN - 1) / WN : 1, nstep = WN ? 2 * nwin : 1;
+      for (int step = 0; step < nstep && !rr && !rc; step++) {   // windows: all K/V passes first (pass 1), then the full block per window (pass 0)
+        const int w = step % nwin, pass = WN && step < nwin;
+        L.meta[M_W0] = WN ? w * WN : 0; L.meta[M_WN] = WN ? std::min(WN, S - w * WN) : 0; L.meta[M_PASS] = pass;
+        L.meta[M_FIRST] = k == firstRun && step == 0; L.meta[M_REL] = k == lastRun && step == nstep - 1;   // VTCM, pool and power votes are held across the blocks of one run, released after the last
+        rr = mega_block(h, L.meta, M_NMETA, rpcmem_to_fd(wk), blobfd, (const uint8_t*)&mod[(size_t)k * 9 * D], 9 * D * 4, times, 32, &rc);
+      }
       if (getenv("MEGA_DBG") && k == 5) { char lp[256]; snprintf(lp, sizeof lp, "megarun_%d.log", first); FILE* lf = fopen(lp, "a"); if (lf) { fprintf(lf, "blk5 stages(us):"); for (int q = 0; q < 25; q++) fprintf(lf, " %d", times[q]); fprintf(lf, " | call %.1f ms\n", (now() - tm1) * 1e3); fclose(lf); } }
       if (rr || rc) { fprintf(stderr, "block %d failed r=0x%x rc=%d\n", first + k, rr, rc); ok = false; }
       if (stream) { std::lock_guard<std::mutex> lk(smu); sfreed = oi; scv.notify_all(); }
@@ -385,10 +399,13 @@ int main(int argc, char** argv) {
     if (!ok) { printf("error\n"); fflush(stdout); continue; }
     { dma_buf_sync_ sy = {(0ull << 2) | 3}; ioctl(blobfd, DMA_BUF_IOCTL_SYNC_, &sy); }   // START|RW: invalidate CPU caches before reading the result
     bool xout32 = xo.size() > 4 && xo.compare(xo.size() - 4, 4, ".x32") == 0;
-    if (!xout32) from_x32((const f32*)(blob + L.meta[M_X]), xin.data(), T);
+    if (!xout32) { xin.resize((size_t)D * T); from_x32((const f32*)(blob + L.meta[M_X]), xin.data(), T); }
     FILE* f = fopen(xo.c_str(), "wb"); fwrite(xout32 ? (const void*)(blob + L.meta[M_X]) : (const void*)xin.data(), 4, (size_t)D * T, f); fclose(f);
     double t_end = now();
     if (getenv("MEGA_DBG")) { char lp[256]; snprintf(lp, sizeof lp, "megarun_%d.log", first); FILE* lf = fopen(lp, "a"); if (lf) { fprintf(lf, "run: in+conv %.1f ms, blocks %.1f ms, out %.1f ms, total %.1f ms\n", (t_conv - ts) * 1e3, (t_dsp - t_conv) * 1e3, (t_end - t_dsp) * 1e3, (t_end - ts) * 1e3); fclose(lf); } }
+    if (blobCap > ((size_t)400 << 20)) {   // big pictures: the chain has several megarun processes, each with its own blob; only the one that works should hold it
+      fastrpc_munmap(CDSP_DOMAIN_ID, blobfd, blob, 0); rpcmem_free(blob); blob = nullptr; blobCap = 0; cur_gh = -1;
+    }
     printf("done %.0f\n", (t_end - ts) * 1000); fflush(stdout);
   }
   mega_close(h);

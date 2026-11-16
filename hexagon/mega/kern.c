@@ -337,3 +337,56 @@ void k_resadd2_tile(float *xs, const uint16_t *t16, const uint16_t *prev, const 
     *xb = QF2SF(Q6_Vqf32_vadd_Vqf32Vsf(MULSF(sb, g), *xb));
   }
 }
+
+/* ---- chunked attention (keys in chunks through VTCM, two passes: row max, then exp + P*V accumulated in fp32); copied from the flux3 tree ---- */
+void k_rowmax_chunk(const uint16_t *S, int nkb, int p0, int p1, const HVX_Vector *kmask, HVX_Vector *mx) {
+  const HVX_Vector *sv = (const HVX_Vector *)S; const HVX_Vector neginf = Q6_Vh_vsplat_R(0xFBFF);
+  for (int p = p0; p < p1; p++) {
+    if (kmask) { HVX_Vector *lv = (HVX_Vector *)&sv[(size_t)(nkb - 1) * 16 + p]; const HVX_Vector km_ = kmask[0]; *lv = Q6_V_vor_VV(Q6_V_vand_VV(*lv, Q6_V_vnot_V(km_)), Q6_V_vand_VV(neginf, km_)); }
+    HVX_Vector m = sv[p];
+    for (int cb = 1; cb < nkb; cb++) m = Q6_Vhf_vmax_VhfVhf(m, sv[cb * 16 + p]);
+    for (int r = 64; r >= 4; r >>= 1) m = Q6_Vhf_vmax_VhfVhf(m, Q6_V_vror_VR(m, r));
+    mx[p] = Q6_Vhf_vmax_VhfVhf(mx[p], m);
+  }
+}
+/* like k_softmax2p, but the row max comes from mx[p] (the max over ALL keys of the row, from k_rowmax_chunk) */
+void k_softmax_fixed(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *et, HVX_Vector *scratch, int p0, int p1, const HVX_Vector *kmask, const HVX_Vector *mx) {
+  const HVX_Vector *sv = (const HVX_Vector *)S; HVX_Vector *pv = (HVX_Vector *)P;
+  const HVX_Vector mask = Q6_Vh_vsplat_R(0x7FFF);
+  const HVX_Vector neginf = Q6_Vh_vsplat_R(0xFBFF);
+  for (int p = p0; p < p1; p++) {
+    if (kmask) { HVX_Vector *lv = (HVX_Vector *)&sv[(size_t)(nkb - 1) * 16 + p]; const HVX_Vector km_ = kmask[0]; *lv = Q6_V_vor_VV(Q6_V_vand_VV(*lv, Q6_V_vnot_V(km_)), Q6_V_vand_VV(neginf, km_)); }
+    const HVX_Vector m = mx[p];
+    int cb = 0;
+    for (; cb + 8 <= nkb; cb += 8) {
+      for (int u = 0; u < 8; u++) {
+        const HVX_Vector d = Q6_Vhf_equals_Vqf16(Q6_Vqf16_vsub_VhfVhf(sv[(cb + u) * 16 + p], m));
+        Q6_vgather_ARMVh(scratch + u, (uint32_t)et, TAB_BYTES - 1, Q6_Vh_vasl_VhR(Q6_V_vand_VV(d, mask), 1));
+      }
+      for (int u = 0; u < 8; u++) pv[(cb + u) * 16 + p] = scratch[u];
+    }
+    for (; cb < nkb; cb++) {
+      const HVX_Vector d = Q6_Vhf_equals_Vqf16(Q6_Vqf16_vsub_VhfVhf(sv[cb * 16 + p], m));
+      pv[cb * 16 + p] = gather_tab(et, Q6_Vh_vasl_VhR(Q6_V_vand_VV(d, mask), 1), scratch);
+    }
+  }
+}
+/* acc (32 vectors: fp32 rows 2p / 2p+1 of the tile) = (first ? 0 : acc) + the fp16 tile t16 */
+void k_acc_tile(HVX_Vector *acc, const uint16_t *t16, int first) {
+  const HVX_Vector *ts = (const HVX_Vector *)t16;
+  for (int p = 0; p < 16; p++) {
+    const HVX_VectorPair w = widen_hf(ts[p]);
+    if (first) { acc[2 * p] = QF2SF(Q6_V_lo_W(w)); acc[2 * p + 1] = QF2SF(Q6_V_hi_W(w)); }
+    else { acc[2 * p] = QF2SF(Q6_Vqf32_vadd_Vqf32Vsf(Q6_V_lo_W(w), acc[2 * p])); acc[2 * p + 1] = QF2SF(Q6_Vqf32_vadd_Vqf32Vsf(Q6_V_hi_W(w), acc[2 * p + 1])); }
+  }
+}
+/* O (nt fp16 tiles) = acc tiles / (row sums = acc tile nt): the end of k_rowscale_sum, from the fp32 accumulators */
+void k_final_acc(uint16_t *O, const HVX_Vector *acc, int nt) {
+  HVX_Vector *v = (HVX_Vector *)O; const HVX_Vector *sm = acc + 32 * nt;
+  for (int p = 0; p < 16; p++) {
+    const HVX_Vector ra = recip_sf(sm[2 * p]), rb = recip_sf(sm[2 * p + 1]);
+    for (int t = 0; t < nt; t++)
+      v[t * 16 + p] = Q6_Vhf_equals_Wqf32(Q6_W_vcombine_VV(MULSF(acc[t * 32 + 2 * p + 1], rb), MULSF(acc[t * 32 + 2 * p], ra)));
+  }
+}
+

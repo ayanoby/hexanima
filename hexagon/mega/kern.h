@@ -30,3 +30,8 @@ void k_transpose_tile(const uint16_t *src, uint16_t *dst);
 void k_resadd_tile(float *x32tile, const uint16_t *t16tile, const float *gate32);   /* x += gate*t for one 32x32 tile */
 void k_rmsrope_head(uint16_t *x4, const float *gain, const float *cosT, const float *sinT, int rope);   /* one head: 4 contiguous tiles in place */
 void k_resadd2_tile(float *x32tile, const uint16_t *t16tile, const uint16_t *prev16tile, const float *gate32);
+/* chunked attention (no limit on the number of tokens) */
+void k_rowmax_chunk(const uint16_t *S, int nkb, int p0, int p1, const HVX_Vector *kmask, HVX_Vector *mx);
+void k_softmax_fixed(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *exp_tab, HVX_Vector *scratch, int p0, int p1, const HVX_Vector *kmask, const HVX_Vector *mx);
+void k_acc_tile(HVX_Vector *acc, const uint16_t *t16, int first);
+void k_final_acc(uint16_t *O, const HVX_Vector *acc, int nt);

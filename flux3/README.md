@@ -1,8 +1,8 @@
 # FLUX.3 Klein, and the kernel tree shared by Klein, LTX-2.5 and MiniMax-H3 Ref2VA
 
 This directory holds the sources of the DSP kernels and the phone runners behind **FLUX.3 Image Klein**. `hexagon/mega/` is the newest copy of the
-Hexagon kernel tree (`hexagon/mega/` at the repository root is the older one used by Anima/H3-Image, `mage/hexagon/mega/` the one of Mage-Flow): its
-`blk.c` holds every kernel mode used by Klein (60, 70), LTX-2.5 (90-92) and the Ref2VA video VAE (82), so **LTX (`../ltx`) and Ref2VA (`../h3`) are built with this tree too**.
+Hexagon kernel tree (`hexagon/mega/` at the repository root is the older one used by Anima/H3-Image): its
+`blk.c` holds every kernel mode used by Klein (70), LTX-2.5 (90-92) and the Ref2VA video VAE (82), so **LTX (`../ltx`), Ref2VA (`../h3`) and Mage-Flow (`../mage`: modes 53, 55, 61, see `../mage/hexagon/mega/README.md`) are built with this tree too**.
 
 | What | Source | Build | Ends up in the APK as |
 |---|---|---|---|

@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -165,7 +166,7 @@ static int g_profn = 0;
 static int call(const Layout& L, int* meta, Buf& w, size_t woff, const Buf& blob, const f32* mod, int nmod) {
   int times[32]; int rc = 0; meta[M_WOFF] = (int)woff;
   if (!map_buf(w)) return -1;
-  int r = mega_block(g_h, meta, M_NMETA, w.fd, blob.fd, (const uint8_t*)mod, nmod * 4, times, 32, &rc);
+  int r = 0; for (int attempt = 0; attempt < 8; attempt++) { rc = 0; r = mega_block(g_h, meta, M_NMETA, w.fd, blob.fd, (const uint8_t*)mod, nmod * 4, times, 32, &rc); if (!r && rc == -77) { fprintf(stderr, "HMX self-test failed, retry %d\n", attempt + 1); usleep(400000); continue; } break; }   // rc -77: nothing was computed, try again
   if (getenv("MAGE_PROF") && (g_profn++ % 12) == 5) { fprintf(stderr, "prof mode %d us:", meta[M_MODE]); for (int i = 0; i < 6; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, " | attn(setup qk pv scale wait flush):"); for (int i = 17; i < 23; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, " | mode50(ln1 q k lnv v o ln2 fc1 fc2):"); for (int i = 8; i < 17; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, "\n"); }
   if (r || rc) { fprintf(stderr, "mega_block r=0x%x rc=%d mode=%d\n", r, rc, meta[M_MODE]); return -1; }
   return 0;
@@ -207,13 +208,23 @@ static void gemm_f16(const __fp16* W, const f32* X, f32* Y, int n, int out, int 
 // ------------------------------------------------------------------ Mage-Flow DiT (MODE 50)
 static bool readraw(const char* p, std::vector<f32>& v, size_t n) { FILE* f = fopen(p, "rb"); if (!f) return false; v.resize(n); bool ok = fread(v.data(), 4, n, f) == n; fclose(f); return ok; }
 static const int NB = 12, D = 3072, TD = 2560;
-static std::vector<std::string> g_files; static Buf g_blobM; static Layout g_LM; static int g_M_ns = -1;
+static std::vector<std::string> g_files; static Buf g_blobM; static Layout g_LM; static int g_M_ns = -1, g_M_wns = -1;
 static Layout make_layout_m(int ns) {
   Layout L; memset(&L, 0, sizeof L); const size_t ntok = (size_t)ns * 32; size_t off = 0;
   struct E { int id; size_t b; } ent[] = {
     {M_X, ntok * D * 4}, {M_COS, (size_t)ns * 8192}, {M_SIN, (size_t)ns * 8192}, {M_H, ntok * D * 2}, {M_Q, ntok * D * 2}, {M_K, ntok * D * 2}, {M_V, ntok * D * 2},
     {M_O, ntok * D * 2}, {M_T, ntok * D * 2}, {M_MID, ntok * 12288 * 2}, {M_ROWS, 4096}, {M_CS, 4096},
     {M_LQ, (size_t)ns * 12 * 2048}, {M_LO, (size_t)ns * 4 * 2048}, {M_LU, (size_t)ns * 4 * 2048}, {M_LD, (size_t)ns * 4 * 2048}};
+  for (auto& e : ent) { L.meta[e.id] = (int)off; off += up4k(e.b); }
+  L.total = off; return L;
+}
+// windowed DiT (like LTX / MiniMax-H3): the activations X and the rope tables of all rows stay in phone memory, the DSP sees a window of wns slabs and the keys / values of ALL ns slabs (global K / V buffers)
+static Layout make_layout_mw(int wns, int ns) {
+  Layout L; memset(&L, 0, sizeof L); const size_t wtok = (size_t)wns * 32, ntok = (size_t)ns * 32; size_t off = 0;
+  struct E { int id; size_t b; } ent[] = {
+    {M_X, wtok * D * 4}, {M_COS, (size_t)wns * 8192}, {M_SIN, (size_t)wns * 8192}, {M_H, wtok * D * 2}, {M_Q, wtok * D * 2}, {M_K, ntok * D * 2}, {M_V, ntok * D * 2},
+    {M_O, wtok * D * 2}, {M_T, wtok * D * 2}, {M_MID, wtok * 12288 * 2}, {M_ROWS, 4096}, {M_CS, 4096},
+    {M_LQ, (size_t)wns * 12 * 2048}, {M_LO, (size_t)wns * 4 * 2048}, {M_LU, (size_t)wns * 4 * 2048}, {M_LD, (size_t)wns * 4 * 2048}};
   for (auto& e : ent) { L.meta[e.id] = (int)off; off += up4k(e.b); }
   L.total = off; return L;
 }
@@ -293,7 +304,7 @@ static bool vit_features(const std::vector<f32>& px, int gh, int gw, std::vector
   std::vector<f32> mod(18432, 0.f); for (int i = 0; i < 1024; i++) mod[i] = 1.f;
   sync_clean(g_blobV);
   int meta[M_NMETA]; for (int i = 0; i < M_NMETA; i++) meta[i] = g_LV.meta[i];
-  meta[M_NTOK] = ntok; meta[M_NVALID] = Np; meta[M_NW] = 3; meta[M_NCB] = 32; meta[M_MODE] = 51; meta[M_NPRE] = 0; meta[M_CAUS] = 0; meta[M_BA] = meta[M_BB] = 0;
+  meta[M_NTOK] = ntok; meta[M_NVALID] = Np; meta[M_NW] = 3; meta[M_NCB] = 32; meta[M_MODE] = 55; meta[M_NPRE] = 0; meta[M_CAUS] = 0; meta[M_BA] = meta[M_BB] = 0;
   std::vector<std::string> vf; for (int i = 0; i < NLAYER_VIT; i++) { char p[512]; snprintf(p, sizeof p, "%s/vit/vit%02d.bin", g_dir.c_str(), i); vf.push_back(p); }
   std::vector<f32> xr((size_t)Np * 1024); bool ok = true;
   ok = stream_files(vf, g_te, [&](int k, Buf& b) {
@@ -312,31 +323,36 @@ static void add_rows_x32(f32* X, int row0, int nrows, const f32* feat) {   // X 
     for (int cb = 0; cb < 80; cb++) { f32* t = X + ((size_t)s * 80 + cb) * 1024 + (size_t)rr * 32; const f32* a = feat + (size_t)r * TD + cb * 32; for (int c = 0; c < 32; c++) t[c] += a[c]; } }
 }
 
-static bool encode_text(const std::vector<int>& ids, int drop, std::vector<f32>& tx, const EditIn* ed = nullptr) {
+static bool encode_text(const std::vector<int>& ids, int drop, std::vector<f32>& tx, const std::vector<EditIn>* eds = nullptr) {   // eds: one entry per reference picture (up to 3), in the order of their <|image_pad|> runs
   const int T = (int)ids.size(), ns = (T + 31) / 32, ntok = ns * 32; if (T > MAXT) return false;
   double t0 = now();
   if (g_T_ns != ns) { if (g_blobTE.p) { unmap_buf(g_blobTE); rpcmem_free(g_blobTE.p); } g_LT = make_layout_te(ns); g_blobTE = make_buf(g_LT.total, true); if (!g_blobTE.p) return false; g_T_ns = ns; }
   uint8_t* blob = g_blobTE.p; memset(blob, 0, g_LT.total);
   { std::vector<f32> rows((size_t)ntok * TD, 0.f); const f32* sc = (const f32*)g_embd; const int8_t* q = (const int8_t*)(g_embd + (size_t)151936 * 4);
     for (int t = 0; t < T; t++) { const int id = ids[t]; const f32 s = sc[id]; const int8_t* r = q + (size_t)id * TD; f32* o = &rows[(size_t)t * TD]; for (int i = 0; i < TD; i++) o[i] = s * r[i]; }
-    if (ed && ed->on) memcpy(&rows[(size_t)ed->k0 * TD], ed->pooled.data(), (size_t)ed->nm * TD * 4);   // image slots carry the ViT features
+    if (eds) for (const EditIn& e : *eds) memcpy(&rows[(size_t)e.k0 * TD], e.pooled.data(), (size_t)e.nm * TD * 4);   // image slots carry the ViT features
     rows_to_x32(rows.data(), ntok, TD, (f32*)(blob + g_LT.meta[M_X]), ns); }
   { std::vector<double> flat((size_t)T * 3); for (int i = 0; i < T; i++) { flat[i * 3] = flat[i * 3 + 1] = flat[i * 3 + 2] = i; }
-    if (ed && ed->on) {   // interleaved mrope: the merged image grid (gh/2 x gw/2) carries (t, h, w) = (k0, k0+row, k0+col); text after it continues at k0 + max(gh, gw)
-      const int gh = ed->gh / 2, gw = ed->gw / 2;
-      for (int r = 0; r < gh; r++) for (int c = 0; c < gw; c++) { const int j = ed->k0 + r * gw + c; flat[j * 3] = ed->k0; flat[j * 3 + 1] = ed->k0 + r; flat[j * 3 + 2] = ed->k0 + c; }
-      for (int t = ed->k0 + ed->nm; t < T; t++) flat[t * 3] = flat[t * 3 + 1] = flat[t * 3 + 2] = ed->k0 + std::max(gh, gw) + (t - (ed->k0 + ed->nm)); }
+    if (eds && !eds->empty()) {   // interleaved mrope: the merged grid of every picture (gh/2 x gw/2) carries (t, h, w) = (p, p+row, p+col), p = the running text position at its start; the text after it continues at p + max(gh, gw)
+      int p = 0, t = 0; size_t ei = 0;
+      while (t < T) {
+        if (ei < eds->size() && t == (*eds)[ei].k0) {
+          const EditIn& e = (*eds)[ei++]; const int gh = e.gh / 2, gw = e.gw / 2;
+          for (int r = 0; r < gh; r++) for (int c = 0; c < gw; c++) { const int j = t + r * gw + c; flat[j * 3] = p; flat[j * 3 + 1] = p + r; flat[j * 3 + 2] = p + c; }
+          t += e.nm; p += std::max(gh, gw);
+        } else { flat[t * 3] = flat[t * 3 + 1] = flat[t * 3 + 2] = p; t++; p++; }
+      } }
     f32* cs = (f32*)(blob + g_LT.meta[M_COS]); f32* sn = (f32*)(blob + g_LT.meta[M_SIN]); memset(cs, 0, (size_t)ns * 8192); memset(sn, 0, (size_t)ns * 8192);
     par_for(T, [&](int t) { for (int d = 0; d < 64; d++) { const int ax = (d % 3 == 1 && d < 60) ? 1 : (d % 3 == 2 && d < 60) ? 2 : 0; const double a = flat[t * 3 + ax] * pow(5e6, -(double)d / 64.0); const size_t idx = (((size_t)(t / 32) * 2 + d / 32) * 1024) + (t % 32) * 32 + d % 32; cs[idx] = (f32)cos(a); sn[idx] = (f32)sin(a); } }); }
   sync_clean(g_blobTE);
   std::vector<f32> mod(18432, 0.f); for (int i = 8192; i < 12288; i++) mod[i] = 1.f;
   int meta[M_NMETA]; for (int i = 0; i < M_NMETA; i++) meta[i] = g_LT.meta[i];
   meta[M_NW] = 3; meta[M_NCB] = 80; meta[M_MODE] = 22; meta[M_FMT] = 1; meta[M_NTOK] = ntok; meta[M_NVALID] = T; meta[M_STOP] = 0;
-  const bool dsk = ed && ed->on;
+  const bool dsk = eds && !eds->empty();
   if (!stream_files(g_tefiles, g_te, [&](int l, Buf& w) {
     meta[M_FIRST] = l == 0 || (dsk && l >= 1 && l <= 3); meta[M_REL] = l == NL_TE - 1 || (dsk && l < 3);
     if (call(g_LT, meta, w, 0, g_blobTE, mod.data(), (int)mod.size())) return false;
-    if (dsk && l < 3) { sync_inval(g_blobTE); add_rows_x32((f32*)(blob + g_LT.meta[M_X]), ed->k0, ed->nm, ed->ds[l].data()); sync_clean(g_blobTE); }   // DeepStack
+    if (dsk && l < 3) { sync_inval(g_blobTE); for (const EditIn& e : *eds) add_rows_x32((f32*)(blob + g_LT.meta[M_X]), e.k0, e.nm, e.ds[l].data()); sync_clean(g_blobTE); }   // DeepStack: every picture's rows
     return true; }, getenv("MAGE_KEEPTE") ? NL_TE : 0)) return false;
   sync_inval(g_blobTE);
   std::vector<f32> rows((size_t)T * TD); x32_to_rows((const f32*)(blob + g_LT.meta[M_X]), T, TD, rows.data());
@@ -344,38 +360,53 @@ static bool encode_text(const std::vector<int>& ids, int drop, std::vector<f32>&
   par_for(T - drop, [&](int t) { const f32* r = &rows[(size_t)(t + drop) * TD]; double ss = 0; for (int i = 0; i < TD; i++) ss += (double)r[i] * r[i]; const float rs = 1.f / sqrtf((float)(ss / TD) + 1e-6f); f32* o = &tx[(size_t)t * TD]; for (int i = 0; i < TD; i++) o[i] = r[i] * rs * g_tefinal[i]; });
   fprintf(stderr, "te: %.2fs (%d tokens, waited %.2fs for io)\n", now() - t0, T, g_waitio); g_waitio = 0; return true;
 }
-// run the DiT. ref (optional): clean reference-image latent tokens [Nr][128] (edit), rh x rw tokens, appended to the image stream after the target tokens (frame index 1)
+// run the DiT. refs (optional): clean reference-image latent tokens [Nr][128] (edit), rh x rw tokens each, appended one after the other to the image stream after the target tokens; picture k sits at RoPE frame index k + 1
 struct RefImg { std::vector<f32> tok; int h = 0, w = 0; };
-static bool run_dit(const std::vector<f32>& tx, int nt, int h, int w, unsigned seed, int steps, const std::string& outz, const RefImg* ref, std::vector<f32>* ztok = nullptr) {
-  const double T0 = now(); const int N = h * w, Nr = ref ? ref->h * ref->w : 0, NI = N + Nr;
+static bool run_dit(const std::vector<f32>& tx, int nt, int h, int w, unsigned seed, int steps, const std::string& outz, const std::vector<RefImg>* refs, std::vector<f32>* ztok = nullptr) {
+  const double T0 = now(); const int N = h * w; int Nr = 0; if (refs) for (const RefImg& r : *refs) Nr += r.h * r.w; const int NI = N + Nr;
   if (NI % 32 || N % 32) { fprintf(stderr, "image tokens must be a multiple of 32\n"); return false; }
   const int nsI = NI / 32, nsT = (nt + 31) / 32, ns = nsI + nsT, ntok = ns * 32;
-  if (g_M_ns != ns) { if (g_blobM.p) { unmap_buf(g_blobM); rpcmem_free(g_blobM.p); } g_LM = make_layout_m(ns); g_blobM = make_buf(g_LM.total, true); if (!g_blobM.p) return false; g_M_ns = ns; }
-  uint8_t* blob = g_blobM.p; memset(blob, 0, g_LM.total); fill_bias_tiles(blob, g_LM, ns);
+  const int WSL = getenv("MAGE_WIN") ? atoi(getenv("MAGE_WIN")) : 32; const bool win = getenv("MAGE_WIN") ? WSL > 0 : ntok > 6000;   // windows (slabs of 32 rows): automatic above 6000 rows, MAGE_WIN=0 forces the plain path
+  const int wns = win ? std::min(std::max(WSL, 1), ns) : ns; const int wkey = win ? wns : 0;
+  if (g_M_ns != ns || g_M_wns != wkey) { if (g_blobM.p) { unmap_buf(g_blobM); rpcmem_free(g_blobM.p); } g_blobM.p = nullptr; g_LM = win ? make_layout_mw(wns, ns) : make_layout_m(ns); g_blobM = make_buf(g_LM.total, true); if (!g_blobM.p) return false; g_M_ns = ns; g_M_wns = wkey; }
+  uint8_t* blob = g_blobM.p; memset(blob, 0, g_LM.total); fill_bias_tiles(blob, g_LM, wns);
+  const size_t XS = (size_t)D / 32 * 1024, CS = (size_t)2 * 1024; std::vector<f32> Xh, Ch, Sh; if (win) { Xh.assign((size_t)ns * XS, 0.f); Ch.assign((size_t)ns * CS, 1.f); Sh.assign((size_t)ns * CS, 0.f); }
+  f32* Xp = win ? Xh.data() : (f32*)(blob + g_LM.meta[M_X]); f32* Cp = win ? Ch.data() : (f32*)(blob + g_LM.meta[M_COS]); f32* Sp = win ? Sh.data() : (f32*)(blob + g_LM.meta[M_SIN]);
   { std::vector<double> flat((size_t)NI * 3); for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) { const int i = y * w + x; flat[i * 3] = 0; flat[i * 3 + 1] = y - (h - h / 2); flat[i * 3 + 2] = x - (w - w / 2); }
-    for (int y = 0; y < (ref ? ref->h : 0); y++) for (int x = 0; x < ref->w; x++) { const int i = N + y * ref->w + x; flat[i * 3] = 1; flat[i * 3 + 1] = y - (ref->h - ref->h / 2); flat[i * 3 + 2] = x - (ref->w - ref->w / 2); }
-    rope_rows((const double(*)[3])flat.data(), NI, ntok, (f32*)(blob + g_LM.meta[M_COS]), (f32*)(blob + g_LM.meta[M_SIN])); }
+    { int base = N; int fr = 1; if (refs) for (const RefImg& r : *refs) { for (int y = 0; y < r.h; y++) for (int x = 0; x < r.w; x++) { const int i = base + y * r.w + x; flat[i * 3] = fr; flat[i * 3 + 1] = y - (r.h - r.h / 2); flat[i * 3 + 2] = x - (r.w - r.w / 2); } base += r.h * r.w; fr++; } }
+    rope_rows((const double(*)[3])flat.data(), NI, ntok, Cp, Sp); }
   std::vector<f32> rows((size_t)ntok * D, 0.f), ttx((size_t)nt * D);
   double t1 = now(); txt_in(tx.data(), nt, ttx.data()); fprintf(stderr, "txt_in: %.2fs\n", now() - t1);
   std::vector<f32> z((size_t)N * 128);
   if (getenv("MAGE_Z0")) { if (!readraw(getenv("MAGE_Z0"), z, z.size())) { fprintf(stderr, "MAGE_Z0 unreadable\n"); return false; } }
   else { std::mt19937 gen(seed); std::normal_distribution<float> nd(0.f, 1.f); for (auto& a : z) a = nd(gen); }
-  std::vector<f32> refimg; if (ref) { refimg.resize((size_t)Nr * D); gemm_f16(g_glue.h("img_in.weight"), ref->tok.data(), refimg.data(), Nr, D, 128); add_bias(refimg.data(), Nr, D, g_glue.f("img_in.bias")); }
+  std::vector<f32> refimg; if (refs && Nr) { refimg.resize((size_t)Nr * D); size_t o = 0; for (const RefImg& r : *refs) { const int n = r.h * r.w; gemm_f16(g_glue.h("img_in.weight"), r.tok.data(), refimg.data() + o * D, n, D, 128); add_bias(refimg.data() + o * D, n, D, g_glue.f("img_in.bias")); o += n; } }
   const f32* sig = g_glue.f("sigmas"); const f32* mods = g_glue.f("mods"); const f32* nmods = g_glue.f("nmods");
   int meta[M_NMETA]; for (int i = 0; i < M_NMETA; i++) meta[i] = g_LM.meta[i];
-  meta[M_NW] = getenv("MAGE_NW") ? atoi(getenv("MAGE_NW")) : 3; meta[M_NCB] = 96; meta[M_MODE] = 50; meta[M_NTOK] = ntok; meta[M_NVALID] = NI + nt; meta[M_BA] = nsI; meta[M_STOP] = 0;
+  meta[M_NW] = getenv("MAGE_NW") ? atoi(getenv("MAGE_NW")) : 3; meta[M_NCB] = 96; meta[M_MODE] = 53; meta[M_NTOK] = ntok; meta[M_NVALID] = NI + nt; meta[M_BA] = nsI; meta[M_STOP] = 0;
   std::vector<f32> v((size_t)N * 128);
   for (int s = 0; s < steps; s++) {
     const double ts = now();
     gemm_f16(g_glue.h("img_in.weight"), z.data(), rows.data(), N, D, 128); add_bias(rows.data(), N, D, g_glue.f("img_in.bias"));
-    if (ref) memcpy(rows.data() + (size_t)N * D, refimg.data(), (size_t)Nr * D * 4);
+    if (Nr) memcpy(rows.data() + (size_t)N * D, refimg.data(), (size_t)Nr * D * 4);
     memcpy(rows.data() + (size_t)NI * D, ttx.data(), (size_t)nt * D * 4);
-    rows_to_x32(rows.data(), ntok, D, (f32*)(blob + g_LM.meta[M_X]), ns); sync_clean(g_blobM);
+    rows_to_x32(rows.data(), ntok, D, Xp, ns); if (!win) sync_clean(g_blobM);
     if (!stream_files(g_files, g_te, [&](int b, Buf& w) {
+      if (win) {   // per block: pass 0 = keys / values of every window into the global K / V buffers, pass 1 = the full block per window (attention over all keys)
+        const int nwin = (ns + wns - 1) / wns; const f32* mb = mods + ((size_t)(s * NB + b) * 16) * D;
+        for (int pass = 0; pass < 2; pass++) for (int wn = 0; wn < nwin; wn++) {
+          const int w0 = wn * wns, nws = std::min(wns, ns - w0); const int ni0 = std::max(0, std::min(nsI - w0, nws));
+          memcpy(blob + g_LM.meta[M_X], &Xh[(size_t)w0 * XS], (size_t)nws * XS * 4); memcpy(blob + g_LM.meta[M_COS], &Ch[(size_t)w0 * CS], (size_t)nws * CS * 4); memcpy(blob + g_LM.meta[M_SIN], &Sh[(size_t)w0 * CS], (size_t)nws * CS * 4);
+          sync_clean(g_blobM);
+          meta[M_NTOK] = nws * 32; meta[M_BA] = ni0; meta[M_A2] = ntok; meta[M_A4] = pass == 0 ? 1 : 2; meta[M_A9] = w0; meta[M_FIRST] = (b == 0 && pass == 0 && wn == 0) ? 1 : 2; meta[M_REL] = (b == NB - 1 && pass == 1 && wn == nwin - 1) ? 1 : 2; meta[M_FMT] = 0;
+          if (call(g_LM, meta, w, 0, g_blobM, mb, 16 * D)) return false;
+          if (pass == 1) { sync_inval(g_blobM); memcpy(&Xh[(size_t)w0 * XS], blob + g_LM.meta[M_X], (size_t)nws * XS * 4); }
+        }
+        meta[M_A2] = meta[M_A4] = meta[M_A9] = 0; return true; }
       meta[M_FIRST] = b == 0; meta[M_REL] = b == NB - 1; meta[M_FMT] = getenv("MAGE_FC2") ? atoi(getenv("MAGE_FC2")) : 0;
       return call(g_LM, meta, w, 0, g_blobM, mods + ((size_t)(s * NB + b) * 16) * D, 16 * D) == 0; }, NB)) return false;
-    sync_inval(g_blobM);
-    x32_to_rows((const f32*)(blob + g_LM.meta[M_X]), N, D, rows.data());
+    if (!win) sync_inval(g_blobM);
+    x32_to_rows((const f32*)Xp, N, D, rows.data());
     ln_rows(rows.data(), N, D, nmods + (size_t)(s * 2) * D, nmods + (size_t)(s * 2 + 1) * D);
     gemm_f16(g_glue.h("proj_out.weight"), rows.data(), v.data(), N, 128, D); add_bias(v.data(), N, 128, g_glue.f("proj_out.bias"));
     if (const char* pv = getenv("MAGE_PREVIEW")) if (*pv && s < steps - 1) {   // preview: x0 estimate z - sigma * v as [128][N] (like the final latent file), written atomically
@@ -427,7 +458,7 @@ static bool vgemm(const std::string& nm, const f32* X, int n, f32* Y, bool gelu)
   if (!map_buf(g_blobG)) return false;
   rows_to_h16(X, n, P.K, (uint16_t*)(g_blobG.p + g_LG.meta[M_H]), ns); sync_clean(g_blobG);
   int meta[M_NMETA]; for (int i = 0; i < M_NMETA; i++) meta[i] = g_LG.meta[i];
-  meta[M_MODE] = 60; meta[M_NTOK] = ntok; meta[M_NCB] = kt; meta[M_BA] = P.N; meta[M_FMT] = gelu ? 2 : 0; meta[M_NW] = 3; static bool first = true; meta[M_FIRST] = first; first = false; meta[M_REL] = 0; meta[M_STOP] = 0; meta[M_NVALID] = n;
+  meta[M_MODE] = 61; meta[M_NTOK] = ntok; meta[M_NCB] = kt; meta[M_BA] = P.N; meta[M_FMT] = gelu ? 2 : 0; meta[M_NW] = 3; static bool first = true; meta[M_FIRST] = first; first = false; meta[M_REL] = 0; meta[M_STOP] = 0; meta[M_NVALID] = n;
   static float dummy[8]; if (call(g_LG, meta, g_vpack, P.off, g_blobG, dummy, 8)) return false;
   sync_inval(g_blobG); h16_to_rows((const uint16_t*)(g_blobG.p + g_LG.meta[M_T]), n, P.N, Y); return true;
 }
@@ -586,8 +617,8 @@ static void vae_encode(const f32* rgb, int h, int w, f32* tok) {
 
 // text-encoder output cache (MAGE_CACHE=dir): the encoder output depends only on the token ids (+ the photo's ViT input when editing), so a new seed / "again" skips the ViT and the 36 layers
 static uint64_t fnv(const void* p, size_t n, uint64_t h) { const uint8_t* b = (const uint8_t*)p; for (size_t i = 0; i < n; i++) { h ^= b[i]; h *= 1099511628211ull; } return h; }
-static std::string tx_cache_path(const std::vector<int>& ids, int drop, const std::vector<f32>* px) {
-  const char* d = getenv("MAGE_CACHE"); if (!d || !*d) return ""; uint64_t k = fnv(ids.data(), ids.size() * 4, 1469598103934665603ull); k = fnv(&drop, 4, k); if (px) k = fnv(px->data(), px->size() * 4, k);
+static std::string tx_cache_path(const std::vector<int>& ids, int drop, const std::vector<std::vector<f32>>* pxs) {
+  const char* d = getenv("MAGE_CACHE"); if (!d || !*d) return ""; uint64_t k = fnv(ids.data(), ids.size() * 4, 1469598103934665603ull); k = fnv(&drop, 4, k); if (pxs) for (const auto& px : *pxs) k = fnv(px.data(), px.size() * 4, k);
   char b[64]; snprintf(b, sizeof b, "/tx_%016llx.f32", (unsigned long long)k); return std::string(d) + b;
 }
 static bool tx_cache_load(const std::string& p, size_t n, std::vector<f32>& tx) { if (p.empty()) return false; FILE* f = fopen(p.c_str(), "rb"); if (!f) return false; tx.resize(n); bool ok = fread(tx.data(), 4, n, f) == n; fclose(f); return ok; }
@@ -646,27 +677,36 @@ int main(int argc, char** argv) {
       if (getenv("MAGE_DUMP_TX")) { FILE* f = fopen(getenv("MAGE_DUMP_TX"), "wb"); fwrite(tx.data(), 4, tx.size(), f); fclose(f); }
       std::vector<f32> zt; if (!run_dit(tx, (int)tx.size() / TD, H / 16, W / 16, seed, steps, outz, nullptr, &zt)) printf("error gen\n"); else { finish_rgb(zt, H / 16, W / 16); printf("done\n"); }
     }
-    if (cmd == "edit") {   // edit DIR DROP SEED STEPS OUT.z : DIR/{meta.txt "gh gw h w", ids.i32 (image pads expanded), px.f32 [gh*gw][1536], ref.rgb fp32 [h*16][w*16][3] in [-1,1]}
-      std::string dir, outz; int drop, steps; unsigned seed; ss >> dir >> drop >> seed >> steps >> outz; int gh, gw, h, w;
-      FILE* mf = fopen((dir + "/meta.txt").c_str(), "r"); if (!mf || fscanf(mf, "%d %d %d %d", &gh, &gw, &h, &w) != 4) { printf("error meta\n"); continue; } fclose(mf);
+    if (cmd == "edit") {   // edit DIR DROP SEED STEPS OUT.z : DIR/{meta.txt: one line "gh gw h w" per picture (1 to 3; the first is the picture to edit, the others are extra references), ids.i32 (image pads expanded, one run per picture), px.f32 [gh*gw][1536] and ref.rgb fp32 [h*16][w*16][3] in [-1,1] for the first picture, px2.f32 / ref2.rgb, px3.f32 / ref3.rgb for the others}
+      std::string dir, outz; int drop, steps; unsigned seed; ss >> dir >> drop >> seed >> steps >> outz;
+      std::vector<std::array<int, 4>> mt; { FILE* mf = fopen((dir + "/meta.txt").c_str(), "r"); int a, b, c, d; while (mf && mt.size() < 3 && fscanf(mf, "%d %d %d %d", &a, &b, &c, &d) == 4) mt.push_back({a, b, c, d}); if (mf) fclose(mf); }
+      if (mt.empty()) { printf("error meta\n"); continue; }
       std::vector<int> ids; { FILE* f = fopen((dir + "/ids.i32").c_str(), "rb"); if (!f) { printf("error ids\n"); continue; } fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET); ids.resize(n / 4); if (fread(ids.data(), 4, ids.size(), f) != ids.size()) {} fclose(f); }
-      EditIn ed; ed.on = true; ed.gh = gh; ed.gw = gw; ed.nm = gh * gw / 4; ed.k0 = -1; int cnt = 0; for (size_t i = 0; i < ids.size(); i++) if (ids[i] == 151655) { if (ed.k0 < 0) ed.k0 = (int)i; cnt++; }
-      if (cnt != ed.nm || ed.k0 < 0) { printf("error pads %d != %d\n", cnt, ed.nm); continue; }
-      if (((h * w) % 32) || 2 * h * w > 6400) { printf("error size\n"); continue; }
-      double t0 = now(); RefImg ref; ref.h = h; ref.w = w; ref.tok.resize((size_t)h * w * 128);
+      std::vector<EditIn> eds(mt.size()); bool bad = false;
+      { size_t ei = 0; for (size_t i = 0; i < ids.size(); i++) if (ids[i] == 151655 && (i == 0 || ids[i - 1] != 151655)) { if (ei >= eds.size()) { bad = true; break; } eds[ei].k0 = (int)i; size_t j = i; while (j < ids.size() && ids[j] == 151655) j++; if ((int)(j - i) != mt[ei][0] * mt[ei][1] / 4) bad = true; ei++; }
+        if (ei != eds.size()) bad = true; }
+      if (bad) { printf("error pads\n"); continue; }
+      for (size_t i = 0; i < eds.size(); i++) { eds[i].on = true; eds[i].gh = mt[i][0]; eds[i].gw = mt[i][1]; eds[i].nm = mt[i][0] * mt[i][1] / 4; }
+      const int h = mt[0][2], w = mt[0][3]; long NIall = (long)h * w; for (auto& m : mt) NIall += (long)m[2] * m[3];
+      if (((h * w) % 32) || NIall > 60000) { printf("error size\n"); continue; }
+      double t0 = now(); std::vector<RefImg> refs(mt.size()); for (size_t i = 0; i < mt.size(); i++) { refs[i].h = mt[i][2]; refs[i].w = mt[i][3]; refs[i].tok.resize((size_t)refs[i].h * refs[i].w * 128); }
+      const std::string sfx[3] = {"", "2", "3"};
       std::thread enc_thread; bool ref_ok = true;   // the VAE encoder runs on the CPU in parallel with the (flash-bound) ViT / text encoder
-      { std::vector<f32>* rgbp = new std::vector<f32>(); if (!readraw((dir + "/ref.rgb").c_str(), *rgbp, (size_t)h * w * 256 * 3)) { printf("error ref\n"); delete rgbp; continue; }
-        enc_thread = std::thread([&, rgbp] { tl_cpu_only = true; vae_encode(rgbp->data(), h, w, ref.tok.data()); delete rgbp; }); }
-      std::vector<f32> px; if (!readraw((dir + "/px.f32").c_str(), px, (size_t)gh * gw * 1536)) { printf("error px\n"); enc_thread.join(); continue; }
-      std::vector<f32> tx; const std::string cp = tx_cache_path(ids, drop, &px);
+      { auto* rgbs = new std::vector<std::vector<f32>>(mt.size()); for (size_t i = 0; i < mt.size(); i++) if (!readraw((dir + "/ref" + sfx[i] + ".rgb").c_str(), (*rgbs)[i], (size_t)refs[i].h * refs[i].w * 256 * 3)) ref_ok = false;
+        if (!ref_ok) { printf("error ref\n"); delete rgbs; continue; }
+        enc_thread = std::thread([&, rgbs] { tl_cpu_only = true; for (size_t i = 0; i < refs.size(); i++) vae_encode((*rgbs)[i].data(), refs[i].h, refs[i].w, refs[i].tok.data()); delete rgbs; }); }
+      std::vector<std::vector<f32>> pxs(mt.size()); bool pxok = true; for (size_t i = 0; i < mt.size(); i++) if (!readraw((dir + "/px" + sfx[i] + ".f32").c_str(), pxs[i], (size_t)mt[i][0] * mt[i][1] * 1536)) pxok = false;
+      if (!pxok) { printf("error px\n"); enc_thread.join(); continue; }
+      std::vector<f32> tx; const std::string cp = tx_cache_path(ids, drop, &pxs);
       if (tx_cache_load(cp, (ids.size() - drop) * TD, tx)) fprintf(stderr, "te: cached (no ViT)\n");
       else {
         if (!g_vglue.base && !g_vglue.load(g_dir + "/vit/vit_glue.bin")) { printf("error vitglue\n"); enc_thread.join(); continue; }
-        if (!vit_features(px, gh, gw, ed.pooled, ed.ds)) { printf("error vit\n"); enc_thread.join(); continue; }
-        if (!encode_text(ids, drop, tx, &ed)) { printf("error te\n"); enc_thread.join(); continue; }
+        bool vok = true; for (size_t i = 0; i < eds.size() && vok; i++) vok = vit_features(pxs[i], eds[i].gh, eds[i].gw, eds[i].pooled, eds[i].ds);
+        if (!vok) { printf("error vit\n"); enc_thread.join(); continue; }
+        if (!encode_text(ids, drop, tx, &eds)) { printf("error te\n"); enc_thread.join(); continue; }
         tx_cache_save(cp, tx); }
       enc_thread.join();
-      std::vector<f32> zt; if (!run_dit(tx, (int)tx.size() / TD, h, w, seed, steps, outz, &ref, &zt)) { printf("error gen\n"); continue; }
+      std::vector<f32> zt; if (!run_dit(tx, (int)tx.size() / TD, h, w, seed, steps, outz, &refs, &zt)) { printf("error gen\n"); continue; }
       finish_rgb(zt, h, w); fprintf(stderr, "edit total %.2fs\n", now() - t0); printf("done\n");
     }
   }

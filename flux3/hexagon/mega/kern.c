@@ -714,6 +714,13 @@ void te_attn3(const float *q, const float *kv, float *out, float *ktbase, int T,
 }
 
 /* ===================== LTX-2.5 Gemma 4 text encoder helpers (anima/ltx) ===================== */
+void tab_init_gelut_s(uint16_t *t2, float s) {   /* GELU(s x)/s = max(x,0) - t2[|x|], t2[a] = a * Phi_tanh(-s a): the epilogue for fp16 activations kept at 1/s of their true size */
+  for (int b = 0; b < 32768; b++) {
+    uint16_t hb = (uint16_t)b; __fp16 hx; memcpy(&hx, &hb, 2); double a = (double)(float)hx; __fp16 t; double u = a * s;
+    if (b >= 0x7C00) t = 0; else t = (__fp16)(a * 0.5 * (1.0 - tanh(0.7978845608028654 * (u + 0.044715 * u * u * u))));
+    memcpy(&t2[b], &t, 2);
+  }
+}
 void tab_init_gelumul(uint16_t *tabs) {   /* the swiglu tables with the tanh GELU: S1[|a|] = a*Phi(a), S2[|a|] = a*Phi(-a), Phi(a) = 0.5 (1 + tanh(c (a + 0.044715 a^3))); k_swiglu_tile then gives gelu(gate)*up */
   for (int t = 0; t < 2; t++) for (int b = 0; b < 32768; b++) {
     uint16_t hb = (uint16_t)b; __fp16 hx; memcpy(&hx, &hb, 2); double a = (double)(float)hx, v;

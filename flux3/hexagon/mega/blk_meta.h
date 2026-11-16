@@ -86,3 +86,13 @@ typedef struct { int off[8], fmt[8], nb[8], kb[8], voff; } te_hdr_t;
 #define KL_DN 94494720u
 #define KL_GAIN 122818560u      /* f32 x 256: q gain (perm)/sqrt(128) [128], k gain (perm) [128] */
 #define KL_TOTAL 122819584u
+
+/* Mage-Flow-Edit-Turbo vision layer pack (mage/export_mvit.py), MODE 55: hidden 1024 (NCB 32), 16 heads padded to hd128 (q/k/v 2048 wide) */
+#define QM_Q 0u
+#define QM_K 2654208u
+#define QM_V 5308416u
+#define QM_O 7962624u
+#define QM_FC1 10469376u
+#define QM_FC2 15777792u
+#define QM_GAIN 20643840u
+#define QM_TOTAL 20676608u

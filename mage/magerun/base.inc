@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -165,7 +166,7 @@ static int g_profn = 0;
 static int call(const Layout& L, int* meta, Buf& w, size_t woff, const Buf& blob, const f32* mod, int nmod) {
   int times[32]; int rc = 0; meta[M_WOFF] = (int)woff;
   if (!map_buf(w)) return -1;
-  int r = mega_block(g_h, meta, M_NMETA, w.fd, blob.fd, (const uint8_t*)mod, nmod * 4, times, 32, &rc);
+  int r = 0; for (int attempt = 0; attempt < 8; attempt++) { rc = 0; r = mega_block(g_h, meta, M_NMETA, w.fd, blob.fd, (const uint8_t*)mod, nmod * 4, times, 32, &rc); if (!r && rc == -77) { fprintf(stderr, "HMX self-test failed, retry %d\n", attempt + 1); usleep(400000); continue; } break; }   // rc -77: nothing was computed, try again
   if (getenv("MAGE_PROF") && (g_profn++ % 12) == 5) { fprintf(stderr, "prof mode %d us:", meta[M_MODE]); for (int i = 0; i < 6; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, " | attn(setup qk pv scale wait flush):"); for (int i = 17; i < 23; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, " | mode50(ln1 q k lnv v o ln2 fc1 fc2):"); for (int i = 8; i < 17; i++) fprintf(stderr, " %d", times[i]); fprintf(stderr, "\n"); }
   if (r || rc) { fprintf(stderr, "mega_block r=0x%x rc=%d mode=%d\n", r, rc, meta[M_MODE]); return -1; }
   return 0;

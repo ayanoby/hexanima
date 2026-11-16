@@ -49,9 +49,82 @@ static void p_attn_flush(void *a, int idx, int n) { ah_t *p = (ah_t *)a; for (in
 typedef struct { const u16 *S; u16 *P; int nkb; } sm_t;
 static void p_softmax(void *a, int i, int n) { sm_t *p = (sm_t *)a; k_softmax2p(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n); }
 
+
+/* ---------------- chunked attention (no limit on the number of tokens) ----------------
+   The plain attention keeps K^T, V and Q of ALL tokens of one head and a full score row in the 8 MB VTCM (231 key slabs = 7392 tokens). This version works on QB query slabs
+   at a time and streams the keys through VTCM in chunks of C key tiles (K and V stay in DDR; each chunk is transposed on its way in): pass 0 finds the row max over all chunks,
+   pass 1 computes P = exp(S - max) per chunk and adds P*V (plus a ones column = row sums) into fp32 accumulators; the end divides by the sums. Same result as the plain one up to
+   the summation order. Port of the flux3 version for heads of 4 tiles (128), 16 heads, no key mask (the token count is a multiple of 32). */
+typedef struct { const u16 *k, *v, *q; u16 *o; u16 *KTc, *Vc, *Qb; int kb0, nkc, C, h, withV, s0, nqb; } cl_t;
+static void p_cl_load(void *a, int idx, int n) {
+  cl_t *p = (cl_t *)a;
+  for (int i = idx; i < p->nkc; i += n) {
+    const int kb = p->kb0 + i;
+    for (int j = 0; j < 4; j++) k_transpose_tile(p->k + ((size_t)kb * NCB + p->h * 4 + j) * T16, p->KTc + ((size_t)i * 4 + j) * T16);
+    if (p->withV) for (int j = 0; j < 4; j++) vcp(p->Vc + ((size_t)j * p->C + i) * T16, p->v + ((size_t)kb * NCB + p->h * 4 + j) * T16, 2048);
+  }
+}
+static void p_cq_load(void *a, int idx, int n) { cl_t *p = (cl_t *)a; for (int s = idx; s < p->nqb; s += n) vcp(p->Qb + (size_t)s * 4 * T16, p->q + ((size_t)(p->s0 + s) * NCB + p->h * 4) * T16, 8192); }
+static void p_cq_flush(void *a, int idx, int n) { cl_t *p = (cl_t *)a; for (int s = idx; s < p->nqb; s += n) vcp(p->o + ((size_t)(p->s0 + s) * NCB + p->h * 4) * T16, p->Qb + (size_t)s * 4 * T16, 8192); }
+typedef struct { const u16 *S; u16 *P; int nkc; HVX_Vector *mx; } rm_t;
+static void p_rowmax(void *a, int i, int n) { rm_t *p = (rm_t *)a; k_rowmax_chunk(p->S, p->nkc, i * 16 / n, (i + 1) * 16 / n, 0, p->mx); }
+static void p_smfix(void *a, int i, int n) { rm_t *p = (rm_t *)a; k_softmax_fixed(p->S, p->P, p->nkc, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, 0, p->mx); }
+static size_t attn_plain_bytes(int nq, int nkb) { return ((size_t)13 * nkb + (size_t)4 * nq + 5) * 2048; }
+static int g_force_c = 0, g_force_q = 0;   /* test overrides of C / QB (0 = automatic) */
+static void attn_chunked(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, uint8_t *vt) {
+  const int nkb = nkv / 32, hdt = 4;
+  const size_t BUDGET = 6815744;   /* 6.5 MB: the tables sit at 7.7 MB */
+  int C = nkb < 128 ? nkb : 128; if (g_force_c > 0 && g_force_c < C) C = g_force_c;
+  while (C > 8 && (size_t)C * (4 + hdt + hdt + 1) * 2048 > BUDGET / 2) C = (C + 1) / 2;
+  const size_t chunkB = (size_t)C * (4 + hdt + hdt + 1) * 2048 + (size_t)(hdt + 1) * 2048, perSlab = (size_t)hdt * 2048 + (size_t)(hdt + 1) * 4096 + 2048;
+  int QB = (int)((BUDGET - chunkB) / perSlab); if (QB > 64) QB = 64; if (QB > nq) QB = nq; if (g_force_q > 0 && g_force_q < QB) QB = g_force_q; if (QB < 1) QB = 1;
+  u16 *KTc = (u16 *)vt, *Vc = KTc + (size_t)C * hdt * T16, *Qb = Vc + (size_t)C * (hdt + 1) * T16, *Sb[2], *Pb[2];
+  Sb[0] = Qb + (size_t)QB * hdt * T16; Sb[1] = Sb[0] + (size_t)C * T16; Pb[0] = Sb[1] + (size_t)C * T16; Pb[1] = Pb[0] + (size_t)C * T16;
+  u16 *Ob = Pb[1] + (size_t)C * T16; HVX_Vector *Oacc = (HVX_Vector *)(((uintptr_t)(Ob + (size_t)(hdt + 1) * T16) + 127) & ~(uintptr_t)127); HVX_Vector *MX = Oacc + (size_t)QB * (hdt + 1) * 32;
+  for (size_t i = 0; i < (size_t)C * T16; i++) Vc[(size_t)hdt * C * T16 + i] = 0x3C00;   /* ones column (row sums through P*V) */
+  const HVX_Vector neginf = Q6_Vh_vsplat_R(0xFBFF);
+  for (int h = 0; h < 16; h++) {
+    for (int s0 = 0; s0 < nq; s0 += QB) {
+      const int nqb = nq - s0 < QB ? nq - s0 : QB;
+      cl_t cl = {k, v, q, o, KTc, Vc, Qb, 0, 0, C, h, 0, s0, nqb};
+      pool_run(p_cq_load, &cl);
+      for (int i = 0; i < nqb * 16; i++) MX[i] = neginf;
+      for (int pass = 0; pass < 2; pass++) {
+        for (int c0 = 0; c0 < nkb; c0 += C) {
+          const int nkc = nkb - c0 < C ? nkb - c0 : C;
+          cl.kb0 = c0; cl.nkc = nkc; cl.withV = pass; pool_run(p_cl_load, &cl);
+          for (int s = 0; s <= nqb; s++) {
+            const int b = s & 1; rm_t rm = {Sb[b], Pb[b], nkc, MX + (size_t)s * 16};
+            rm_t pr = {Sb[(s - 1) & 1], 0, nkc, MX + (size_t)(s > 0 ? s - 1 : 0) * 16};
+            if (pass == 0) {
+              if (s > 0) pool_start(p_rowmax, &pr);
+              if (s < nqb) for (int nb = 0; nb < nkc; nb++) { hmx_acc((uint8_t *)(Qb + (size_t)s * hdt * T16), (hdt << 11) | 0x7C, (uint8_t *)(KTc + (size_t)nb * hdt * T16), (hdt << 11) - 1); hmx_store((uint8_t *)(Sb[b] + (size_t)nb * T16), 0); }
+              if (s > 0) pool_wait();
+            } else {
+              if (s < nqb) for (int nb = 0; nb < nkc; nb++) { hmx_acc((uint8_t *)(Qb + (size_t)s * hdt * T16), (hdt << 11) | 0x7C, (uint8_t *)(KTc + (size_t)nb * hdt * T16), (hdt << 11) - 1); hmx_store((uint8_t *)(Sb[b] + (size_t)nb * T16), 0); }
+              if (s < nqb) pool_start(p_smfix, &rm);
+              if (s > 0) {   /* P*V for slab s-1 while the workers run the softmax of slab s */
+                const u16 *P = Pb[(s - 1) & 1];
+                for (int j = 0; j < hdt + 1; j++) {
+                  for (int k0 = 0; k0 < nkc; k0 += 32) { int cc = nkc - k0 < 32 ? nkc - k0 : 32; hmx_acc((uint8_t *)(P + (size_t)k0 * T16), (cc << 11) | 0x7C, (uint8_t *)(Vc + ((size_t)j * C + k0) * T16), (cc << 11) - 1); }
+                  hmx_store((uint8_t *)(Ob + (size_t)j * T16), 0);
+                  k_acc_tile(Oacc + ((size_t)(s - 1) * (hdt + 1) + j) * 32, Ob + (size_t)j * T16, c0 == 0);
+                }
+              }
+              if (s < nqb) pool_wait();
+            }
+          }
+        }
+      }
+      for (int s = 0; s < nqb; s++) k_final_acc(Qb + (size_t)s * hdt * T16, Oacc + (size_t)s * (hdt + 1) * 32, hdt);
+      pool_run(p_cq_flush, &cl);
+    }
+  }
+}
+
 static uint64_t g_acc[8];
 #define PC() HAP_perf_get_time_us()
-static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, uint8_t *vt) {
+static void attn_plain(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, uint8_t *vt) {
   const int nkb = nkv / 32;
   u16 *KT = (u16 *)vt, *Vw = KT + (size_t)4 * nkb * T16, *Qh = Vw + (size_t)5 * nkb * T16;           /* Qh also receives O */
   u16 *Sb[2], *Pb[2]; Sb[0] = Qh + (size_t)nq * 4 * T16; Sb[1] = Sb[0] + (size_t)nkb * T16; Pb[0] = Sb[1] + (size_t)nkb * T16; Pb[1] = Pb[0] + (size_t)nkb * T16;
@@ -90,6 +163,11 @@ static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, i
   }
 }
 
+static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, uint8_t *vt) {
+  if (g_force_c > 0 || attn_plain_bytes(nq, nkv / 32) > VT_TAB - 65536) attn_chunked(q, k, v, o, nq, nkv, vt);   /* the keys do not fit in VTCM (or a test forces it) */
+  else attn_plain(q, k, v, o, nq, nkv, vt);
+}
+
 /* ---------------- block ---------------- */
 static uint32_t us_now(void) { return (uint32_t)HAP_perf_get_time_us(); }
 
@@ -119,17 +197,18 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     tab_init(g_et_h, g_t2_h);
     g_init = 1;
   }
+  g_force_c = meta[M_FORCE] & 0xFFFF; g_force_q = (meta[M_FORCE] >> 16) & 0xFFFF;
   gemm_set_q8(meta[M_Q8]);
   if (!pool_n()) pool_init(meta[M_NW] ? meta[M_NW] : 3);   /* workers spin: with several processes they only exist during a call */
   if (!g_vt && vtcm_get()) { *rc = -1; return 0; }
   uint32_t ctx = g_ctx; uint8_t *vt = g_vt;
   if (meta[M_FIRST]) { HAP_power_request_t rq; memset(&rq, 0, sizeof rq); rq.type = HAP_power_set_HMX; rq.hmx.power_up = TRUE; HAP_power_set((void *)hd, &rq); power_max((void *)hd); }   /* once per run of blocks */
   if (HAP_compute_res_hmx_lock(ctx)) { *rc = -2; return 0; }
-  const int ntok = meta[M_NTOK], nctx = meta[M_NCTX], ns = ntok / 32, nc = nctx / 32;
+  const int ntok = meta[M_NTOK], nctx = meta[M_NCTX], nc = nctx / 32, win = meta[M_WN] > 0, w0 = win ? meta[M_W0] : 0, ns = win ? meta[M_WN] : ntok / 32, nw = ns * 32, kvonly = win && meta[M_PASS] == 1;   /* nw: rows of this call (one window or all tokens) */
 #define BUF(m) (blob + meta[m])
 #define WB(m) ((const uint8_t *)wts + meta[m])
-  float *x = (float *)BUF(M_X); const float *mod = (const float *)modp, *gain = (const float *)WB(M_GAIN), *cosT = (const float *)BUF(M_COS), *sinT = (const float *)BUF(M_SIN);
-  u16 *h16 = (u16 *)BUF(M_H), *q16 = (u16 *)BUF(M_Q), *k16 = (u16 *)BUF(M_K), *v16 = (u16 *)BUF(M_V), *o16 = (u16 *)BUF(M_O), *t16 = (u16 *)BUF(M_T), *mid = (u16 *)BUF(M_MID), *ck16 = (u16 *)BUF(M_CK), *cv16 = (u16 *)BUF(M_CV);
+  float *x = (float *)BUF(M_X) + (size_t)w0 * NCB * 1024; const float *mod = (const float *)modp, *gain = (const float *)WB(M_GAIN), *cosT = (const float *)BUF(M_COS) + (size_t)w0 * 2048, *sinT = (const float *)BUF(M_SIN) + (size_t)w0 * 2048;
+  u16 *h16 = (u16 *)BUF(M_H), *q16 = (u16 *)BUF(M_Q), *k16 = (u16 *)BUF(M_K) + (size_t)w0 * NCB * T16, *v16 = (u16 *)BUF(M_V) + (size_t)w0 * NCB * T16, *kall = (u16 *)BUF(M_K), *vall = (u16 *)BUF(M_V), *o16 = (u16 *)BUF(M_O), *t16 = (u16 *)BUF(M_T), *mid = (u16 *)BUF(M_MID), *ck16 = (u16 *)BUF(M_CK), *cv16 = (u16 *)BUF(M_CV);
   static HVX_Vector LM[NCB] __attribute__((aligned(128))), LN[NCB] __attribute__((aligned(128)));
   if (ntimes > 24) times[24] = (int)(us_now() - te0);   /* entry -> start of work: mmap_get, acquire, pool, HMX lock */
   int ti = 0; uint32_t t0 = us_now();
@@ -155,23 +234,27 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     if (meta[M_STOP] == 93) { P.ns = 2; p_ln(&P, 0, 1); goto done; }
     pool_run(p_ln, &P); TICK();
     if (site == 0) {
-      gemm_run(h16, ntok, DIM, (u16 *)WB(M_WSQ), DIM, q16, vt); gemm_run(h16, ntok, DIM, (u16 *)WB(M_WSK), DIM, k16, vt); gemm_run(h16, ntok, DIM, (u16 *)WB(M_WSV), DIM, v16, vt); TICK();
-      P.g = gain; P.c = cosT; P.s = sinT; P.rope = 1; P.q = q16; pool_run(p_rope, &P);
-      P.g = gain + 128; P.q = k16; pool_run(p_rope, &P); TICK();
-      attn_run(q16, k16, v16, o16, ns, ntok, vt); TICK();
-      { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, ntok, DIM, (u16 *)WB(M_WSO), DIM, t16, vt, &e); } TICK();
+      if (!kvonly) gemm_run(h16, nw, DIM, (u16 *)WB(M_WSQ), DIM, q16, vt);
+      if (!win || kvonly) { gemm_run(h16, nw, DIM, (u16 *)WB(M_WSK), DIM, k16, vt); gemm_run(h16, nw, DIM, (u16 *)WB(M_WSV), DIM, v16, vt); }   /* windows: K and V of every window are made first (pass 1), the full block follows */
+      TICK();
+      P.g = gain; P.c = cosT; P.s = sinT; P.rope = 1; P.q = q16; if (!kvonly) pool_run(p_rope, &P);
+      if (!win || kvonly) { P.g = gain + 128; P.q = k16; pool_run(p_rope, &P); }
+      TICK();
+      if (kvonly) goto done;
+      attn_run(q16, kall, vall, o16, ns, ntok, vt); TICK();
+      { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, nw, DIM, (u16 *)WB(M_WSO), DIM, t16, vt, &e); } TICK();
     } else if (site == 1) {
-      gemm_run(h16, ntok, DIM, (u16 *)WB(M_WCQ), DIM, q16, vt);
+      gemm_run(h16, nw, DIM, (u16 *)WB(M_WCQ), DIM, q16, vt);
       gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCK), DIM, ck16, vt); gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCV), DIM, cv16, vt); TICK();
       P.rope = 0; P.g = gain + 256; P.q = q16; pool_run(p_rope, &P);
       P.ns = nc; P.g = gain + 384; P.q = ck16; pool_run(p_rope, &P); P.ns = ns; TICK();
       attn_run(q16, ck16, cv16, o16, ns, nctx, vt); TICK();
-      { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, ntok, DIM, (u16 *)WB(M_WCO), DIM, t16, vt, &e); } TICK();
+      { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, nw, DIM, (u16 *)WB(M_WCO), DIM, t16, vt, &e); } TICK();
     } else {
-      { gemm_epi_t e = {2, 0, 0, g_t2, g_scr}; gemm_run_ex(h16, ntok, DIM, (u16 *)WB(M_WM1), 8192, mid, vt, &e); } TICK();
+      { gemm_epi_t e = {2, 0, 0, g_t2, g_scr}; gemm_run_ex(h16, nw, DIM, (u16 *)WB(M_WM1), 8192, mid, vt, &e); } TICK();
       { gemm_geo_t g0 = {256, 256, 0}, g1 = {256, 256, 128};   /* two K halves: weights are re-read 2x less; partial 1 -> t16, partial 2 + residual */
-        gemm_run_geo(mid, ntok, 4096, (u16 *)WB(M_WM2), DIM, t16, vt, 0, &g0);
-        gemm_epi_t e = {4, x, gt}; e.prev = t16; gemm_run_geo(mid, ntok, 4096, (u16 *)WB(M_WM2), DIM, t16, vt, &e, &g1); } TICK();
+        gemm_run_geo(mid, nw, 4096, (u16 *)WB(M_WM2), DIM, t16, vt, 0, &g0);
+        gemm_epi_t e = {4, x, gt}; e.prev = t16; gemm_run_geo(mid, nw, 4096, (u16 *)WB(M_WM2), DIM, t16, vt, &e, &g1); } TICK();
     }
   }
 done:

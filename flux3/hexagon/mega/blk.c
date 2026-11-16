@@ -28,7 +28,7 @@ typedef uint16_t u16;
 #define T16 1024          /* halfwords per h16 tile */
 #define VT_TAB (7u << 20) /* tables at the top 1 MB of VTCM */
 
-static u16 *g_et, *g_tabs, *g_tabs2, *g_t2; static HVX_Vector *g_scr;   /* tables (exp, 3 SiTU) + per-worker gather scratch */
+static u16 *g_et, *g_tabs, *g_tabs2, *g_t2, *g_t2s; static HVX_Vector *g_scr;   /* tables (exp, 3 SiTU) + per-worker gather scratch */
 
 static void vcp(void *d, const void *s, size_t bytes) {
   HVX_Vector *dv = (HVX_Vector *)d; const HVX_Vector *sv = (const HVX_Vector *)s; size_t n = bytes / 128;
@@ -95,7 +95,7 @@ static void p_softmax(void *a, int i, int n) { sm_t *p = (sm_t *)a;
   if (p->pm) k_softmax2pm(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, p->pk, p->pmi, p->pm, p->np);
   else k_softmax2p(p->S, p->P, p->nkb, g_et, g_scr + 8 * i, i * 16 / n, (i + 1) * 16 / n, p->km, p->kst); }
 
-static uint64_t g_acc[8];
+static uint64_t g_acc[24];
 #define PC() HAP_perf_get_time_us()
 static u16 g_km[64] __attribute__((aligned(128)));
 static u16 g_cm[16 * 64] __attribute__((aligned(128)));   /* causal diagonal-tile masks, one vector per row pair: lane l = key c*2 + (row&1); masked when c > row */
@@ -251,15 +251,15 @@ static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, i
 /* ---------------- block ---------------- */
 static uint32_t us_now(void) { return (uint32_t)HAP_perf_get_time_us(); }
 
-static uint32_t g_ctx; static uint8_t *g_vt; static int g_init; static u16 *g_et_h, *g_tabs_h, *g_tabs2_h, *g_t2_h, *g_tabs3_h;
+static uint32_t g_ctx; static uint8_t *g_vt; static int g_init; static u16 *g_et_h, *g_tabs_h, *g_tabs2_h, *g_t2_h, *g_tabs3_h, *g_t2s_h;
 void mega_blk_release(void) { if (!g_init) return; pool_quit(); if (g_vt) HAP_compute_res_release(g_ctx); g_vt = 0; g_init = 0; }
 static int vtcm_get(void) {
   compute_res_attr_t attr; HAP_compute_res_attr_init(&attr);
   HAP_compute_res_attr_set_vtcm_param(&attr, 8u << 20, 1); HAP_compute_res_attr_set_hmx_param(&attr, 1);
   g_ctx = HAP_compute_res_acquire(&attr, 5000000); if (!g_ctx) return -1;
   g_vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr); hmx_bias_setup(g_vt + (8u << 20) - 4096);
-  g_et = (u16 *)(g_vt + VT_TAB); g_tabs = g_et + 32768; g_tabs2 = g_tabs + 3 * 32768; g_scr = (HVX_Vector *)(g_vt + VT_TAB + 393216); g_t2 = (u16 *)(g_vt + VT_TAB + 458752);
-  memcpy(g_et, g_et_h, 65536); memcpy(g_tabs, g_tabs_h, 3 * 65536); memcpy(g_tabs2, g_tabs2_h, 2 * 65536); memcpy(g_t2, g_t2_h, 65536);
+  g_et = (u16 *)(g_vt + VT_TAB); g_tabs = g_et + 32768; g_tabs2 = g_tabs + 3 * 32768; g_scr = (HVX_Vector *)(g_vt + VT_TAB + 393216); g_t2 = (u16 *)(g_vt + VT_TAB + 458752); g_t2s = (u16 *)(g_vt + VT_TAB + 524288);
+  memcpy(g_et, g_et_h, 65536); memcpy(g_tabs, g_tabs_h, 3 * 65536); memcpy(g_tabs2, g_tabs2_h, 2 * 65536); memcpy(g_t2, g_t2_h, 65536); memcpy(g_t2s, g_t2s_h, 65536);
   return 0;
 }
 
@@ -297,6 +297,7 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     tab_init_situ(g_tabs_h);
     g_tabs2_h = (u16 *)memalign(128, 2 * 65536); tab_init_swiglu(g_tabs2_h);
     g_t2_h = (u16 *)memalign(128, 65536); tab_init_gelut(g_t2_h);
+    g_t2s_h = (u16 *)memalign(128, 65536); tab_init_gelut_s(g_t2s_h, 16.0f);   /* Mage: GELU(16 x) / 16 */
     g_tabs3_h = (u16 *)memalign(128, 2 * 65536); tab_init_gelumul(g_tabs3_h);
     g_init = 1;
   }
@@ -639,6 +640,77 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     gemm_set_q8(1);
     goto done;
   }
+  if (meta[M_MODE] == 53) {   /* Mage-Flow double-stream block (mage/export_mage.py). rows = [img slabs (M_BA of them) | txt slabs]; keys = all rows (txt pad is trailing -> M_NVALID mask). mod = [img: shift1,scale1,gate1,shift2,scale2,gate2][txt: same] x DIM f32.
+                                 Biases ride in the 4 extra K tiles (host pre-fills the L buffers with the bias-tile pattern), q/k per-head RMSNorm in the GEMM epilogue, rope on the img rows only.
+                                 Windowed runs (like MiniMax-H3 and LTX): M_A4 bit 0 = only project this window's keys/values into the GLOBAL K/V buffers at slab offset M_A9, bit 1 = keys/values already there (the window's queries attend to all M_A2 key tokens); M_BA = image slabs inside the window, M_NVALID = valid key tokens (global). Without flags: the plain block over all rows. */
+    const int32_t *h4 = (const int32_t *)wts; uint32_t po[14]; for (int i = 0; i < 14; i++) po[i] = (uint32_t)h4[1 + i];
+    const int ni = meta[M_BA], nt = ns - ni; const int sl0[2] = {0, ni}, sln[2] = {ni, nt};
+    const int fl53 = meta[M_A4], onlyKV = fl53 & 1, haveKV = (fl53 >> 1) & 1, nkall = (onlyKV || haveKV) ? meta[M_A2] : ntok; u16 *k16w = k16 + (size_t)meta[M_A9] * NCB * T16, *v16w = v16 + (size_t)meta[M_A9] * NCB * T16;
+    g_hdt = 4; gemm_set_q8(1);
+    for (int s = 0; s < 2; s++) {   /* stage 1: LN + q,k,v */
+      const int n = sln[s], s0 = sl0[s]; if (!n) continue; const float *m = mod + (size_t)s * 8 * DIM; const uint32_t *o = po + 7 * s;
+      uint64_t cc = PC(); k_ln_prep(LM, LN, m, m + DIM); P.x = x + (size_t)s0 * NCB * 1024; P.h = h16 + (size_t)s0 * NCB * T16; P.ns = n; pool_run(p_lnn, &P); g_acc[8] += PC() - cc; cc = PC();
+      const gemm_geo_t g3[3] = {{NCB, NCB + 4, 0, Lq + (size_t)s0 * 12 * T16, 12, 4}, {NCB, NCB + 4, 0, Lq + (size_t)s0 * 12 * T16 + 4 * T16, 12, 4}, {NCB, NCB + 4, 0, Lq + (size_t)s0 * 12 * T16 + 8 * T16, 12, 4}};
+      const float *gn = (const float *)(wts + o[6]);
+      u16 *hs = h16 + (size_t)s0 * NCB * T16, *qs = q16 + (size_t)s0 * NCB * T16, *ks = (onlyKV ? k16w : k16) + (size_t)s0 * NCB * T16, *vs = (onlyKV ? v16w : v16) + (size_t)s0 * NCB * T16;
+      gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 3; e.rope = s == 0; e.gain = gn; e.cosT = cosT; e.sinT = sinT;
+      if (!onlyKV) gemm_run_geo(hs, n * 32, DIM + 128, WB(o[0]), DIM, qs, vt, &e, &g3[0]);
+      g_acc[9] += PC() - cc; cc = PC();
+      if (haveKV) continue;
+      e.gain = gn + 128; gemm_run_geo(hs, n * 32, DIM + 128, WB(o[1]), DIM, ks, vt, &e, &g3[1]); g_acc[10] += PC() - cc; cc = PC();
+      k_ln_prep(LM, LN, m + 2 * DIM, m + 3 * DIM); pool_run(p_lnn, &P); g_acc[11] += PC() - cc; cc = PC();   /* v input at 1/4096 (its own scale) */
+      gemm_run_geo(hs, n * 32, DIM + 128, WB(o[2]), DIM, vs, vt, 0, &g3[2]); g_acc[12] += PC() - cc;
+    } TICK();
+    if (onlyKV) goto done;
+    attn_run(q16, k16, v16, o16, ns, nkall, meta[M_NVALID], 0, 0, NCB, NCB, 1, vt); TICK();
+    for (int s = 0; s < 2; s++) {   /* stage 2: o-proj + residual, LN2, fc1(+GELU), fc2 + residual */
+      const int n = sln[s], s0 = sl0[s]; if (!n) continue; const float *m = mod + (size_t)s * 8 * DIM; const uint32_t *o = po + 7 * s;
+      u16 *os = o16 + (size_t)s0 * NCB * T16, *ts = t16 + (size_t)s0 * NCB * T16, *ms = mid + (size_t)s0 * 384 * T16, *hs = h16 + (size_t)s0 * NCB * T16;
+      float *xs = x + (size_t)s0 * NCB * 1024;
+      uint64_t cc = PC();
+      { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = xs; e.gate = m + 4 * DIM; const gemm_geo_t go = {NCB, NCB + 4, 0, Lo + (size_t)s0 * 4 * T16, 4, 4};
+        gemm_run_geo(os, n * 32, DIM + 128, WB(o[3]), DIM, ts, vt, &e, &go); } g_acc[13] += PC() - cc; cc = PC();
+      k_ln_prep(LM, LN, m + 5 * DIM, m + 6 * DIM); P.x = xs; P.h = hs; P.ns = n; pool_run(p_lnn, &P); g_acc[14] += PC() - cc; cc = PC();
+      { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 2; e.t2 = g_t2s; e.scr = g_scr; const gemm_geo_t gu = {NCB, NCB + 4, 0, Lu + (size_t)s0 * 4 * T16, 4, 4};
+        gemm_run_geo(hs, n * 32, DIM + 128, WB(o[4]), 12288, ms, vt, &e, &gu); } g_acc[15] += PC() - cc; cc = PC();
+      if (meta[M_FMT] == 4) {   /* fc2 in 4 K parts of 96 tiles: smaller weight panels -> more rows per VTCM row group (fewer weight re-reads); every part adds gate*partial to the fp32 stream */
+        gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = xs; e.gate = m + 7 * DIM;
+        for (int kp = 0; kp < 4; kp++) { const gemm_geo_t gp = kp == 3 ? (gemm_geo_t){384, 388, 288, Ld + (size_t)s0 * 4 * T16, 4, 4} : (gemm_geo_t){384, 388, kp * 96, 0, 0, 0};
+          gemm_run_geo(ms, n * 32, kp == 3 ? 3072 + 128 : 3072, WB(o[5]), DIM, ts, vt, &e, &gp); }
+      } else
+      { const gemm_geo_t g0 = {384, 388, 0, 0, 0, 0}, g1_ = {384, 388, 192, Ld + (size_t)s0 * 4 * T16, 4, 4};
+        gemm_run_geo(ms, n * 32, 6144, WB(o[5]), DIM, ts, vt, 0, &g0);
+        gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 4; e.x32 = xs; e.gate = m + 7 * DIM; e.prev = ts;
+        gemm_run_geo(ms, n * 32, 6144 + 128, WB(o[5]), DIM, ts, vt, &e, &g1_); } g_acc[16] += PC() - cc;
+    } TICK();
+    goto done;
+  }
+  if (meta[M_MODE] == 61) {   /* generic GEMM for the CPU-side VAE: t16 = [gelu](h16 @ W + bias). M_NCB = K tiles, M_BA = N (output columns), M_FMT: 0 plain, 2 tanh-GELU epilogue; W at M_WOFF = [N/32][K/32+4] q8 tiles (bias in the 4 extra K tiles), L buffer M_LQ = bias tile pattern */
+    const int kt = meta[M_NCB], N = meta[M_BA]; gemm_set_q8(1);
+    gemm_epi_t e; memset(&e, 0, sizeof e); if (meta[M_FMT] == 2) { e.mode = 2; e.t2 = g_t2; e.scr = g_scr; }
+    const gemm_geo_t g = {kt, kt + 4, 0, Lq, 4, 4};
+    gemm_run_geo(h16, ntok, kt * 32 + 128, WB(0), N, t16, vt, &e, &g); TICK();
+    goto done;
+  }
+  if (meta[M_MODE] == 55) {   /* Qwen3-VL-4B vision layer (mage/export_mvit.py): like MODE 23 with hidden 1024, ffn 4096 (no padding) */
+    const float *gw = (const float *)(wts + QM_GAIN), *ones = mod;
+    for (int cb = 0; cb < NCB; cb++) { LM[cb] = *(const HVX_Vector *)(gw + cb * 32); LN[cb] = *(const HVX_Vector *)(gw + 1024 + cb * 32); }
+    pool_run(p_lnn, &P); TICK();
+    { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 3; e.rope = 1; e.gain = 0; e.cosT = cosT; e.sinT = sinT;
+      gemm_run_geo(h16, ntok, DIM + 128, WB(QM_Q), 2048, q16, vt, &e, &gq);
+      gemm_run_geo(h16, ntok, DIM + 128, WB(QM_K), 2048, k16, vt, &e, &gk);
+      gemm_run_geo(h16, ntok, DIM + 128, WB(QM_V), 2048, v16, vt, 0, &gv); } TICK();
+    g_hdt = 4; attn_run(q16, k16, v16, o16, ns, ntok, meta[M_NVALID], 0, 0, 64, 64, 1, vt); TICK();
+    { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x; e.gate = ones; const gemm_geo_t go = {64, 68, 0, Lo, 4, 4};
+      gemm_run_geo(o16, ntok, 2048 + 128, WB(QM_O), DIM, t16, vt, &e, &go); } TICK();
+    for (int cb = 0; cb < NCB; cb++) { LM[cb] = *(const HVX_Vector *)(gw + 2048 + cb * 32); LN[cb] = *(const HVX_Vector *)(gw + 3072 + cb * 32); }
+    pool_run(p_lnn, &P); TICK();
+    { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 2; e.t2 = g_t2; e.scr = g_scr; const gemm_geo_t gu = {NCB, NCB + 4, 0, Lu, 4, 4};
+      gemm_run_geo(h16, ntok, DIM + 128, WB(QM_FC1), 4096, mid, vt, &e, &gu); } TICK();
+    { gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x; e.gate = ones; const gemm_geo_t gd = {128, 132, 0, Ld, 4, 4};
+      gemm_run_geo(mid, ntok, 4096 + 128, WB(QM_FC2), DIM, t16, vt, &e, &gd); } TICK();
+    goto done;
+  }
   if (meta[M_MODE] == 40) {   /* Qwen-Image-2.1 DiT block. rows = own tokens (ns slabs); keys = own rows + meta[M_NPRE] cached prefix slabs placed after them in K/V; causal = prefix prefill.
                                  mod = [scale1, tanh(gate1), scale2, tanh(gate2)] x 4096 f32 (host side) */
     const float *s1 = mod, *g1 = mod + DIM, *s2 = mod + 2 * DIM, *g2 = mod + 3 * DIM; const float *gn;
@@ -753,10 +825,12 @@ int mega_block(remote_handle64 hd, const int *meta, int nmeta, int wfd, int bfd,
   if (HAP_mmap_get(bfd, &bp, &bpa) || !bp) { *rc = -7; return 0; }
   g_blob = (uint8_t *)bp;
   const size_t xb = (size_t)meta[M_NTOK] * DIM * 4;
-  if (meta[M_FIRST]) { cache_sync(g_blob + meta[M_X], xb); cache_sync(g_blob + meta[M_COS], (size_t)meta[M_NTOK] / 32 * 8192); cache_sync(g_blob + meta[M_SIN], (size_t)meta[M_NTOK] / 32 * 8192); }
+  if (meta[M_FIRST] && meta[M_MODE] != 61) { cache_sync(g_blob + meta[M_X], xb); cache_sync(g_blob + meta[M_COS], (size_t)meta[M_NTOK] / 32 * 8192); cache_sync(g_blob + meta[M_SIN], (size_t)meta[M_NTOK] / 32 * 8192); }
   if ((meta[M_MODE] == 50 || meta[M_MODE] == 51 || meta[M_MODE] == 80 || meta[M_MODE] == 81 || meta[M_MODE] == 82 || meta[M_MODE] == 90 || meta[M_MODE] == 91 || meta[M_MODE] == 92) && meta[M_FIRST]) cache_sync(g_blob + meta[M_HN], 131072);
   if (meta[M_NPRE]) { const size_t own = (size_t)meta[M_NTOK] * DIM * 2, pre = (size_t)meta[M_NPRE] * 32 * DIM * 2; cache_sync(g_blob + meta[M_K] + own, pre); cache_sync(g_blob + meta[M_V] + own, pre); }
+  if (meta[M_MODE] == 61) { cache_sync(g_blob + meta[M_H], (size_t)meta[M_NTOK] / 32 * meta[M_NCB] * 2048); cache_sync(g_blob + meta[M_LQ], (size_t)meta[M_NTOK] / 32 * 4 * 2048); }   /* Mage VAE GEMM: host-written A tiles + bias pattern */
   int r = mega_block_impl(hd, meta, nmeta, wfd, mod, modlen, times, ntimes, rc);
+  if (meta[M_MODE] == 61) cache_sync(g_blob + meta[M_T], (size_t)meta[M_NTOK] / 32 * (meta[M_BA] / 32) * 2048);   /* DSP-written result */
   if (meta[M_REL]) cache_sync(g_blob + meta[M_X], xb);
   HAP_mmap_put(bfd);
   if (*rc != -5) HAP_mmap_put(wfd);

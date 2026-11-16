@@ -19,6 +19,8 @@ And **Qwen-Image 2.1 Turbo** (Qwen team; with the 4-step Lightning LoRA by Light
 About 40 s for 512x768, about 40-50 s for an edit (768x512 from a 512x512 photo); the weights (~14 GB, optional download) are streamed from storage for every picture. **Non-commercial use only** (Qwen Research License), see below.
 And **Mage-Flow-Edit-Turbo** (Microsoft, MIT): a 4B model that draws and **edits photos by a prompt** in about 12 seconds a picture (a text encoder, a ViT, a 12-block transformer and the VAE, all on the NPU). The weights are about 8.7 GB (optional download) and are streamed from storage for every picture.
 And **MiniMax-H3-Image** (MiniMax, 33B transformer and a Qwen3-VL text encoder, INT8-ConvRot, 6 steps without CFG, or 2 with the pDMD LoRA): sizes from 512 to 2048, about 2 minutes for 512x768 (the weights stream from storage for every picture). It is an optional 48 GB download from its own public repository `ayanoby/hexanima-h3`; **MiniMax community licence: not for the US, EU, UK and South Korea, outputs must not be used to improve other AI models** (the app asks for consent first). Powered by MiniMax-H3-Image.
+And **FLUX.3 Image Klein** (Black Forest Labs, 5.6B, non-commercial FLUX Kommunity License): photorealism and legible text, 16 steps without CFG, about a minute for 512x512, with a live preview (9 GB, in the download catalog).
+And **LTX-2.5 Video** (Lightricks, 22B distilled, LTX-2 Community License): short video from a prompt or from a photo (17-97 frames, 8 steps, no sound), saved as an MP4 with a player in the app (31 GB, in the download catalog). **MiniMax-H3 Ref2VA** makes video with a reference photo (the converted files are put in by hand, see `h3/NOTES_REF2VA.md`).
 
 ## Features
 
@@ -172,6 +174,7 @@ Qualcomm may terminate that license at any time, in which case distribution of t
 - `app/`: the Android app (plain Java, built without Gradle by `app/build.sh`), package `com.hexanima.npu`. Languages in `app/assets/lang/`.
 - `phone/`: the on-device server (`animad.cpp`) and `anima.sh`, which the app runs.
 - `chainrun/`, `hexagon/mega/`: helper processes and the Hexagon HMX kernels (see `THIRD_PARTY.md` for the Qualcomm files you have to supply).
+- `flux3/`, `ltx/`: FLUX.3 Klein and LTX-2.5 (kernels, runners, pack conversion; `flux3/hexagon/mega` is the kernel tree shared with MiniMax-H3 Ref2VA, whose runner is `h3/hexagon/mega/r2vrun.cpp`). See `flux3/README.md`, `ltx/README.md`, `h3/NOTES_REF2VA.md`.
 - `patches/`: patches for stable-diffusion.cpp (NPU/TE/VAE hooks, serve mode); `android/build_sd.sh` builds it.
 - `export/`, `tools/`: model conversion (`make_pack.py` builds the downloadable packs), translations (`build_lang.py`, `lang/`), `stage_jnilibs.sh`.
 - `docs/PITFALLS.md`: engineering notes on the NPU work.

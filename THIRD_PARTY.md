@@ -14,6 +14,10 @@ This repository contains only HexAnima's own source code (MIT, see `LICENSE`). N
 | Qwen3-VL-8B-Instruct (Qwen team) with Unsloth GGUF quantisation (text encoder and vision tower of the Qwen-Image pack) | same pack | Apache 2.0 |
 | Mage-Flow-Edit-Turbo transformer and Mage-VAE (Microsoft) | the optional Mage-Flow pack (text-to-image and photo editing; converted for the NPU, hosted in its own repository with `LICENSE` and `NOTICE.md`) | MIT |
 | Qwen3-VL-4B (Qwen team): text encoder and vision tower of the Mage-Flow pack | same pack | Apache 2.0 |
+| FLUX.3 Image Klein (Black Forest Labs) with the Qwen3-VL-4B text encoder (Qwen team) | the optional FLUX.3 Klein pack (converted for the NPU, hosted in its own repository `ayanoby/hexanima-klein-packs` with `LICENSE` and `NOTICE.md`; in the download catalog) | FLUX Kommunity License (non-commercial); Apache 2.0 for the text encoder |
+| LTX-2.5 22B distilled (Lightricks) with its Gemma 4 12B based text encoder (Google) and the text-embeddings connectors | the optional LTX-2.5 pack (converted for the NPU, video only, hosted in `ayanoby/hexanima-ltx-packs` with `LICENSE` and `NOTICE.md`; in the download catalog) | LTX-2.x Community License Agreement; Gemma terms for the text encoder |
+| MiniMax-H3 Ref2VA (MiniMax; INT8-ConvRot transformer, video VAE and the 4-step turbo LoRA as published by Comfy-Org) | the video model made with `h3/` (the converted files are put on the phone by hand, they are not distributed by this project) | MiniMax-H3 Community License Agreement |
+| Real-ESRGAN (Xintao Wang et al.) x4 / x2 networks | the upscaler button in the picture viewer (the networks are downloaded on demand) | BSD-3-Clause (`licenses/real_esrgan_license.txt`) |
 | stable-diffusion.cpp | sampler and CPU parts (`patches/` are applied to it) | MIT |
 | TAEHV (`taew2_1`) | preview decoder | see github.com/madebyollin/taehv |
 | Danbooru tag list (DominikDoom/a1111-sd-webui-tagcomplete) | prompt suggestions | see that repository |
@@ -33,6 +37,12 @@ Built with Qwen. The Lightning v2-RL adapter's repository (lightx2v/Qwen-Image-2
 Qwen-Image-2.1-Turbo, the Lightning v2-RL adapter and the Qwen-Image-2.1 VAE are licensed under the Qwen RESEARCH LICENSE AGREEMENT (Copyright (c) 2026 Hangzhou Tongyi Laboratory Technology Co., Ltd.): non-commercial use only.
 The pack is converted and quantised (8-bit and lossless 4-bit tiles for the Hexagon matrix unit, the Lightning LoRA kept unmerged, the vision tower's heads zero-padded, the VAE re-written as fp16 Hexagon contexts); the changes are listed in the pack's `NOTICE.md` and in `app/assets/licenses/qwen_notice.txt`.
 The license text is bundled in the app (`qwen_research_license.txt`) and shown under Info -> Licenses. Sources of the conversion are in `qwen/`.
+
+## FLUX.3 Klein and LTX-2.5 notices
+
+The Klein and LTX-2.5 packs are converted derivatives (8-bit tiles for the Hexagon matrix unit, QNN contexts for the autoencoders), not official products of Black Forest Labs or Lightricks, and carry their licences with them (`LICENSE`, `NOTICE.md` in each pack repository).
+The licence texts and the notices are bundled in the app (`app/assets/licenses/flux_kommunity_license.txt`, `klein_notice.txt`, `ltx2_community_license.txt`, `ltx_notice.txt`) and shown under Info -> Licenses; the app shows the key restrictions before the download.
+Sources of the conversion are in `flux3/` and `ltx/`.
 
 ## Anima LoRA folding
 

@@ -1,6 +1,8 @@
 """H3 VAE ViT decoder tile for QNN: z [1,24,16,16] (already latents*std+mean) -> image [1,3,256,256] (ImageNet-normalised RGB). usage: python export_vae_h3.py OUT.onnx [VAE.safetensors]"""
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import sys, os, math, struct, json, numpy as np, torch, torch.nn as nn, torch.nn.functional as F
-sys.path.insert(0, '/home/artem/anima-npu/work/h3')
+sys.path.insert(0, (os.environ.get('H3_W', 'h3_weights')))
 from h3lib import ST
 class Dec(nn.Module):
     def __init__(s, path, H=16, W=16):
@@ -37,7 +39,7 @@ class Dec(nn.Module):
         x = F.layer_norm(x, (1024,), s.no_w, s.no_b, 1e-5); x = F.linear(x, s.po_w, s.po_b)[:H * W]
         return x.view(H, W, 3, 16, 16).permute(2, 0, 3, 1, 4).reshape(1, 3, H * 16, W * 16)
 if __name__ == '__main__':
-    out = sys.argv[1]; path = sys.argv[2] if len(sys.argv) > 2 else '/home/artem/anima-npu/work/h3/ref/MiniMax-H3-Image/vae/diffusion_pytorch_model.safetensors'
+    out = sys.argv[1]; path = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get('H3_W', 'h3_weights') + '/ref/MiniMax-H3-Image/vae/diffusion_pytorch_model.safetensors')
     m = Dec(path).eval(); z = torch.randn(1, 24, 16, 16) * 1.2
     with torch.no_grad(): ref = m(z)
     from h3lib import vae_decode

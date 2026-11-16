@@ -1,0 +1,12 @@
+#include "AEEStdDef.idl"
+#include "remote.idl"
+interface mega : remote_handle64 {
+  long probe(in long K, in long reps, in long stage, rout long long cyc_per_call, rout float maxerr, rout long lockrc, rout long vtcmrc);
+  long bench(in long M, in long K, in long N, rout long long us, rout float err, rout long rc);
+  long stream(in long M, in long K, in long N, in long mode, rout long long us, rout long long copy_us, rout long rc);
+  long copybw(in long threads, in long mb, rout long long us);
+  long ktest(in long which, rout float err, rout long long us, rout long long cyc);
+  long gtest(in long M, in long K, in long N, in long nw, rout long long us, rout float err, rout long rc);
+  long block(in sequence<long> meta, in long wfd, in long bfd, in sequence<uint8> mod, rout sequence<long> times, rout long rc);
+  long dump(in long mode, in sequence<uint8> act, in sequence<uint8> wgt, rout sequence<uint8> res, rout long rc);
+};

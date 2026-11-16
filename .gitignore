@@ -23,3 +23,16 @@ app/assets/anima.sh
 android/build/
 !app/assets/preview_*.bin
 phone/animaconv
+# build outputs of the model trees (generated sources, binaries, SDK files)
+flux3/hexagon/mega/out/
+flux3/hexagon/mega/bld/
+flux3/hexagon/mega/qhl_hmx/
+flux3/hexagon/mega/syslib/
+flux3/runner/out/
+flux3/runner/flux3run.cpp
+ltx/runner/out/
+ltx/runner/ltxrun.cpp
+ltx/vae/runner/out/
+h3/hexagon/mega/out/
+h3/hexagon/mega/out_arm/
+h3/vae/out/

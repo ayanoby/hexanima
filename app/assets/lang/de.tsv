@@ -468,3 +468,68 @@ Loaded	Geladen
 Unloaded	Entladen
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Das Modell wird unter der MiniMax-H3-Image Community License Agreement verbreitet (der Lizenztext wird mit den Dateien geladen). Es darf nicht in den USA, der Europäischen Union, im Vereinigten Königreich und in Südkorea verwendet werden, und seine Ergebnisse dürfen nicht zur Verbesserung anderer KI-Modelle genutzt werden. Größe: %s GB. Herunterladen?
 Accept and download	Akzeptieren und herunterladen
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	Die Anzahl der Token pro Frame (%d) muss durch 32 teilbar sein, z. B. 512×512, 1024×576, 768×768
+Video too large: reduce the size or the frame count	Video zu groß: Größe oder Bildanzahl verringern
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Die Anzahl der Patches (%d) muss durch 32 teilbar sein, z. B. 512×512, 768×1024, 1024×1024
+The picture is too large to upscale	Das Bild ist zu groß zum Hochskalieren
+Too large for x4: choose x2	Zu groß für ×4: ×2 wählen
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	Die Tokenanzahl (%d) muss durch 32 teilbar sein, z. B. 512×384, 384×512, 512×512
+Cannot play the video	Das Video kann nicht abgespielt werden
+An upscale is already running	Eine Hochskalierung läuft bereits
+×4 · photo	×4 · Foto
+×4 · anime	×4 · Anime
+×2 · photo	×2 · Foto
+×2 · anime	×2 · Anime
+Upscale (Real-ESRGAN, NPU)	Hochskalieren (Real-ESRGAN, NPU)
+Download needed	Download erforderlich
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	Das Hochskalierungsnetz (%s, %d MB) wird einmalig von Hugging Face geladen. Real-ESRGAN-Lizenz: BSD-3.
+anime	Anime
+photo	Foto
+Downloading…	Wird heruntergeladen…
+Download failed: %s	Download fehlgeschlagen: %s
+Upscaling…	Wird hochskaliert…
+Upscale failed: %s	Hochskalieren fehlgeschlagen: %s
+Done: a new picture in the gallery	Fertig: ein neues Bild in der Galerie
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%d Frames (%.1f s bei %d fps)
+Frame rate	Bildrate
+Frames	Frames
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	Wie viele Entrauschungsschritte das Modell ausführt. Mehr Schritte: feinere Details, aber ein langsameres Bild, und nur bis zu einem gewissen Punkt. Nehmen Sie die für das Modell empfohlene Zahl: schnelle Modelle (Turbo, Lightning) brauchen etwa 4–8 Schritte, normale 20–30.
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	Länge des Clips (die Liste hängt vom Modell ab: LTX 17–97 Frames, Ref2VA 22–90). Längere Clips machen jeden Schritt langsamer (die Aufmerksamkeit wächst mit der Bildanzahl) und das Dekodieren länger und begrenzen die Bildgröße, die in den Speicher passt.
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	Bilder pro Sekunde des fertigen MP4. Das ändert nur die Wiedergabegeschwindigkeit: Das Modell wurde mit 24 fps trainiert, daher wirkt 24–25 am natürlichsten, niedrigere Werte ergeben Zeitlupe.
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	Das Foto ist eine Referenz: Die Person, das Tier oder der Gegenstand darauf erscheint im Video; beschreiben Sie im Prompt, was passiert und wie sich die Kamera bewegt. Die Umgebung kommt aus dem Prompt.
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	Wählen Sie ein Referenzfoto (optional): Das Motiv des Fotos erscheint im Video. Ohne Foto entsteht das Video nur aus dem Prompt.
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	Das Foto wird das erste Bild des Videos; beschreiben Sie im Prompt, was passiert und wie sich die Kamera bewegt.
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	Wählen Sie ein Foto, um es zum Leben zu erwecken (Bild zu Video). Ohne Foto entsteht das Video nur aus dem Prompt.
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 Schritte · Video aus Prompt und Referenzfoto, ohne Ton
+22B · 8 steps · 17-frame video, no sound	22B · 8 Schritte · Video mit 17 Frames, ohne Ton
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 Schritte · Fotorealismus, Text in Bildern
+Create video  ·  ~%d s	Video erstellen  ·  ~%d s
+Generation failed: %s (log files/klein/klein.log)	Generierung fehlgeschlagen: %s (Log files/klein/klein.log)
+Decoding the video…	Video wird dekodiert…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	Die Datei des Bildencoders (files/ltx/vae/etile.bin) fehlt: Bild zu Video ist nicht verfügbar
+Saving the video…	Video wird gespeichert…
+Generation failed: %s (log files/ltx/ltx.log)	Generierung fehlgeschlagen: %s (Log files/ltx/ltx.log)
+Decoding the video %d/%d…	Video wird dekodiert %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	Die Datei des Bildencoders (files/r2v/enc/henc.bin) fehlt: das Referenzfoto ist nicht verfügbar
+Generation failed: %s (log files/r2v/r2v.log)	Generierung fehlgeschlagen: %s (Log files/r2v/r2v.log)
+Upscaler	Hochskalierer
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	Vergrößert ein fertiges Bild auf der NPU. Die Schaltfläche befindet sich in der Bildansicht. BSD-3  ·  Xintao Wang et al.
+Anime	Anime
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	Das Modell wird unter der FLUX Kommunity License verbreitet (Black Forest Labs; der Lizenztext wird mit den Dateien geladen). Die Nutzung ist nichtkommerziell (kommerziell nur zu den Bedingungen der Lizenz), und seine Ausgaben dürfen nicht zum Trainieren oder Verbessern anderer KI-Modelle verwendet werden. Größe: %s GB. Herunterladen?
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	Das Modell wird unter der LTX-2 Community License Agreement verbreitet (Lightricks; der Lizenztext wird mit den Dateien geladen): kostenlos für Organisationen mit einem Jahresumsatz unter 10 Mio. USD, es gelten die Nutzungsbeschränkungen der Lizenz. Der Gemma-Textencoder (Google) wird unter den Gemma-Bedingungen verwendet. Größe: %s GB. Herunterladen?
+FLUX.3 Klein notices (changes made)	FLUX.3-Klein-Hinweise (vorgenommene Änderungen)
+LTX-2.5 notices (changes made)	LTX-2.5-Hinweise (vorgenommene Änderungen)
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) erzeugt ein Video aus einem Prompt und optional einem Referenzfoto: Die Person, das Tier oder der Gegenstand auf dem Foto erscheint im Video, während Umgebung und Bewegung aus dem Prompt stammen. 22–90 Frames, 4 Schritte (destillierte Turbo-LoRA, ohne CFG), ohne Ton. Die Dateien (files/r2v) werden von Hand abgelegt, der Textencoder wird mit MiniMax-H3-Image geteilt (files/h3/te). MiniMax-H3-Community-Lizenz: nicht für die USA, die EU, das Vereinigte Königreich und Korea.
+Ref2VA sizes	Ref2VA-Größen
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	Beide Seiten sind Vielfache von 32, mindestens 256; die Token pro Frame (Breite/32 × Höhe/32) müssen durch 32 teilbar sein, z. B. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Höchstens 16000 Token insgesamt (Latent-Frames × Token pro Frame): 1024×576 ergibt 56 Frames in ~20 Minuten, 512×512 ergibt 22 Frames in ~5 Minuten. Länge und Größe des Clips verändern die Zeit fast quadratisch.
+LTX sizes	LTX-Größen
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Beide Seiten sind Vielfache von 32, mindestens 256; die Tokenanzahl 3 × (Breite/32) × (Höhe/32) muss durch 32 teilbar sein, zum Beispiel 512×384, 384×512, 512×512, 768×512, 768×768. Schreiben Sie den Prompt ausführlich und auf Englisch: wer, was er tut, das Licht, die Kamera.
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Klein-Größen
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Beide Seiten sind Vielfache von 16, die Anzahl der Patches (Breite/16 × Höhe/16) ist durch 32 teilbar und höchstens 6144 (zum Beispiel 1536×1024), mindestens 256 pro Seite. Schreiben Sie den Prompt ausführlich, als zusammenhängenden Absatz.
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, destilliert) erzeugt ein kurzes Video aus einem Prompt: 17–97 Frames (standardmäßig 17), eine frei wählbare Bildrate für das MP4, ohne Ton. Der Gemma-Textencoder, die 48 DiT-Blöcke (8 Schritte, ohne CFG) und der VAE laufen auf der NPU; ein ganzer Clip dauert etwa anderthalb Minuten. Das Modell ist im Download-Katalog (etwa 31 GB; LTX-2 Community License). Das Ergebnis ist ein MP4 neben einem Vorschaubild im Verlauf (die ▶-Schaltfläche).
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein (Black Forest Labs, 5.6B) ist ein fotorealistisches Modell, das lange, in normalen Sätzen geschriebene Prompts versteht und Text zeichnet. 16 Schritte, ohne CFG: etwa eine Minute für 512×512, 3–4 Minuten für 1024×1024. Der Textencoder, der Transformer und der Decoder laufen auf der NPU. Das Modell ist im Download-Katalog (etwa 9 GB). FLUX-Kommunity-Lizenz: nur nichtkommerzielle Nutzung.

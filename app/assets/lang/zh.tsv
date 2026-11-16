@@ -468,3 +468,68 @@ Loaded	已加载
 Unloaded	未加载
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	该模型依据 MiniMax-H3-Image Community License Agreement 分发(许可证文本会随文件一起下载)。不得在美国、欧盟、英国和韩国使用,其输出也不得用于改进其他 AI 模型。大小:%s GB。是否下载?
 Accept and download	接受并下载
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	每帧的 token 数（%d）必须能被 32 整除，例如 512×512、1024×576、768×768
+Video too large: reduce the size or the frame count	视频太大：请减小尺寸或帧数
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	patch 数量（%d）必须能被 32 整除，例如 512×512、768×1024、1024×1024
+The picture is too large to upscale	图片太大，无法放大
+Too large for x4: choose x2	对 ×4 来说太大：请选择 ×2
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	token 数量（%d）必须能被 32 整除，例如 512×384、384×512、512×512
+Cannot play the video	无法播放视频
+An upscale is already running	已有放大任务正在运行
+×4 · photo	×4 · 照片
+×4 · anime	×4 · 动漫
+×2 · photo	×2 · 照片
+×2 · anime	×2 · 动漫
+Upscale (Real-ESRGAN, NPU)	放大（Real-ESRGAN，NPU）
+Download needed	需要下载
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	放大网络（%s，%d MB）只需从 Hugging Face 下载一次。Real-ESRGAN 许可证：BSD-3。
+anime	动漫
+photo	照片
+Downloading…	正在下载…
+Download failed: %s	下载失败：%s
+Upscaling…	正在放大…
+Upscale failed: %s	放大失败：%s
+Done: a new picture in the gallery	完成：图库中有一张新图片
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%d 帧（%d fps 下为 %.1f 秒）
+Frame rate	帧率
+Frames	帧数
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	模型执行多少步去噪。步数越多：细节越精细，但图片越慢，而且只在一定范围内有效。请使用模型推荐的步数：快速模型（Turbo、Lightning）需要约 4–8 步，普通模型 20–30 步。
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	片段长度（列表取决于模型：LTX 17–97 帧，Ref2VA 22–90 帧）。片段越长，每一步越慢（注意力随帧数增长），解码也越久，并且会限制能放进内存的图片尺寸。
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	成品 MP4 的每秒帧数。它只改变播放速度：模型是在 24 fps 下训练的，所以 24–25 看起来最自然，更低的值会变成慢动作。
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	照片作为参考：照片中的人物、动物或物体会出现在视频中；请在描述中写明发生了什么以及镜头如何移动。环境取自描述。
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	选择一张参考照片（可选）：照片中的主体会出现在视频中。不选时，视频仅根据描述生成。
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	照片将成为视频的第一帧；请在描述中写明发生了什么以及镜头如何移动。
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	选择一张照片让它动起来（图片转视频）。不选照片时，视频仅根据描述生成。
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 步 · 根据描述和参考照片生成视频，无声
+22B · 8 steps · 17-frame video, no sound	22B · 8 步 · 17 帧视频，无声
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 步 · 照片级真实感，图片中的文字
+Create video  ·  ~%d s	生成视频  ·  约 %d 秒
+Generation failed: %s (log files/klein/klein.log)	生成失败：%s（日志 files/klein/klein.log）
+Decoding the video…	正在解码视频…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	缺少图像编码器文件（files/ltx/vae/etile.bin）：无法使用图片转视频
+Saving the video…	正在保存视频…
+Generation failed: %s (log files/ltx/ltx.log)	生成失败：%s（日志 files/ltx/ltx.log）
+Decoding the video %d/%d…	正在解码视频 %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	缺少图像编码器文件（files/r2v/enc/henc.bin）：无法使用参考照片
+Generation failed: %s (log files/r2v/r2v.log)	生成失败：%s（日志 files/r2v/r2v.log）
+Upscaler	放大器
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	在 NPU 上放大一张完成的图片。按钮位于图片查看器中。BSD-3  ·  Xintao Wang 等
+Anime	动漫
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	该模型根据 FLUX Kommunity License 分发（Black Forest Labs；许可证文本会随文件一起下载）。仅限非商业使用（商业使用须符合许可证条款），其输出不得用于训练或改进其他 AI 模型。大小：%s GB。是否下载？
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	该模型根据 LTX-2 Community License Agreement 分发（Lightricks；许可证文本会随文件一起下载）：年收入低于 1000 万美元的组织可免费使用，并适用许可证的使用限制。Gemma 文本编码器（Google）按 Gemma 条款使用。大小：%s GB。是否下载？
+FLUX.3 Klein notices (changes made)	FLUX.3 Klein 声明（所做的更改）
+LTX-2.5 notices (changes made)	LTX-2.5 声明（所做的更改）
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA（33B）根据描述以及可选的参考照片生成视频：照片中的人物、动物或物体会出现在视频中，而环境和动作取自描述。22–90 帧，4 步（蒸馏的 turbo LoRA，无 CFG），无声。文件（files/r2v）需手动放入，文本编码器与 MiniMax-H3-Image 共用（files/h3/te）。MiniMax H3 Community 许可证：不适用于美国、欧盟、英国和韩国。
+Ref2VA sizes	Ref2VA 尺寸
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	两边都是 32 的倍数，至少 256；每帧的 token 数（宽/32 × 高/32）必须能被 32 整除，例如 512×512、768×512、1024×576、768×768、1024×1024。总计最多 16000 个 token（潜空间帧数 × 每帧 token 数）：1024×576 约 20 分钟生成 56 帧，512×512 约 5 分钟生成 22 帧。片段长度和尺寸对时间的影响近似呈平方关系。
+LTX sizes	LTX 尺寸
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	两边都是 32 的倍数，至少 256；token 数 3 ×（宽/32）×（高/32）必须能被 32 整除，例如 512×384、384×512、512×512、768×512、768×768。请用英文详细撰写描述：谁、做什么、光线、镜头。
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Klein 尺寸
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	两边都是 16 的倍数，patch 数量（宽/16 × 高/16）能被 32 整除且最多 6144（例如 1536×1024），每边至少 256。请详细撰写描述，写成连贯的一段话。
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5（Lightricks，22B，蒸馏版）根据描述生成短视频：17–97 帧（默认 17），MP4 的帧率可自行选择，无声。Gemma 文本编码器、48 个 DiT 块（8 步，无 CFG）和 VAE 都在 NPU 上运行；一个完整片段大约需要一分半钟。该模型已在下载目录中（约 31 GB；LTX-2 Community License）。结果是历史记录中预览帧旁边的 MP4（▶ 按钮）。
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein（Black Forest Labs，5.6B）是一个照片级真实的模型，能理解用普通句子写成的长描述，并能绘制文字。16 步，无 CFG：512×512 约一分钟，1024×1024 约 3–4 分钟。文本编码器、Transformer 和解码器都在 NPU 上运行。该模型已在下载目录中（约 9 GB）。FLUX Kommunity 许可证：仅限非商业使用。

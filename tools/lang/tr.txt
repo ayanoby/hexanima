@@ -468,3 +468,68 @@
 467	Yüklü değil
 468	Model, MiniMax-H3-Image Community License Agreement kapsamında dağıtılır (lisans metni dosyalarla birlikte indirilir). ABD, Avrupa Birliği, Birleşik Krallık ve Güney Kore'de kullanılamaz ve çıktıları başka yapay zekâ modellerini geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
 469	Kabul et ve indir
+470	Kare başına belirteç sayısı (%d) 32'ye bölünebilmeli, örn. 512×512, 1024×576, 768×768
+471	Video çok büyük: boyutu veya kare sayısını azaltın
+472	Yama sayısı (%d) 32'ye bölünebilmeli, örn. 512×512, 768×1024, 1024×1024
+473	Görsel büyütmek için çok büyük
+474	×4 için çok büyük: ×2 seçin
+475	Belirteç sayısı (%d) 32'ye bölünebilmeli, örn. 512×384, 384×512, 512×512
+476	Video oynatılamıyor
+477	Bir büyütme zaten çalışıyor
+478	×4 · fotoğraf
+479	×4 · anime
+480	×2 · fotoğraf
+481	×2 · anime
+482	Büyüt (Real-ESRGAN, NPU)
+483	İndirme gerekli
+484	Büyütme ağı (%s, %d MB) Hugging Face'ten bir kez indirilir. Real-ESRGAN lisansı: BSD-3.
+485	anime
+486	fotoğraf
+487	İndiriliyor…
+488	İndirme başarısız: %s
+489	Büyütülüyor…
+490	Büyütme başarısız: %s
+491	Tamam: galeride yeni bir görsel
+492	%d fps
+493	%d kare (%d fps'de %.1f sn)
+494	Kare hızı
+495	Kareler
+496	Modelin kaç gürültü giderme adımı attığı. Daha fazla adım: daha ince ayrıntı, ama daha yavaş görsel ve yalnızca belli bir noktaya kadar. Model için önerilen sayıyı kullanın: hızlı modeller (Turbo, Lightning) yaklaşık 4–8 adım, normal olanlar 20–30 adım ister.
+497	Klibin uzunluğu (liste modele bağlıdır: LTX 17–97 kare, Ref2VA 22–90). Daha uzun klipler her adımı yavaşlatır (dikkat kare sayısıyla büyür), çözmeyi uzatır ve belleğe sığan görsel boyutunu sınırlar.
+498	Hazır MP4'ün saniyedeki kare sayısı. Yalnızca oynatma hızını değiştirir: model 24 fps ile eğitildi, bu yüzden 24–25 en doğal görünür, daha düşük değerler ağır çekim verir.
+499	Fotoğraf bir referanstır: üzerindeki kişi, hayvan veya nesne videoda görünür; istemde ne olduğunu ve kameranın nasıl hareket ettiğini yazın. Ortam istemden alınır.
+500	Bir referans fotoğraf seçin (isteğe bağlı): fotoğrafın konusu videoda görünür. Fotoğraf yoksa video yalnızca istemden oluşturulur.
+501	Fotoğraf videonun ilk karesi olur; istemde ne olduğunu ve kameranın nasıl hareket ettiğini yazın.
+502	Canlandırmak için bir fotoğraf seçin (görselden videoya). Fotoğraf yoksa video yalnızca istemden oluşturulur.
+503	33B · 4 adım · istemden ve referans fotoğraftan video, sessiz
+504	22B · 8 adım · 17 karelik video, sessiz
+505	5.6B · 16 adım · fotogerçekçilik, görsellerde yazı
+506	Video oluştur  ·  ~%d sn
+507	Üretim başarısız: %s (günlük files/klein/klein.log)
+508	Video çözülüyor…
+509	Görsel kodlayıcı dosyası (files/ltx/vae/etile.bin) eksik: görselden videoya kullanılamıyor
+510	Video kaydediliyor…
+511	Üretim başarısız: %s (günlük files/ltx/ltx.log)
+512	Video çözülüyor %d/%d…
+513	Görsel kodlayıcı dosyası (files/r2v/enc/henc.bin) eksik: referans fotoğraf kullanılamıyor
+514	Üretim başarısız: %s (günlük files/r2v/r2v.log)
+515	Büyütücü
+516	Bitmiş bir görseli NPU'da büyütür. Düğme görsel görüntüleyicisindedir. BSD-3  ·  Xintao Wang ve ark.
+517	Anime
+518	%s / %s GB
+519	Model, FLUX Kommunity License altında dağıtılır (Black Forest Labs; lisans metni dosyalarla birlikte indirilir). Kullanım ticari değildir (ticari kullanım yalnızca lisansın koşullarıyla) ve çıktıları başka yapay zekâ modellerini eğitmek veya geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
+520	Model, LTX-2 Community License Agreement altında dağıtılır (Lightricks; lisans metni dosyalarla birlikte indirilir): yıllık geliri 10 milyon ABD dolarının altındaki kuruluşlar için ücretsizdir ve lisansın kullanım kısıtlamaları geçerlidir. Gemma metin kodlayıcısı (Google) Gemma koşulları altında kullanılır. Boyut: %s GB. İndirilsin mi?
+521	FLUX.3 Klein bildirimleri (yapılan değişiklikler)
+522	LTX-2.5 bildirimleri (yapılan değişiklikler)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	MiniMax-H3 Ref2VA (33B), bir istemden ve isteğe bağlı olarak bir referans fotoğraftan video üretir: fotoğraftaki kişi, hayvan veya nesne videoda görünür, ortam ve hareket ise istemden gelir. 22–90 kare, 4 adım (damıtılmış turbo LoRA, CFG yok), sessiz. Dosyalar (files/r2v) elle konur, metin kodlayıcısı MiniMax-H3-Image ile ortaktır (files/h3/te). MiniMax H3 Community lisansı: ABD, AB, Birleşik Krallık ve Kore için değil.
+527	Ref2VA boyutları
+528	İki kenar da 32'nin katı, en az 256; kare başına belirteç (genişlik/32 × yükseklik/32) 32'ye bölünebilmeli, örn. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Toplamda en fazla 16000 belirteç (gizil kareler × kare başına belirteç): 1024×576 yaklaşık 20 dakikada 56 kare, 512×512 yaklaşık 5 dakikada 22 kare verir. Klibin uzunluğu ve boyutu süreyi neredeyse ikinci dereceden değiştirir.
+529	LTX boyutları
+530	İki kenar da 32'nin katı, en az 256; belirteç sayısı 3 × (genişlik/32) × (yükseklik/32) 32'ye bölünebilmeli, örneğin 512×384, 384×512, 512×512, 768×512, 768×768. İstemi ayrıntılı ve İngilizce yazın: kim, ne yapıyor, ışık, kamera.
+531	FLUX.3 Image Klein
+533	Klein boyutları
+534	İki kenar da 16'nın katı, yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünebilir ve en fazla 6144 (örneğin 1536×1024), kenar başına en az 256. İstemi ayrıntılı, tek ve bağlantılı bir paragraf olarak yazın.
+535	LTX-2.5 (Lightricks, 22B, damıtılmış) bir istemden kısa bir video üretir: 17–97 kare (varsayılan 17), MP4 için istediğiniz kare hızı, sessiz. Gemma metin kodlayıcısı, 48 DiT bloğu (8 adım, CFG yok) ve VAE NPU'da çalışır; tam bir klip yaklaşık bir buçuk dakika sürer. Model indirme kataloğunda (yaklaşık 31 GB; LTX-2 Community License). Sonuç, geçmişte bir önizleme karesinin yanındaki bir MP4'tür (▶ düğmesi).
+536	FLUX.3 Image Klein (Black Forest Labs, 5.6B), düz cümlelerle yazılmış uzun istemleri izleyen ve yazı çizen fotogerçekçi bir modeldir. 16 adım, CFG yok: 512×512 için yaklaşık bir dakika, 1024×1024 için 3–4 dakika. Metin kodlayıcısı, transformer ve çözücü NPU'da çalışır. Model indirme kataloğunda (yaklaşık 9 GB). FLUX Kommunity lisansı: yalnızca ticari olmayan kullanım.

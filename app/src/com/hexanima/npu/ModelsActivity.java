@@ -119,7 +119,7 @@ public class ModelsActivity extends Base {
     /** one line of the catalog: a model with its variants (Anima turbo + base, Qwen 4 step + 8 step) */
     static final class Entry { String key, name, family, line = ""; final List<Models.Item> v = new ArrayList<>(); final List<String> lbl = new ArrayList<>(); }
 
-    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : it.h3 ? "MiniMax-H3" : "Anima"; }
+    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : it.h3 ? "MiniMax-H3" : it.klein ? "FLUX.3-Klein" : it.ltx ? "LTX-2.5" : "Anima"; }
     static String lineOf(Models.Item it) { String n = it.name; return n.contains("RealSkin") ? "RealSkin" : n.contains("3D Harem") ? "3D Harem" : "Harem"; }
 
     List<Entry> entries() {
@@ -145,7 +145,7 @@ public class ModelsActivity extends Base {
         addUpdate(base);
         addCustom();
         List<Entry> all = entries(); java.util.LinkedHashMap<String, List<Entry>> fams = new java.util.LinkedHashMap<>();
-        for (String f : new String[]{"Anima", "Qwen-Image", "MOSS-Image", "Mage-Flow", "MiniMax-H3", "Legacy"}) fams.put(f, new ArrayList<>());
+        for (String f : new String[]{"Anima", "Qwen-Image", "MOSS-Image", "Mage-Flow", "MiniMax-H3", "FLUX.3-Klein", "LTX-2.5", "Legacy"}) fams.put(f, new ArrayList<>());
         for (Entry e : all) {
             boolean inst = false, ramOk = true, hit = q.isEmpty();
             for (Models.Item it : e.v) { inst |= store.modelInstalled(it.id); ramOk &= !((it.moss || it.qwen) && Compat.ramGb(this) < 10.5); hit |= (it.name + " " + it.author + " " + e.family).toLowerCase().contains(q); }
@@ -172,6 +172,7 @@ public class ModelsActivity extends Base {
                 addEntry(e, base, needCommonAnima);
             }
         }
+        if (q.isEmpty() || "upscaler real-esrgan апскейлер".contains(q)) { addUpscale(); any = true; }
         if (items.isEmpty()) list.addView(text(L.s("Каталог пуст", "The catalog is empty"), 13, DIM, false));
         else if (!any) list.addView(text(L.s("Ничего не найдено", "Nothing found"), 14, DIM, false));
         else if (!store.commonInstalled() && hasAnima()) { TextView n = text(L.f("К первой модели Anima добавятся общие файлы (%s ГБ): текстовый энкодер и VAE. Они качаются один раз.", "The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.", gb(store.commonSize)), 12, DIM, false); n.setPadding(dp(2), dp(12), 0, 0); list.addView(n); }
@@ -194,7 +195,7 @@ public class ModelsActivity extends Base {
             String d = L.s(f.desc, f.descEn); if (!d.isEmpty()) { TextView dv = text(d, 13, DIM, false); dv.setPadding(0, dp(8), 0, dp(2)); c.addView(dv); }
             for (int k = 0; k < e.v.size(); k++) {
                 final Models.Item it = e.v.get(k); final boolean have = store.modelInstalled(it.id), busy = downloading && it.id.equals(dlId);
-                final boolean needCommon = needCommonAnima && !it.moss && !it.qwen && !it.mage && !it.h3;
+                final boolean needCommon = needCommonAnima && it.anima();
                 LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
                 vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(it.size)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
                 if (have && !busy) {
@@ -281,7 +282,52 @@ public class ModelsActivity extends Base {
         }
     }
 
-    boolean hasAnima() { for (Models.Item it : items) if (!it.moss && !it.qwen && !it.mage && !it.h3) return true; return false; }
+    /** the Real-ESRGAN upscaler weights (not a model of the generator): two small downloads, used by the button in the picture viewer */
+    void addUpscale() {
+        LinearLayout hd = new LinearLayout(this); hd.setPadding(0, dp(18), 0, dp(8)); hd.addView(text(L.s("Апскейлер", "Upscaler"), 18, TXT, true)); list.addView(hd);
+        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setBackground(bg(CARD, 14)); c.setPadding(dp(16), dp(12), dp(16), dp(12));
+        c.addView(text("Real-ESRGAN ×2 / ×4", 16, TXT, true));
+        TextView mt = text(L.s("Увеличивает готовую картинку на NPU. Кнопка в просмотре картинки. BSD-3  ·  Xintao Wang et al.", "Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al."), 13, DIM, false); mt.setPadding(0, dp(3), 0, dp(2)); c.addView(mt);
+        for (final boolean anime : new boolean[]{false, true}) {
+            final String id = anime ? "up-anime" : "up-photo"; final boolean have = Upscale.has(getFilesDir(), anime), busy = downloading && id.equals(dlId);
+            LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
+            vr.addView(text((anime ? L.s("Аниме", "Anime") : L.s("Фото", "Photo")) + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", Upscale.size(anime) / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+            if (have && !busy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; Upscale.delete(getFilesDir(), anime); render(); }); vr.addView(del); }
+            else if (!busy) {
+                Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", String.format("%.2f", Upscale.size(anime) / 1e9)), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+                bt.setOnClickListener(v -> startUp(anime)); vr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
+            }
+            c.addView(vr);
+            if (busy) {
+                ProgressBar pb = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); pb.setMax(1000);
+                pb.setProgressTintList(android.content.res.ColorStateList.valueOf(ACC)); pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(LINE));
+                LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-1, dp(3)); pl.topMargin = dp(10); c.addView(pb, pl); bars.put(id, pb);
+                TextView tv = text(dlMsg, 12, DIM, false); tv.setPadding(0, dp(6), 0, 0); c.addView(tv); msgs.put(id, tv);
+                TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); c.addView(x);
+            }
+        }
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); list.addView(c, lp);
+    }
+
+    void startUp(final boolean anime) {
+        if (downloading) return;
+        long need = Upscale.size(anime); if (getFilesDir().getUsableSpace() < need + 100_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(need)), Toast.LENGTH_LONG).show(); return; }
+        downloading = true; dlId = anime ? "up-anime" : "up-photo"; dlDone = 0; dlTotal = need; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        render();
+        new Thread(() -> {
+            String err = null;
+            try { Upscale.download(app, anime, n -> { dlDone = n; dlMsg = L.f("%s / %s ГБ", "%s / %s GB", String.format("%.2f", n / 1e9), String.format("%.2f", need / 1e9)); }, cancel); }
+            catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: можно продолжить", "Cancelled: you can resume"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
+            final String msg = err; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); render(); });
+        }).start();
+    }
+
+    boolean hasAnima() { for (Models.Item it : items) if (it.anima()) return true; return false; }
 
     void start(String base, Models.Item it, boolean needCommon) {
         if (!Compat.chipAllowed(this)) {   // an unsupported chip: the models will not run, so ask before 4 GB are downloaded
@@ -291,6 +337,16 @@ public class ModelsActivity extends Base {
         }
         if (it.h3) {   // the MiniMax licence has to be seen before the download: territories, outputs, notices
             builder().setTitle("MiniMax-H3-Image").setMessage(L.f("Модель распространяется по MiniMax-H3-Image Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size)))
+                .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+            return;
+        }
+        if (it.klein) {   // the FLUX licence has to be seen before the download
+            builder().setTitle("FLUX.3 Image Klein").setMessage(L.f("Модель распространяется по FLUX Kommunity License (Black Forest Labs; текст лицензии скачается вместе с файлами). Использование некоммерческое (коммерческое только на условиях лицензии), результаты нельзя использовать для обучения или улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?", gb(it.size)))
+                .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+            return;
+        }
+        if (it.ltx) {   // the LTX licence has to be seen before the download
+            builder().setTitle("LTX-2.5 Video").setMessage(L.f("Модель распространяется по LTX-2 Community License Agreement (Lightricks; текст лицензии скачается вместе с файлами): бесплатно для организаций с годовым доходом до 10 млн долларов, действуют ограничения на использование из лицензии. Текстовый энкодер Gemma (Google) используется на условиях Gemma. Размер: %s ГБ. Скачать?", "The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?", gb(it.size)))
                 .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
             return;
         }
@@ -318,7 +374,7 @@ public class ModelsActivity extends Base {
                 dlDone = d; dlTotal = tot; dlMsg = L.f("%s / %s ГБ  ·  %s", "%s / %s GB  ·  %s", gb(d), gb(tot), what);
             };
             String err = null;
-            try { if (!it.moss && !it.qwen && !it.mage && !it.h3) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
+            try { if (it.anima()) store.installCommon(base, pg, cancel); store.installModel(base, it, pg, cancel); }
             catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: файлы сохранены, можно продолжить", "Cancelled: the files are kept, you can resume"); }
             catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
             final String msg = err;

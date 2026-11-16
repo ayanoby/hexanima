@@ -123,7 +123,7 @@ public class Settings extends Base {
                 else startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PREFIX_URI_PERMISSION), 31);
             }).show()));
         LinearLayout c5 = card(col); c5.addView(githubRow());   // about: the project page
-        if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", "")) || Mage.is(p.getString("model", "")) || H3.is(p.getString("model", ""))) return;
+        if (Moss.is(p.getString("model", "")) || Qwen.is(p.getString("model", "")) || Mage.is(p.getString("model", "")) || H3.is(p.getString("model", "")) || Klein.is(p.getString("model", "")) || Ltx.is(p.getString("model", ""))) return;
         TextView pl = text(L.s("Теги качества перед описанием (модели Anima)", "Quality tags before the prompt (Anima models)"), 15, TXT, true); pl.setPadding(dp(2), dp(14), 0, dp(6)); c3.addView(pl);
         prefixEdit = field("");
         prefixEdit.setText(rawPrefix(this)); prefixEdit.setTextSize(13); prefixEdit.setMinLines(2); prefixEdit.setGravity(Gravity.TOP);

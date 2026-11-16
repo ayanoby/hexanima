@@ -1,0 +1,14 @@
+# Notice
+
+These files are a **Derivative of LTX-2.x** (Lightricks' LTX-2.5 22B distilled audio-video model, https://huggingface.co/Lightricks/LTX-2.5) distributed under the LTX-2.x Community License Agreement (`LICENSE`). **The files were modified (converted) by the HexAnima project; they are not an official Lightricks product.**
+
+What was changed:
+- The 22B distilled video transformer (48 blocks, INT8-ConvRot source weights as published for ComfyUI) was repacked into 8-bit tile block files for the Hexagon matrix unit (`dit/vbNN.bin`) with its small tensors in `dit/` (glue); the video stream only (no audio stream).
+- The text encoder (a Gemma-4-based model with the LTX projection, distributed together with LTX-2.5) was converted the same way (`te/gmNN.bin`, `glue/`), and the text-embeddings connectors (`conn/`).
+- The video autoencoder (decoder and image encoder) was exported as Qualcomm QNN HTP context binaries for Hexagon v69 (Snapdragon 8 Gen 1 / 8+ Gen 1), built with QAIRT 2.28 (`vae/`); `tok.bin` is the tokenizer.
+
+All use-based restrictions of Section 4 and Attachment A of the LTX-2.x Community License Agreement (including its acceptable use policy) apply to these files and to everyone who receives them, as does the whole Agreement (see `LICENSE`, including the revenue threshold in Section 2.1). No transfer of these files grants any right to use LTX-2.x itself.
+
+The text encoder is distributed with LTX-2.5 by its publishers; its own terms, as published with that release, apply to it.
+
+HexAnima is an independent, unofficial project, not affiliated with Lightricks or Google.

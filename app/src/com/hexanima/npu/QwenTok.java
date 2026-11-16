@@ -103,5 +103,7 @@ public class QwenTok {
         for (int i = 0; i < nPads; i++) sb.append("<|image_pad|>");
         return encode(sb.append("<|vision_end|>").append(prompt).append(MAGE_END).toString());
     }
+    /** FLUX.3 Image Klein: the plain chat template (user turn, no system message), no padding */
+    public int[] encodeKlein(String prompt) { return encode("<|im_start|>user\n" + prompt + "<|im_end|>\n<|im_start|>assistant\n"); }
     public int dropMage(boolean edit) { return encode(edit ? MAGE_EDIT_SYS : MAGE_SYS).length; }
 }

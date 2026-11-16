@@ -468,3 +468,68 @@
 467	Déchargé
 468	Le modèle est distribué sous la MiniMax-H3-Image Community License Agreement (le texte de la licence est téléchargé avec les fichiers). Il ne doit pas être utilisé aux États-Unis, dans l'Union européenne, au Royaume-Uni ni en Corée du Sud, et ses résultats ne doivent pas servir à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
 469	Accepter et télécharger
+470	Le nombre de tokens par image (%d) doit être divisible par 32, par ex. 512×512, 1024×576, 768×768
+471	Vidéo trop grande : réduisez la taille ou le nombre d'images
+472	Le nombre de patchs (%d) doit être divisible par 32, par ex. 512×512, 768×1024, 1024×1024
+473	L'image est trop grande pour être agrandie
+474	Trop grand pour ×4 : choisissez ×2
+475	Le nombre de tokens (%d) doit être divisible par 32, par ex. 512×384, 384×512, 512×512
+476	Impossible de lire la vidéo
+477	Un agrandissement est déjà en cours
+478	×4 · photo
+479	×4 · anime
+480	×2 · photo
+481	×2 · anime
+482	Agrandir (Real-ESRGAN, NPU)
+483	Téléchargement nécessaire
+484	Le réseau d'agrandissement (%s, %d Mo) est téléchargé une seule fois depuis Hugging Face. Licence de Real-ESRGAN : BSD-3.
+485	anime
+486	photo
+487	Téléchargement…
+488	Échec du téléchargement : %s
+489	Agrandissement…
+490	Échec de l'agrandissement : %s
+491	Terminé : une nouvelle image dans la galerie
+492	%d ips
+493	%d images (%.1f s à %d ips)
+494	Fréquence d'images
+495	Images
+496	Combien d'étapes de débruitage le modèle effectue. Plus d'étapes : des détails plus fins, mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles rapides (Turbo, Lightning) demandent environ 4–8 étapes, les modèles ordinaires 20–30.
+497	Durée du clip (la liste dépend du modèle : LTX 17–97 images, Ref2VA 22–90). Les clips plus longs ralentissent chaque étape (l'attention croît avec le nombre d'images), allongent le décodage et limitent la taille d'image qui tient en mémoire.
+498	Images par seconde du MP4 final. Cela ne change que la vitesse de lecture : le modèle a été entraîné à 24 ips, donc 24–25 paraît le plus naturel et les valeurs plus basses donnent un effet de ralenti.
+499	La photo sert de référence : la personne, l'animal ou l'objet qu'elle montre apparaît dans la vidéo ; dites dans la description ce qui se passe et comment la caméra bouge. Le décor vient de la description.
+500	Choisissez une photo de référence (facultatif) : le sujet de la photo apparaît dans la vidéo. Sans photo, la vidéo est créée à partir de la description seule.
+501	La photo devient la première image de la vidéo ; dites dans la description ce qui se passe et comment la caméra bouge.
+502	Choisissez une photo pour lui donner vie (image vers vidéo). Sans photo, la vidéo est créée à partir de la description seule.
+503	33B · 4 étapes · vidéo à partir d'une description et d'une photo de référence, sans son
+504	22B · 8 étapes · vidéo de 17 images, sans son
+505	5.6B · 16 étapes · photoréalisme, texte dans les images
+506	Créer la vidéo  ·  ~%d s
+507	Échec de la génération : %s (journal files/klein/klein.log)
+508	Décodage de la vidéo…
+509	Le fichier de l'encodeur d'images (files/ltx/vae/etile.bin) est absent : image vers vidéo n'est pas disponible
+510	Enregistrement de la vidéo…
+511	Échec de la génération : %s (journal files/ltx/ltx.log)
+512	Décodage de la vidéo %d/%d…
+513	Le fichier de l'encodeur d'images (files/r2v/enc/henc.bin) est absent : la photo de référence n'est pas disponible
+514	Échec de la génération : %s (journal files/r2v/r2v.log)
+515	Agrandisseur
+516	Agrandit une image terminée sur le NPU. Le bouton se trouve dans la visionneuse d'images. BSD-3  ·  Xintao Wang et al.
+517	Anime
+518	%s / %s Go
+519	Le modèle est distribué sous la FLUX Kommunity License (Black Forest Labs ; le texte de la licence est téléchargé avec les fichiers). L'usage est non commercial (usage commercial uniquement selon les conditions de la licence) et ses résultats ne doivent pas servir à entraîner ni à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
+520	Le modèle est distribué sous la LTX-2 Community License Agreement (Lightricks ; le texte de la licence est téléchargé avec les fichiers) : gratuit pour les organisations dont le chiffre d'affaires annuel est inférieur à 10 millions de dollars, et les restrictions d'usage de la licence s'appliquent. L'encodeur de texte Gemma (Google) est utilisé selon les conditions de Gemma. Taille : %s Go. Télécharger ?
+521	Mentions FLUX.3 Klein (modifications apportées)
+522	Mentions LTX-2.5 (modifications apportées)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	MiniMax-H3 Ref2VA (33B) crée une vidéo à partir d'une description et, en option, d'une photo de référence : la personne, l'animal ou l'objet de la photo apparaît dans la vidéo, tandis que le décor et le mouvement viennent de la description. 22–90 images, 4 étapes (LoRA turbo distillée, sans CFG), sans son. Les fichiers (files/r2v) sont placés à la main, l'encodeur de texte est partagé avec MiniMax-H3-Image (files/h3/te). Licence MiniMax H3 Community : pas pour les États-Unis, l'UE, le Royaume-Uni et la Corée.
+527	Tailles Ref2VA
+528	Les deux côtés sont des multiples de 32, au moins 256 ; les tokens par image (largeur/32 × hauteur/32) doivent être divisibles par 32, par ex. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Au plus 16000 tokens au total (images latentes × tokens par image) : 1024×576 donne 56 images en ~20 minutes, 512×512 donne 22 images en ~5 minutes. La durée et la taille du clip font varier le temps presque de façon quadratique.
+529	Tailles LTX
+530	Les deux côtés sont des multiples de 32, au moins 256 ; le nombre de tokens 3 × (largeur/32) × (hauteur/32) doit être divisible par 32, par exemple 512×384, 384×512, 512×512, 768×512, 768×768. Rédigez la description en détail et en anglais : qui, ce qu'il fait, la lumière, la caméra.
+531	FLUX.3 Image Klein
+533	Tailles Klein
+534	Les deux côtés sont des multiples de 16, le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32 et au plus 6144 (par exemple 1536×1024), au moins 256 par côté. Rédigez la description en détail, en un paragraphe continu.
+535	LTX-2.5 (Lightricks, 22B, distillé) crée une courte vidéo à partir d'une description : 17–97 images (17 par défaut), la fréquence d'images du MP4 au choix, sans son. L'encodeur de texte Gemma, les 48 blocs DiT (8 étapes, sans CFG) et le VAE tournent sur le NPU ; un clip complet prend environ une minute et demie. Le modèle est dans le catalogue de téléchargement (environ 31 Go ; LTX-2 Community License). Le résultat est un MP4 à côté d'une image d'aperçu dans l'historique (le bouton ▶).
+536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) est un modèle photoréaliste qui suit de longues descriptions écrites en phrases ordinaires et dessine du texte. 16 étapes, sans CFG : environ une minute pour 512×512, 3–4 minutes pour 1024×1024. L'encodeur de texte, le transformeur et le décodeur tournent sur le NPU. Le modèle est dans le catalogue de téléchargement (environ 9 Go). Licence FLUX Kommunity : usage non commercial uniquement.

@@ -40,6 +40,47 @@ public class Viewer extends Base {
     LinearLayout top, bottom, actions;
     TextView counter, info, prompt;
     ImageButton favB;
+    FrameLayout rootFl, videoBox; VideoView vv; SeekBar vSeek; TextView vCur, vTot; ImageView vPlay, vBig; View vBar, vClose; boolean vDrag, vCtl = true; final Handler vH = new Handler(Looper.getMainLooper());
+    final Runnable vTick = new Runnable() { @Override public void run() {
+        if (vv == null) return;
+        try { if (!vDrag) { int p = vv.getCurrentPosition(); vSeek.setProgress(p); vCur.setText(clock(p)); } } catch (Exception ignored) { }
+        vH.postDelayed(this, 200); } };
+    final Runnable vHide = () -> showControls(false);
+    static String clock(int ms) { int s = Math.max(0, ms) / 1000; return String.format("%d:%02d", s / 60, s % 60); }
+    void showControls(boolean on) {
+        vCtl = on; vH.removeCallbacks(vHide); if (videoBox == null) return;
+        for (View v : new View[]{vPlay, vBar, vClose}) v.animate().alpha(on ? 1f : 0f).setDuration(180).withEndAction(() -> { }).start();
+        vPlay.setClickable(on); vSeek.setEnabled(on); vClose.setClickable(on);
+        if (on && vv != null && vv.isPlaying()) vH.postDelayed(vHide, 1000);
+    }
+    void vToggle() { if (vv == null) return; if (vv.isPlaying()) vv.pause(); else vv.start(); setBtnIcon(vPlay, vv.isPlaying() ? "ic_pause" : "ic_play"); showControls(true); }
+    /** plays the clip of a video entry in this screen: big play / pause button in the middle, time and a seek bar at the bottom, tap shows / hides them (they hide by themselves while playing); loops; the cross or Back closes it */
+    void playVideo(File png) {
+        final File vid = Gallery.videoOf(png); if (vid == null || videoBox != null) return; if (vBig != null) vBig.setVisibility(View.GONE);
+        videoBox = new FrameLayout(this); videoBox.setBackgroundColor(Color.BLACK); videoBox.setClickable(true);
+        vv = new VideoView(this); vv.setVideoPath(vid.getPath());
+        videoBox.addView(vv, new FrameLayout.LayoutParams(-1, -1, Gravity.CENTER));
+        vPlay = circleBtn("ic_pause", 76); vPlay.setOnClickListener(v -> vToggle());
+        videoBox.addView(vPlay, new FrameLayout.LayoutParams(dp(80), dp(80), Gravity.CENTER));
+        LinearLayout bar = new LinearLayout(this); bar.setGravity(Gravity.CENTER_VERTICAL); bar.setPadding(dp(16), dp(10), dp(16), dp(10)); bar.setBackground(bg(0x66000000, 14)); vBar = bar;
+        vCur = text("0:00", 13, Color.WHITE, false); vTot = text("0:00", 13, Color.WHITE, false);
+        vSeek = new SeekBar(this); vSeek.setProgressTintList(android.content.res.ColorStateList.valueOf(Color.WHITE)); vSeek.setThumbTintList(android.content.res.ColorStateList.valueOf(Color.WHITE)); vSeek.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0x66FFFFFF));
+        vSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar sb, int p, boolean user) { if (user && vv != null) { vv.seekTo(p); vCur.setText(clock(p)); } }
+            public void onStartTrackingTouch(SeekBar sb) { vDrag = true; vH.removeCallbacks(vHide); }
+            public void onStopTrackingTouch(SeekBar sb) { vDrag = false; if (vv != null) { vv.seekTo(sb.getProgress()); } showControls(true); } });
+        bar.addView(vCur); bar.addView(vSeek, new LinearLayout.LayoutParams(0, dp(36), 1)); bar.addView(vTot);
+        FrameLayout.LayoutParams bp = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM); bp.setMargins(dp(12), 0, dp(12), dp(36)); videoBox.addView(bar, bp);
+        TextView x = text("✕", 22, Color.WHITE, false); x.setGravity(Gravity.CENTER); x.setBackground(bg(0x66000000, 24)); x.setOnClickListener(v -> closeVideo()); vClose = x;
+        FrameLayout.LayoutParams xp = new FrameLayout.LayoutParams(dp(48), dp(48), Gravity.TOP | Gravity.END); xp.setMargins(0, dp(40), dp(12), 0); videoBox.addView(x, xp);
+        videoBox.setOnClickListener(v -> showControls(!vCtl));
+        vv.setOnPreparedListener(mp -> { mp.setLooping(true); vSeek.setMax(vv.getDuration()); vTot.setText(clock(vv.getDuration())); vv.start(); setBtnIcon(vPlay, "ic_pause"); showControls(true); vH.post(vTick); });
+        vv.setOnErrorListener((mp, w, e) -> { Toast.makeText(this, L.s("Не удалось воспроизвести видео", "Cannot play the video"), Toast.LENGTH_SHORT).show(); closeVideo(); return true; });
+        rootFl.addView(videoBox, new FrameLayout.LayoutParams(-1, -1)); vCtl = true;
+    }
+    void closeVideo() { if (videoBox == null) return; vH.removeCallbacksAndMessages(null); try { vv.stopPlayback(); } catch (Exception ignored) { } rootFl.removeView(videoBox); videoBox = null; vv = null; if (getIntent().getBooleanExtra("play", false)) finish(); else refresh(); }
+    @Override public void onBackPressed() { if (videoBox != null) closeVideo(); else super.onBackPressed(); }
+    @Override protected void onPause() { if (vv != null && vv.isPlaying()) { vv.pause(); if (vPlay != null) setBtnIcon(vPlay, "ic_play"); } super.onPause(); }
 
     /** mode = Gallery.ALL / FAV / TRASH of the list; reuse = show "Reuse settings" (the caller must handle RESULT_OK with prompt/seed/w/h) */
     static void open(Activity a, File[] list, int index, int mode, boolean reuse) {
@@ -56,7 +97,7 @@ public class Viewer extends Base {
         mode = in.getIntExtra("mode", Gallery.ALL); idx = Math.max(0, Math.min(in.getIntExtra("i", 0), files.size() - 1)); reuse = in.getBooleanExtra("reuse", false);
         if (files.isEmpty()) { finish(); return; }
 
-        FrameLayout root = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
+        FrameLayout root = rootFl = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
         pager = new Pager(this); root.addView(pager, new FrameLayout.LayoutParams(-1, -1));
         pager.onTap = this::toggleBars; pager.onPage = i -> { idx = i; refresh(); };
 
@@ -71,9 +112,12 @@ public class Viewer extends Base {
         prompt = text("", 13, Color.WHITE, false); prompt.setMaxLines(3); prompt.setPadding(0, dp(4), 0, dp(8)); bottom.addView(prompt);
         actions = new LinearLayout(this); bottom.addView(actions);
         root.addView(bottom, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        vBig = circleBtn("ic_play", 76); vBig.setVisibility(View.GONE); vBig.setOnClickListener(x -> playVideo(files.get(idx)));
+        root.addView(vBig, new FrameLayout.LayoutParams(dp(76), dp(76), Gravity.CENTER));
         setContentView(root);
         pager.set(files, idx);
         refresh();
+        if (in.getBooleanExtra("play", false) && Gallery.videoOf(files.get(idx)) != null) playVideo(files.get(idx));
     }
 
     void toggleBars() {
@@ -106,6 +150,7 @@ public class Viewer extends Base {
         info.setText(m.optString("model", "") + "  ·  " + m.optInt("w") + "×" + m.optInt("h") + "  ·  seed " + m.optString("seed") + "\n" + when + (m.has("sec") ? L.f("  ·  %.1f с", "  ·  %.1f s", m.optDouble("sec")) : ""));
         prompt.setText(m.optString("prompt"));
         actions.removeAllViews(); favB = null;
+        if (vBig != null) vBig.setVisibility(Gallery.videoOf(f) != null && videoBox == null ? View.VISIBLE : View.GONE);
         if (mode == Gallery.TRASH) {
             act(L.s("Восстановить", "Restore"), () -> { Gallery.restore(this, f); removeCurrent(); });
             act(L.s("Удалить навсегда", "Delete forever"), () -> builder().setMessage(L.s("Удалить навсегда?", "Delete forever?")).setPositiveButton(L.s("Да", "Yes"), (x, y) -> { Gallery.delete(f); removeCurrent(); }).setNegativeButton(L.s("Отмена", "Cancel"), null).show());
@@ -115,7 +160,62 @@ public class Viewer extends Base {
         ico("ic_share", () -> Gallery.share(this, f));
         favB = ico("ic_star_off", () -> { boolean nv = !Gallery.fav(f); Gallery.setFav(f, nv); setFav(favB, nv); changed = true; }); setFav(favB, Gallery.fav(f));
         if (reuse) ico("ic_refresh", () -> { setResult(RESULT_OK, new Intent().putExtra("prompt", m.optString("prompt")).putExtra("seed", m.optString("seed")).putExtra("w", m.optInt("w", 512)).putExtra("h", m.optInt("h", 768))); finish(); });
+        if (Gallery.videoOf(f) == null) ico("ic_upscale", () -> upscaleDialog(f, m));
         ico("ic_delete", () -> { Gallery.trash(this, f); removeCurrent(); });
+    }
+
+    final Main.Sh upSh = new Main.Sh(); boolean upBusy;
+    /** Real-ESRGAN on the NPU: x4 or x2, photo or anime network; the result becomes a new picture next to this one */
+    void upscaleDialog(final File f, final JSONObject m) {
+        if (upBusy) { Toast.makeText(this, L.s("Увеличение уже идёт", "An upscale is already running"), Toast.LENGTH_SHORT).show(); return; }
+        final String mn = m.optString("model", ""); final boolean photoFirst = mn.contains("Klein") || mn.contains("H3") || mn.contains("Qwen") || mn.contains("Mage") || mn.contains("MOSS");
+        final String[] names = photoFirst
+            ? new String[]{L.s("×4 · фото", "×4 · photo"), L.s("×4 · аниме", "×4 · anime"), L.s("×2 · фото", "×2 · photo"), L.s("×2 · аниме", "×2 · anime")}
+            : new String[]{L.s("×4 · аниме", "×4 · anime"), L.s("×4 · фото", "×4 · photo"), L.s("×2 · аниме", "×2 · anime"), L.s("×2 · фото", "×2 · photo")};
+        final boolean[] anime = photoFirst ? new boolean[]{false, true, false, true} : new boolean[]{true, false, true, false}, half = {false, false, true, true};
+        builder().setTitle(L.s("Увеличить (Real-ESRGAN, NPU)", "Upscale (Real-ESRGAN, NPU)")).setItems(names, (d, i) -> {
+            final boolean an = anime[i], hf = half[i];
+            int w = m.optInt("w", 512), h = m.optInt("h", 512); String bad = Upscale.sizeError(w, h, hf);
+            if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
+            if (!Upscale.has(getFilesDir(), an)) { askDownload(f, an, hf); return; }
+            startUpscale(f, an, hf);
+        }).show();
+    }
+    void askDownload(final File f, final boolean an, final boolean hf) {
+        builder().setTitle(L.s("Нужна загрузка", "Download needed")).setMessage(L.f("Сеть для увеличения (%s, %d МБ) скачивается один раз с Hugging Face. Лицензия Real-ESRGAN — BSD-3.", "The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.", an ? L.s("аниме", "anime") : L.s("фото", "photo"), Upscale.size(an) / 1000000))
+            .setPositiveButton(L.s("Скачать", "Download"), (d, i) -> downloadThenUpscale(f, an, hf)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+    }
+    void downloadThenUpscale(final File f, final boolean an, final boolean hf) {
+        upBusy = true; final android.app.AlertDialog dlg = builder().setTitle(L.s("Загрузка…", "Downloading…")).setMessage("0 %").setCancelable(false).create(); dlg.show();
+        new Thread(() -> {
+            String err = null;
+            try { final long tot = Upscale.size(an); Upscale.download(this, an, n -> runOnUiThread(() -> dlg.setMessage((100 * n / tot) + " %")), null); } catch (Throwable e) { err = String.valueOf(e.getMessage() != null ? e.getMessage() : e); }
+            final String er = err;
+            runOnUiThread(() -> {
+                dlg.dismiss(); upBusy = false;
+                if (er != null) { Toast.makeText(this, L.f("Не удалось скачать: %s", "Download failed: %s", er), Toast.LENGTH_LONG).show(); return; }
+                startUpscale(f, an, hf);
+            });
+        }).start();
+    }
+    void startUpscale(final File f, final boolean an, final boolean hf) {
+        {
+            upBusy = true; Toast.makeText(this, L.s("Увеличение…", "Upscaling…"), Toast.LENGTH_SHORT).show();
+            new Thread(() -> {
+                File nf = null; String err = null;
+                try {
+                    upSh.env = new String[]{new File(getFilesDir(), "anima").getPath(), new File(getFilesDir(), "sd").getPath(), getApplicationInfo().nativeLibraryDir};
+                    nf = Upscale.run(this, upSh, f, an, hf);
+                } catch (Throwable e) { err = String.valueOf(e.getMessage() != null ? e.getMessage() : e); }
+                final File res = nf; final String er = err;
+                runOnUiThread(() -> {
+                    upBusy = false;
+                    if (res == null) { Toast.makeText(this, L.f("Не удалось увеличить: %s", "Upscale failed: %s", er), Toast.LENGTH_LONG).show(); return; }
+                    changed = true; files.add(idx + 1, res); idx++; pager.set(files, idx); refresh();
+                    Toast.makeText(this, L.s("Готово: новая картинка в галерее", "Done: a new picture in the gallery"), Toast.LENGTH_SHORT).show();
+                });
+            }).start();
+        }
     }
 
     /** the picture left this list (trash / restore / delete): show the next one, or close when it was the last */

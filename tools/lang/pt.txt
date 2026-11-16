@@ -468,3 +468,68 @@
 467	Descarregado
 468	O modelo é distribuído sob a MiniMax-H3-Image Community License Agreement (o texto da licença é baixado junto com os arquivos). Não pode ser usado nos Estados Unidos, na União Europeia, no Reino Unido nem na Coreia do Sul, e seus resultados não podem ser usados para melhorar outros modelos de IA. Tamanho: %s GB. Baixar?
 469	Aceitar e baixar
+470	Os tokens por quadro (%d) devem ser divisíveis por 32, por ex. 512×512, 1024×576, 768×768
+471	Vídeo grande demais: reduza o tamanho ou o número de quadros
+472	O número de patches (%d) deve ser divisível por 32, por ex. 512×512, 768×1024, 1024×1024
+473	A imagem é grande demais para ampliar
+474	Grande demais para ×4: escolha ×2
+475	O número de tokens (%d) deve ser divisível por 32, por ex. 512×384, 384×512, 512×512
+476	Não foi possível reproduzir o vídeo
+477	Já há uma ampliação em andamento
+478	×4 · foto
+479	×4 · anime
+480	×2 · foto
+481	×2 · anime
+482	Ampliar (Real-ESRGAN, NPU)
+483	Download necessário
+484	A rede de ampliação (%s, %d MB) é baixada uma vez do Hugging Face. Licença do Real-ESRGAN: BSD-3.
+485	anime
+486	foto
+487	Baixando…
+488	Falha no download: %s
+489	Ampliando…
+490	Falha ao ampliar: %s
+491	Pronto: uma nova imagem na galeria
+492	%d fps
+493	%d quadros (%.1f s a %d fps)
+494	Taxa de quadros
+495	Quadros
+496	Quantas etapas de remoção de ruído o modelo executa. Mais etapas: detalhes mais finos, mas uma imagem mais lenta, e só até certo ponto. Use o número recomendado para o modelo: modelos rápidos (Turbo, Lightning) precisam de cerca de 4–8 etapas, os comuns de 20–30.
+497	Duração do clipe (a lista depende do modelo: LTX 17–97 quadros, Ref2VA 22–90). Clipes mais longos deixam cada etapa mais lenta (a atenção cresce com o número de quadros) e a decodificação mais demorada, e limitam o tamanho de imagem que cabe na memória.
+498	Quadros por segundo do MP4 final. Isso só muda a velocidade de reprodução: o modelo foi treinado a 24 fps, então 24–25 parece o mais natural e valores menores dão câmera lenta.
+499	A foto é uma referência: a pessoa, o animal ou o objeto nela aparece no vídeo; diga na descrição o que acontece e como a câmera se move. O cenário vem da descrição.
+500	Escolha uma foto de referência (opcional): o assunto da foto aparece no vídeo. Sem ela, o vídeo é criado só a partir da descrição.
+501	A foto se torna o primeiro quadro do vídeo; diga na descrição o que acontece e como a câmera se move.
+502	Escolha uma foto para dar vida a ela (imagem para vídeo). Sem foto, o vídeo é criado só a partir da descrição.
+503	33B · 4 etapas · vídeo a partir de uma descrição e de uma foto de referência, sem som
+504	22B · 8 etapas · vídeo de 17 quadros, sem som
+505	5.6B · 16 etapas · fotorrealismo, texto em imagens
+506	Criar vídeo  ·  ~%d s
+507	Falha na geração: %s (registro files/klein/klein.log)
+508	Decodificando o vídeo…
+509	O arquivo do codificador de imagens (files/ltx/vae/etile.bin) está ausente: imagem para vídeo não está disponível
+510	Salvando o vídeo…
+511	Falha na geração: %s (registro files/ltx/ltx.log)
+512	Decodificando o vídeo %d/%d…
+513	O arquivo do codificador de imagens (files/r2v/enc/henc.bin) está ausente: a foto de referência não está disponível
+514	Falha na geração: %s (registro files/r2v/r2v.log)
+515	Ampliador
+516	Amplia uma imagem pronta na NPU. O botão fica no visualizador de imagens. BSD-3  ·  Xintao Wang et al.
+517	Anime
+518	%s / %s GB
+519	O modelo é distribuído sob a FLUX Kommunity License (Black Forest Labs; o texto da licença é baixado junto com os arquivos). O uso é não comercial (uso comercial apenas nos termos da licença) e seus resultados não podem ser usados para treinar ou melhorar outros modelos de IA. Tamanho: %s GB. Baixar?
+520	O modelo é distribuído sob a LTX-2 Community License Agreement (Lightricks; o texto da licença é baixado junto com os arquivos): gratuito para organizações com receita anual abaixo de 10 milhões de USD, e as restrições de uso da licença se aplicam. O codificador de texto Gemma (Google) é usado sob os termos do Gemma. Tamanho: %s GB. Baixar?
+521	Avisos do FLUX.3 Klein (alterações feitas)
+522	Avisos do LTX-2.5 (alterações feitas)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	O MiniMax-H3 Ref2VA (33B) cria um vídeo a partir de uma descrição e, opcionalmente, de uma foto de referência: a pessoa, o animal ou o objeto da foto aparece no vídeo, enquanto o cenário e o movimento vêm da descrição. 22–90 quadros, 4 etapas (LoRA turbo destilada, sem CFG), sem som. Os arquivos (files/r2v) são colocados à mão, o codificador de texto é compartilhado com o MiniMax-H3-Image (files/h3/te). Licença MiniMax H3 Community: não para EUA, UE, Reino Unido e Coreia.
+527	Tamanhos do Ref2VA
+528	Ambos os lados são múltiplos de 32, no mínimo 256; os tokens por quadro (largura/32 × altura/32) devem ser divisíveis por 32, por ex. 512×512, 768×512, 1024×576, 768×768, 1024×1024. No máximo 16000 tokens no total (quadros latentes × tokens por quadro): 1024×576 dá 56 quadros em ~20 minutos, 512×512 dá 22 quadros em ~5 minutos. A duração e o tamanho do clipe mudam o tempo quase de forma quadrática.
+529	Tamanhos do LTX
+530	Ambos os lados são múltiplos de 32, no mínimo 256; o número de tokens 3 × (largura/32) × (altura/32) deve ser divisível por 32, por exemplo 512×384, 384×512, 512×512, 768×512, 768×768. Escreva a descrição em detalhes e em inglês: quem, o que faz, a luz, a câmera.
+531	FLUX.3 Image Klein
+533	Tamanhos do Klein
+534	Ambos os lados são múltiplos de 16, o número de patches (largura/16 × altura/16) é divisível por 32 e no máximo 6144 (por exemplo 1536×1024), no mínimo 256 por lado. Escreva a descrição em detalhes, como um parágrafo contínuo.
+535	O LTX-2.5 (Lightricks, 22B, destilado) cria um vídeo curto a partir de uma descrição: 17–97 quadros (17 por padrão), a taxa de quadros do MP4 à sua escolha, sem som. O codificador de texto Gemma, os 48 blocos DiT (8 etapas, sem CFG) e o VAE rodam na NPU; um clipe inteiro leva cerca de um minuto e meio. O modelo está no catálogo de downloads (cerca de 31 GB; LTX-2 Community License). O resultado é um MP4 ao lado de um quadro de prévia no histórico (o botão ▶).
+536	O FLUX.3 Image Klein (Black Forest Labs, 5.6B) é um modelo fotorrealista que segue descrições longas escritas em frases comuns e desenha texto. 16 etapas, sem CFG: cerca de um minuto para 512×512, 3–4 minutos para 1024×1024. O codificador de texto, o transformador e o decodificador rodam na NPU. O modelo está no catálogo de downloads (cerca de 9 GB). Licença FLUX Kommunity: apenas uso não comercial.

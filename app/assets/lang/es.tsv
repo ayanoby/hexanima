@@ -53,13 +53,13 @@ Too large: at most 6144 patches (e.g. 1536×960)	Demasiado grande: máximo 6144 
 Get a model	Obtener un modelo
 Generate  ·  ~%d s	Generar  ·  ~%d s
 Model is loaded on the NPU, generation starts at once	El modelo está cargado en la NPU; la generación empieza al instante
-Model is unloaded: it loads itself when you generate (~5 s)	El modelo no está en memoria: se cargará solo al generar (~5 s)
-Unload	Liberar memoria
+Model is unloaded: it loads itself when you generate (~5 s)	El modelo está descargado: se cargará solo al generar (~5 s)
+Unload	Descargar de memoria
 Generating…	Generando…
 Shell does not start: %s	No se puede iniciar el shell: %s
 Switching model…	Cambiando de modelo…
 Loading the model…	Cargando el modelo…
-Unloading the model…	Liberando el modelo de la memoria…
+Unloading the model…	Descargando el modelo de la memoria…
 Enter a prompt	Escribe una descripción
 Starting…	Iniciando…
 Saving…	Guardando…
@@ -98,8 +98,8 @@ Seed	Seed
 -1 is random every time. A number repeats the same picture with the same prompt, size and model. The seed used is shown under the picture and in the history.	-1 es aleatoria cada vez. Un número repite la misma imagen con la misma descripción, tamaño y modelo. La seed usada aparece bajo la imagen y en el historial.
 Why the first steps are faster	Por qué los primeros pasos son más rápidos
 The first two steps run at reduced resolution (overall composition), the last two at full resolution, so details are kept. On some unusual sizes this switches off automatically.	Los dos primeros pasos se ejecutan a resolución reducida (composición general) y los dos últimos a resolución completa, así se conservan los detalles. En algunos tamaños poco habituales se desactiva automáticamente.
-Loading and unloading	Cargar y liberar memoria
-A loaded model holds several gigabytes of RAM. If the phone slows down or you are done, tap Unload. It loads itself when you generate (~5 s).	Un modelo cargado ocupa varios gigabytes de RAM. Si el teléfono va lento o has terminado, pulsa «Liberar memoria». Se carga solo al generar (~5 s).
+Loading and unloading	Cargar y descargar de memoria
+A loaded model holds several gigabytes of RAM. If the phone slows down or you are done, tap Unload. It loads itself when you generate (~5 s).	Un modelo cargado ocupa varios gigabytes de RAM. Si el teléfono va lento o has terminado, pulsa «Descargar de memoria». Se carga solo al generar (~5 s).
 Where pictures are stored	Dónde se guardan las imágenes
 Only inside the app. A picture goes to the phone gallery (Pictures/Anima) after Download. Deleted pictures go to the trash and stay there for 30 days.	Solo dentro de la app. Una imagen llega a la galería del teléfono (Pictures/Anima) tras pulsar «Descargar». Las imágenes eliminadas van a la papelera y permanecen 30 días.
 Supported phones	Teléfonos compatibles
@@ -147,7 +147,7 @@ Load the model at start	Cargar el modelo al iniciar
 The first picture is faster, but the model holds RAM	La primera imagen es más rápida, pero el modelo ocupa RAM
 Never	Nunca
 %d min	%d min
-Unload when idle	Liberar memoria al estar inactivo
+Unload when idle	Descargar de memoria al estar inactivo
 Frees RAM when you have not generated anything for a while	Libera RAM cuando llevas un rato sin generar nada
 Keep the screen on while generating	Mantener la pantalla encendida al generar
 Quality tags before the prompt	Etiquetas de calidad antes de la descripción
@@ -333,7 +333,7 @@ Tokens: %d / %d	Tokens: %d / %d
   ·  negative: %d	  ·  negativo: %d
   ·  too long	  ·  demasiado largo
 Loaded on the NPU, generation starts at once	Cargado en la NPU, la generación empieza al instante
-Unloaded · loads itself when you generate (~5 s)	No está en memoria · se carga solo al generar (~5 s)
+Unloaded · loads itself when you generate (~5 s)	Descargado · se carga solo al generar (~5 s)
 Prompt too long: %d tokens, the limit is %d. Shorten it.	Prompt demasiado largo: %d tokens, el límite es %d. Acórtalo.
 Preparing the LoRA… (once for this set)	Preparando la LoRA… (una vez para este conjunto)
 Preparing the turbo LoRA…	Preparando la LoRA turbo…
@@ -465,6 +465,71 @@ Wallpaper dimming	Oscurecimiento del fondo
 Pinch to zoom, drag to move	Pellizca para ampliar, arrastra para mover
 Position and scale	Posición y escala
 Loaded	Cargado
-Unloaded	No está en memoria
+Unloaded	Descargado
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	El modelo se distribuye bajo la MiniMax-H3-Image Community License Agreement (el texto de la licencia se descarga con los archivos). No debe usarse en Estados Unidos, la Unión Europea, el Reino Unido ni Corea del Sur, y sus resultados no deben usarse para mejorar otros modelos de IA. Tamaño: %s GB. ¿Descargar?
 Accept and download	Aceptar y descargar
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	Los tokens por fotograma (%d) deben ser divisibles entre 32, p. ej. 512×512, 1024×576, 768×768
+Video too large: reduce the size or the frame count	Vídeo demasiado grande: reduce el tamaño o el número de fotogramas
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	El número de parches (%d) debe ser divisible entre 32, p. ej. 512×512, 768×1024, 1024×1024
+The picture is too large to upscale	La imagen es demasiado grande para ampliarla
+Too large for x4: choose x2	Demasiado grande para ×4: elige ×2
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	El número de tokens (%d) debe ser divisible entre 32, p. ej. 512×384, 384×512, 512×512
+Cannot play the video	No se puede reproducir el vídeo
+An upscale is already running	Ya hay una ampliación en curso
+×4 · photo	×4 · foto
+×4 · anime	×4 · anime
+×2 · photo	×2 · foto
+×2 · anime	×2 · anime
+Upscale (Real-ESRGAN, NPU)	Ampliar (Real-ESRGAN, NPU)
+Download needed	Se necesita una descarga
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	La red de ampliación (%s, %d MB) se descarga una vez desde Hugging Face. Licencia de Real-ESRGAN: BSD-3.
+anime	anime
+photo	foto
+Downloading…	Descargando…
+Download failed: %s	Error de descarga: %s
+Upscaling…	Ampliando…
+Upscale failed: %s	Error al ampliar: %s
+Done: a new picture in the gallery	Listo: una imagen nueva en la galería
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%d fotogramas (%.1f s a %d fps)
+Frame rate	Velocidad de fotogramas
+Frames	Fotogramas
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	Cuántos pasos de eliminación de ruido da el modelo. Más pasos: más detalle, pero una imagen más lenta, y solo hasta cierto punto. Usa el número recomendado para el modelo: los modelos rápidos (Turbo, Lightning) necesitan unos 4–8 pasos, los normales 20–30.
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	Duración del clip (la lista depende del modelo: LTX 17–97 fotogramas, Ref2VA 22–90). Los clips más largos hacen cada paso más lento (la atención crece con el número de fotogramas) y la decodificación más larga, y limitan el tamaño de imagen que cabe en memoria.
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	Fotogramas por segundo del MP4 final. Solo cambia la velocidad de reproducción: el modelo se entrenó a 24 fps, así que 24–25 se ve lo más natural y los valores menores dan cámara lenta.
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	La foto es una referencia: la persona, el animal o el objeto que aparece en ella aparece en el vídeo; di en la descripción qué ocurre y cómo se mueve la cámara. El entorno sale de la descripción.
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	Elige una foto de referencia (opcional): el sujeto de la foto aparece en el vídeo. Sin ella el vídeo se crea solo a partir de la descripción.
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	La foto se convierte en el primer fotograma del vídeo; di en la descripción qué ocurre y cómo se mueve la cámara.
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	Elige una foto para darle vida (imagen a vídeo). Sin foto el vídeo se crea solo a partir de la descripción.
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 pasos · vídeo a partir de una descripción y una foto de referencia, sin sonido
+22B · 8 steps · 17-frame video, no sound	22B · 8 pasos · vídeo de 17 fotogramas, sin sonido
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 pasos · fotorrealismo, texto en las imágenes
+Create video  ·  ~%d s	Crear vídeo  ·  ~%d s
+Generation failed: %s (log files/klein/klein.log)	Error de generación: %s (registro files/klein/klein.log)
+Decoding the video…	Decodificando el vídeo…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	Falta el archivo del codificador de imágenes (files/ltx/vae/etile.bin): imagen a vídeo no está disponible
+Saving the video…	Guardando el vídeo…
+Generation failed: %s (log files/ltx/ltx.log)	Error de generación: %s (registro files/ltx/ltx.log)
+Decoding the video %d/%d…	Decodificando el vídeo %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	Falta el archivo del codificador de imágenes (files/r2v/enc/henc.bin): la foto de referencia no está disponible
+Generation failed: %s (log files/r2v/r2v.log)	Error de generación: %s (registro files/r2v/r2v.log)
+Upscaler	Ampliador
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	Amplía una imagen terminada en la NPU. El botón está en el visor de imágenes. BSD-3  ·  Xintao Wang et al.
+Anime	Anime
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	El modelo se distribuye bajo la FLUX Kommunity License (Black Forest Labs; el texto de la licencia se descarga con los archivos). El uso es no comercial (el uso comercial solo según los términos de la licencia) y sus resultados no deben usarse para entrenar ni mejorar otros modelos de IA. Tamaño: %s GB. ¿Descargar?
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	El modelo se distribuye bajo la LTX-2 Community License Agreement (Lightricks; el texto de la licencia se descarga con los archivos): gratis para organizaciones con ingresos anuales inferiores a 10 millones de USD, y se aplican las restricciones de uso de la licencia. El codificador de texto Gemma (Google) se usa bajo los términos de Gemma. Tamaño: %s GB. ¿Descargar?
+FLUX.3 Klein notices (changes made)	Avisos de FLUX.3 Klein (cambios realizados)
+LTX-2.5 notices (changes made)	Avisos de LTX-2.5 (cambios realizados)
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) crea un vídeo a partir de una descripción y, opcionalmente, una foto de referencia: la persona, el animal o el objeto de la foto aparece en el vídeo, mientras que el entorno y el movimiento salen de la descripción. 22–90 fotogramas, 4 pasos (LoRA turbo destilada, sin CFG), sin sonido. Los archivos (files/r2v) se colocan a mano, el codificador de texto se comparte con MiniMax-H3-Image (files/h3/te). Licencia MiniMax H3 Community: no para EE. UU., la UE, el Reino Unido ni Corea.
+Ref2VA sizes	Tamaños de Ref2VA
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	Ambos lados son múltiplos de 32, al menos 256; los tokens por fotograma (ancho/32 × alto/32) deben ser divisibles entre 32, p. ej. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Como máximo 16000 tokens en total (fotogramas latentes × tokens por fotograma): 1024×576 da 56 fotogramas en ~20 minutos, 512×512 da 22 fotogramas en ~5 minutos. La duración y el tamaño del clip cambian el tiempo casi de forma cuadrática.
+LTX sizes	Tamaños de LTX
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Ambos lados son múltiplos de 32, al menos 256; el número de tokens 3 × (ancho/32) × (alto/32) debe ser divisible entre 32, por ejemplo 512×384, 384×512, 512×512, 768×512, 768×768. Escribe la descripción con detalle y en inglés: quién, qué hace, la luz, la cámara.
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Tamaños de Klein
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Ambos lados son múltiplos de 16, el número de parches (ancho/16 × alto/16) es divisible entre 32 y como máximo 6144 (por ejemplo 1536×1024), al menos 256 por lado. Escribe la descripción con detalle, como un párrafo continuo.
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, destilado) crea un vídeo corto a partir de una descripción: 17–97 fotogramas (17 por defecto), la velocidad de fotogramas del MP4 a tu elección, sin sonido. El codificador de texto Gemma, los 48 bloques DiT (8 pasos, sin CFG) y el VAE se ejecutan en la NPU; un clip completo tarda alrededor de minuto y medio. El modelo está en el catálogo de descargas (unos 31 GB; LTX-2 Community License). El resultado es un MP4 junto a un fotograma de vista previa en el historial (el botón ▶).
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein (Black Forest Labs, 5.6B) es un modelo fotorrealista que sigue descripciones largas escritas en frases normales y dibuja texto. 16 pasos, sin CFG: alrededor de un minuto para 512×512, 3–4 minutos para 1024×1024. El codificador de texto, el transformador y el decodificador se ejecutan en la NPU. El modelo está en el catálogo de descargas (unos 9 GB). Licencia FLUX Kommunity: solo uso no comercial.

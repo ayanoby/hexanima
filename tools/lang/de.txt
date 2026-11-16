@@ -468,3 +468,68 @@
 467	Entladen
 468	Das Modell wird unter der MiniMax-H3-Image Community License Agreement verbreitet (der Lizenztext wird mit den Dateien geladen). Es darf nicht in den USA, der Europäischen Union, im Vereinigten Königreich und in Südkorea verwendet werden, und seine Ergebnisse dürfen nicht zur Verbesserung anderer KI-Modelle genutzt werden. Größe: %s GB. Herunterladen?
 469	Akzeptieren und herunterladen
+470	Die Anzahl der Token pro Frame (%d) muss durch 32 teilbar sein, z. B. 512×512, 1024×576, 768×768
+471	Video zu groß: Größe oder Bildanzahl verringern
+472	Die Anzahl der Patches (%d) muss durch 32 teilbar sein, z. B. 512×512, 768×1024, 1024×1024
+473	Das Bild ist zu groß zum Hochskalieren
+474	Zu groß für ×4: ×2 wählen
+475	Die Tokenanzahl (%d) muss durch 32 teilbar sein, z. B. 512×384, 384×512, 512×512
+476	Das Video kann nicht abgespielt werden
+477	Eine Hochskalierung läuft bereits
+478	×4 · Foto
+479	×4 · Anime
+480	×2 · Foto
+481	×2 · Anime
+482	Hochskalieren (Real-ESRGAN, NPU)
+483	Download erforderlich
+484	Das Hochskalierungsnetz (%s, %d MB) wird einmalig von Hugging Face geladen. Real-ESRGAN-Lizenz: BSD-3.
+485	Anime
+486	Foto
+487	Wird heruntergeladen…
+488	Download fehlgeschlagen: %s
+489	Wird hochskaliert…
+490	Hochskalieren fehlgeschlagen: %s
+491	Fertig: ein neues Bild in der Galerie
+492	%d fps
+493	%d Frames (%.1f s bei %d fps)
+494	Bildrate
+495	Frames
+496	Wie viele Entrauschungsschritte das Modell ausführt. Mehr Schritte: feinere Details, aber ein langsameres Bild, und nur bis zu einem gewissen Punkt. Nehmen Sie die für das Modell empfohlene Zahl: schnelle Modelle (Turbo, Lightning) brauchen etwa 4–8 Schritte, normale 20–30.
+497	Länge des Clips (die Liste hängt vom Modell ab: LTX 17–97 Frames, Ref2VA 22–90). Längere Clips machen jeden Schritt langsamer (die Aufmerksamkeit wächst mit der Bildanzahl) und das Dekodieren länger und begrenzen die Bildgröße, die in den Speicher passt.
+498	Bilder pro Sekunde des fertigen MP4. Das ändert nur die Wiedergabegeschwindigkeit: Das Modell wurde mit 24 fps trainiert, daher wirkt 24–25 am natürlichsten, niedrigere Werte ergeben Zeitlupe.
+499	Das Foto ist eine Referenz: Die Person, das Tier oder der Gegenstand darauf erscheint im Video; beschreiben Sie im Prompt, was passiert und wie sich die Kamera bewegt. Die Umgebung kommt aus dem Prompt.
+500	Wählen Sie ein Referenzfoto (optional): Das Motiv des Fotos erscheint im Video. Ohne Foto entsteht das Video nur aus dem Prompt.
+501	Das Foto wird das erste Bild des Videos; beschreiben Sie im Prompt, was passiert und wie sich die Kamera bewegt.
+502	Wählen Sie ein Foto, um es zum Leben zu erwecken (Bild zu Video). Ohne Foto entsteht das Video nur aus dem Prompt.
+503	33B · 4 Schritte · Video aus Prompt und Referenzfoto, ohne Ton
+504	22B · 8 Schritte · Video mit 17 Frames, ohne Ton
+505	5.6B · 16 Schritte · Fotorealismus, Text in Bildern
+506	Video erstellen  ·  ~%d s
+507	Generierung fehlgeschlagen: %s (Log files/klein/klein.log)
+508	Video wird dekodiert…
+509	Die Datei des Bildencoders (files/ltx/vae/etile.bin) fehlt: Bild zu Video ist nicht verfügbar
+510	Video wird gespeichert…
+511	Generierung fehlgeschlagen: %s (Log files/ltx/ltx.log)
+512	Video wird dekodiert %d/%d…
+513	Die Datei des Bildencoders (files/r2v/enc/henc.bin) fehlt: das Referenzfoto ist nicht verfügbar
+514	Generierung fehlgeschlagen: %s (Log files/r2v/r2v.log)
+515	Hochskalierer
+516	Vergrößert ein fertiges Bild auf der NPU. Die Schaltfläche befindet sich in der Bildansicht. BSD-3  ·  Xintao Wang et al.
+517	Anime
+518	%s / %s GB
+519	Das Modell wird unter der FLUX Kommunity License verbreitet (Black Forest Labs; der Lizenztext wird mit den Dateien geladen). Die Nutzung ist nichtkommerziell (kommerziell nur zu den Bedingungen der Lizenz), und seine Ausgaben dürfen nicht zum Trainieren oder Verbessern anderer KI-Modelle verwendet werden. Größe: %s GB. Herunterladen?
+520	Das Modell wird unter der LTX-2 Community License Agreement verbreitet (Lightricks; der Lizenztext wird mit den Dateien geladen): kostenlos für Organisationen mit einem Jahresumsatz unter 10 Mio. USD, es gelten die Nutzungsbeschränkungen der Lizenz. Der Gemma-Textencoder (Google) wird unter den Gemma-Bedingungen verwendet. Größe: %s GB. Herunterladen?
+521	FLUX.3-Klein-Hinweise (vorgenommene Änderungen)
+522	LTX-2.5-Hinweise (vorgenommene Änderungen)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	MiniMax-H3 Ref2VA (33B) erzeugt ein Video aus einem Prompt und optional einem Referenzfoto: Die Person, das Tier oder der Gegenstand auf dem Foto erscheint im Video, während Umgebung und Bewegung aus dem Prompt stammen. 22–90 Frames, 4 Schritte (destillierte Turbo-LoRA, ohne CFG), ohne Ton. Die Dateien (files/r2v) werden von Hand abgelegt, der Textencoder wird mit MiniMax-H3-Image geteilt (files/h3/te). MiniMax-H3-Community-Lizenz: nicht für die USA, die EU, das Vereinigte Königreich und Korea.
+527	Ref2VA-Größen
+528	Beide Seiten sind Vielfache von 32, mindestens 256; die Token pro Frame (Breite/32 × Höhe/32) müssen durch 32 teilbar sein, z. B. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Höchstens 16000 Token insgesamt (Latent-Frames × Token pro Frame): 1024×576 ergibt 56 Frames in ~20 Minuten, 512×512 ergibt 22 Frames in ~5 Minuten. Länge und Größe des Clips verändern die Zeit fast quadratisch.
+529	LTX-Größen
+530	Beide Seiten sind Vielfache von 32, mindestens 256; die Tokenanzahl 3 × (Breite/32) × (Höhe/32) muss durch 32 teilbar sein, zum Beispiel 512×384, 384×512, 512×512, 768×512, 768×768. Schreiben Sie den Prompt ausführlich und auf Englisch: wer, was er tut, das Licht, die Kamera.
+531	FLUX.3 Image Klein
+533	Klein-Größen
+534	Beide Seiten sind Vielfache von 16, die Anzahl der Patches (Breite/16 × Höhe/16) ist durch 32 teilbar und höchstens 6144 (zum Beispiel 1536×1024), mindestens 256 pro Seite. Schreiben Sie den Prompt ausführlich, als zusammenhängenden Absatz.
+535	LTX-2.5 (Lightricks, 22B, destilliert) erzeugt ein kurzes Video aus einem Prompt: 17–97 Frames (standardmäßig 17), eine frei wählbare Bildrate für das MP4, ohne Ton. Der Gemma-Textencoder, die 48 DiT-Blöcke (8 Schritte, ohne CFG) und der VAE laufen auf der NPU; ein ganzer Clip dauert etwa anderthalb Minuten. Das Modell ist im Download-Katalog (etwa 31 GB; LTX-2 Community License). Das Ergebnis ist ein MP4 neben einem Vorschaubild im Verlauf (die ▶-Schaltfläche).
+536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) ist ein fotorealistisches Modell, das lange, in normalen Sätzen geschriebene Prompts versteht und Text zeichnet. 16 Schritte, ohne CFG: etwa eine Minute für 512×512, 3–4 Minuten für 1024×1024. Der Textencoder, der Transformer und der Decoder laufen auf der NPU. Das Modell ist im Download-Katalog (etwa 9 GB). FLUX-Kommunity-Lizenz: nur nichtkommerzielle Nutzung.

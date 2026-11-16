@@ -55,9 +55,18 @@ public class Main extends Base {
     int mossSteps() { return customTurbo() ? prefs().getInt("turbo_sampler", 4) : rs8() ? 8 : Moss.steps(model); }
     boolean h3Lora() { return isH3() && prefs().getBoolean("h3_lora", false) && H3.loraInstalled(getFilesDir()); }
     int h3Steps() { return steps(); }   // 6 fixed; with the pDMD LoRA 2..4 (default 2)
-    int stepsDef() { return isH3() ? (h3Lora() ? H3.LORA_STEPS : H3.STEPS) : base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
+    int stepsDef() { return isR2v() ? R2v.STEPS : isLtx() ? Ltx.STEPS : isKlein() ? Klein.STEPS : isH3() ? (h3Lora() ? H3.LORA_STEPS : H3.STEPS) : base() ? Settings.baseSteps(this) : isMoss() ? mossSteps() : isQwen() ? (customTurboQwen() ? prefs().getInt("qturbo_sampler", 4) : Qwen.steps(model)) : STEPS; }
+    int ltxLf() { if (isR2v()) { int r = prefs().getInt("r2v_t", 7); for (int o : R2v.T_OPTS) if (o == r) return r; return 7; } int v = prefs().getInt("ltx_lf", 3); for (int o : Ltx.LF_OPTS) if (o == v) return v; return 3; }
+    int vidFrames(int lf) { return isR2v() ? R2v.frames(lf) : Ltx.frames(lf); }
+    int ltxFps() { if (isR2v()) { int r = prefs().getInt("r2v_fps", R2v.FPS); for (int o : R2v.FPS_OPTS) if (o == r) return r; return R2v.FPS; } int v = prefs().getInt("ltx_fps", Ltx.FPS); for (int o : Ltx.FPS_OPTS) if (o == v) return v; return Ltx.FPS; }
+    TextView ltxFramesVal, ltxFpsVal; LinearLayout ltxRow;
+    void pickLtx(final boolean fps) {
+        final int[] o = isR2v() ? (fps ? R2v.FPS_OPTS : R2v.T_OPTS) : fps ? Ltx.FPS_OPTS : Ltx.LF_OPTS; final String[] names = new String[o.length]; int cur = 0;
+        for (int i = 0; i < o.length; i++) { names[i] = fps ? L.f("%d кадров/с", "%d fps", o[i]) : L.f("%d кадров (%.1f с при %d fps)", "%d frames (%.1f s at %d fps)", vidFrames(o[i]), vidFrames(o[i]) / (double) ltxFps(), ltxFps()); if (o[i] == (fps ? ltxFps() : ltxLf())) cur = i; }
+        builder().setTitle(fps ? L.s("Частота кадров", "Frame rate") : L.s("Число кадров", "Frames")).setSingleChoiceItems(names, cur, (d, i) -> { d.dismiss(); prefs().edit().putInt(isR2v() ? (fps ? "r2v_fps" : "r2v_t") : fps ? "ltx_fps" : "ltx_lf", o[i]).apply(); refreshBaseUi(); }).show();
+    }
     int stepsMin() { return isH3() ? (h3Lora() ? H3.LORA_STEPS : 1) : 1; }
-    int stepsMax() { return isH3() ? (h3Lora() ? H3.LORA_MAX_STEPS : H3.STEPS) : base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
+    int stepsMax() { return isR2v() ? R2v.MAX_STEPS : isLtx() ? Ltx.STEPS : isKlein() ? Klein.MAX_STEPS : isH3() ? (h3Lora() ? H3.LORA_MAX_STEPS : H3.STEPS) : base() ? 50 : isMoss() ? mossSteps() : isQwen() ? 50 : isMage() ? 4 : 50; }
     String stepsKey() { return "steps_" + model + (customTurbo() || customTurboAnima() || customTurboQwen() ? "_t" : "") + (rs8() && !customTurbo() ? "_8" : "") + (isH3() && h3Lora() ? "_hl" : ""); }   // the steps of a model with a turbo LoRA picked by the user are kept apart
     int steps() { return Math.max(stepsMin(), Math.min(stepsMax(), prefs().getInt(stepsKey(), stepsDef()))); }
     void setSteps(int v) { prefs().edit().putInt(stepsKey(), Math.max(stepsMin(), Math.min(stepsMax(), v))).apply(); if (base()) prefs().edit().putInt("base_steps", steps()).apply(); refreshBaseUi(); }
@@ -83,7 +92,7 @@ public class Main extends Base {
 
     TextView chipName, chipDot, state, status, saved, phSize, ramTxt, tempTxt, warnTxt, sizeText;
     View placeholder; LinearLayout sizeChips, advBox; ImageView advArrow; TextView advSum;
-    LinearLayout customRow, imgBox;
+    LinearLayout customRow; FrameLayout imgBox;
     LinearLayout cfgRow, baseRow, stepsRow, variantRow, turboStrRow; SeekBar turboBar; TextView countVal, countBadge;
     Button loadBtn, genBtn; LinearLayout baseBody;
     ImageButton dlBtn, shareBtn, favBtn, againBtn;
@@ -179,9 +188,7 @@ public class Main extends Base {
         LinearLayout.LayoutParams vrl = new LinearLayout.LayoutParams(-1, dp(42)); vrl.topMargin = dp(8); root.addView(variantRow, vrl);
 
         // the picture
-        imgBox = new LinearLayout(this);
-        imgBox.setOrientation(LinearLayout.VERTICAL);
-        imgBox.setGravity(Gravity.CENTER);
+        imgBox = new FrameLayout(this);
         imgBox.setBackground(bg(CARD, 14));
         imgBox.setClipToOutline(true);
         imgBox.setOutlineProvider(new ViewOutlineProvider() {
@@ -190,13 +197,14 @@ public class Main extends Base {
         LinearLayout ph = new LinearLayout(this); ph.setOrientation(LinearLayout.VERTICAL); ph.setGravity(Gravity.CENTER);
         phSize = text("", 14, DIM, false); phSize.setGravity(Gravity.CENTER); ph.addView(phSize, new LinearLayout.LayoutParams(-1, -2));
         placeholder = ph;
-        imgBox.addView(placeholder, new LinearLayout.LayoutParams(-1, -1));   // the picture area has a fixed size: the placeholder and the picture fill it (the picture is fitted inside)
+        imgBox.addView(placeholder, new FrameLayout.LayoutParams(-1, -1));   // the picture area has a fixed size: the placeholder and the picture fill it (the picture is fitted inside)
         img = new ImageView(this);
         img.setAdjustViewBounds(false);
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
         img.setVisibility(View.GONE);
-        img.setOnClickListener(v -> { if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
-        imgBox.addView(img, new LinearLayout.LayoutParams(-1, -1));
+        img.setOnClickListener(v -> { if (lastFile != null && Gallery.videoOf(lastFile) != null) vidTap(); else if (lastFile != null) { File[] all = Gallery.list(this, Gallery.ALL); int k = java.util.Arrays.asList(all).indexOf(lastFile); Viewer.open(this, all, Math.max(0, k), Gallery.ALL, true); } });
+        imgBox.addView(img, new FrameLayout.LayoutParams(-1, -1));
+        buildVideoOverlay();
         int boxH = getResources().getDisplayMetrics().widthPixels - dp(40);   // the starting height; updatePlaceholder() sets it from the chosen size
         LinearLayout.LayoutParams ibl = new LinearLayout.LayoutParams(-1, boxH); ibl.topMargin = dp(8); root.addView(imgBox, ibl);
         LinearLayout resRow = new LinearLayout(this);
@@ -320,8 +328,15 @@ public class Main extends Base {
         baseRow = new LinearLayout(this); baseRow.setOrientation(LinearLayout.VERTICAL); baseRow.setVisibility(View.GONE);
         stepsVal = text("", 15, TXT, false); cfgVal = text("", 15, TXT, false);
         stepsRow = new LinearLayout(this); stepsRow.setOrientation(LinearLayout.VERTICAL);
-        stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0), L.s("Сколько шагов очистки от шума делает модель. Больше шагов: тоньше детали, но картинка дольше, и только до определённого предела. Берите число, рекомендованное для модели: быстрым (Turbo, Lightning) нужно около 4–8 шагов, обычным 20–30. Оранжевое число значит, что вы изменили рекомендованное значение.", "How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30. An orange number means you changed the recommended value."))); stepsRow.addView(divider());
+        stepsRow.addView(paramRow(L.s("Шаги", "Steps"), stepper(stepsVal, 0), L.s("Сколько шагов очистки от шума делает модель. Больше шагов: тоньше детали, но картинка дольше, и только до определённого предела. Берите число, рекомендованное для модели: быстрым (Turbo, Lightning) нужно около 4–8 шагов, обычным 20–30.", "How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30."))); stepsRow.addView(divider());
         pcard.addView(stepsRow);
+        ltxFramesVal = text("", 15, TXT, false); ltxFpsVal = text("", 15, TXT, false);
+        for (TextView t : new TextView[]{ltxFramesVal, ltxFpsVal}) { t.setGravity(Gravity.END); t.setPadding(dp(12), dp(10), dp(4), dp(10)); }
+        ltxFramesVal.setOnClickListener(v -> pickLtx(false)); ltxFpsVal.setOnClickListener(v -> pickLtx(true));
+        ltxRow = new LinearLayout(this); ltxRow.setOrientation(LinearLayout.VERTICAL); ltxRow.setVisibility(View.GONE);
+        ltxRow.addView(paramRow(L.s("Кадров", "Frames"), ltxFramesVal, L.s("Длина клипа (список зависит от модели: LTX 17–97 кадров, Ref2VA 22–90). Чем длиннее, тем дольше шаги (внимание растёт с числом кадров) и декодирование, и тем меньше размер, который помещается в память.", "Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory."))); ltxRow.addView(divider());
+        ltxRow.addView(paramRow(L.s("Частота кадров", "Frame rate"), ltxFpsVal, L.s("Сколько кадров в секунду в готовом MP4. Меняет только скорость воспроизведения: сама модель обучена на 24 кадрах в секунду, поэтому 24–25 выглядит естественнее всего, меньше значения дают замедленную съёмку.", "Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion."))); ltxRow.addView(divider());
+        pcard.addView(ltxRow);
         cfgRow = paramRow("CFG", stepper(cfgVal, 1), L.s("Насколько строго картинка следует промпту. Выше: ближе к описанию, но жёстче контраст и больше артефактов; ниже: свободнее и мягче. Обычные модели хорошо работают примерно на 3–5, у быстрых (Turbo) моделей CFG равен 1. Значение больше 1 замедляет каждый шаг, потому что модель считает дважды (с промптом и без него), и только тогда учитывается негативный промпт.", "How strictly the picture follows the prompt. Higher: closer to the description but harsher contrast and more artifacts; lower: freer and softer. Regular models work well at about 3–5, fast (Turbo) models use 1. A value above 1 slows every step because the model runs twice (with and without the prompt), and only then is the negative prompt used.")); baseRow.addView(cfgRow); baseRow.addView(divider());
         samplerVal = text("", 15, TXT, false); samplerVal.setOnClickListener(v -> builder().setTitle(L.s("Сэмплер", "Sampler")).setSingleChoiceItems(Settings.SAMPLERS, java.util.Arrays.asList(Settings.SAMPLERS).indexOf(smp()), (d, i) -> { d.dismiss(); prefs().edit().putString("sampler", Settings.SAMPLERS[i]).apply(); refreshBaseUi(); }).show());
         schedVal = text("", 15, TXT, false); schedVal.setOnClickListener(v -> { String[] sn = Settings.SCHEDULERS.clone(); sn[0] = L.s("по умолчанию", "default");
@@ -444,7 +459,7 @@ public class Main extends Base {
         }).start();
     }
 
-    @Override protected void onPause() {
+    @Override protected void onPause() { if (mv != null && mv.getVisibility() == View.VISIBLE) videoUi(lastFile);
         super.onPause();
         visible = false;
         ui.removeCallbacks(ramTick);
@@ -548,6 +563,10 @@ public class Main extends Base {
         }
         editAdd.setVisibility(View.GONE);
         if (editNote != null) editNote.setText(b != null && multi ? L.s("В описании ссылайтесь на картинки: «картинка 1», «картинка 2», например «персонаж с картинки 1 стоит на фоне картинки 2».", "Refer to the pictures in the prompt: \"picture 1\", \"picture 2\", e.g. \"the character from picture 1 stands in the scene of picture 2\".")
+            : b != null && isR2v() ? L.s("Фото — референс: человек, животное или предмет с него появится в видео; в описании скажите, что происходит и как движется камера. Окружение берите из описания.", "The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.")
+            : isR2v() ? L.s("Выберите фото-референс (необязательно): персонаж или предмет с него появится в видео. Без фото видео создаётся только по описанию.", "Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.")
+            : b != null && isLtx() ? L.s("Фото станет первым кадром видео; в описании скажите, что в нём происходит и как движется камера.", "The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.")
+            : isLtx() ? L.s("Выберите фото, чтобы оживить его (видео из картинки). Без фото видео создаётся только по описанию.", "Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.")
             : b != null ? L.s("Описание — что в фото изменить, например «сделай небо закатным».", "The prompt says what to change, e.g. \"make the sky a sunset\".") : L.s("Выберите фото, чтобы изменить его по описанию. Без фото модель просто рисует картинку.", "Pick a photo to change it by the prompt. Without one the model just draws a picture."));
     }
     void pickEdit() {
@@ -926,6 +945,9 @@ public class Main extends Base {
     boolean isMoss() { return Moss.is(model); }
     boolean isMage() { return Mage.is(model); }
     boolean isH3() { return H3.is(model); }
+    boolean isKlein() { return Klein.is(model); }
+    boolean isLtx() { return Ltx.is(model); }
+    boolean isR2v() { return R2v.is(model); }
     /** CFG of the picture: the base models keep theirs (base_cfg, 4), the turbo ones have their own (turbo_cfg, 1 = no second pass) */
     // the picture settings live in prefs() (the "lab" file in lab mode), not in Settings.prefs(): read them from the same place they are written
     String smp() { String v = prefs().getString("sampler", "euler"); return java.util.Arrays.asList(Settings.SAMPLERS).contains(v) ? v : "euler"; }
@@ -933,9 +955,9 @@ public class Main extends Base {
     String negStr() { String n = clean(prefs().getString("base_neg", Settings.DEFAULT_NEG)).trim(); return n.isEmpty() ? Settings.DEFAULT_NEG : n; }
     String cfgKey() { return base() ? "base_cfg" : "turbo_cfg"; }
     String cfgStr() { return prefs().getString(cfgKey(), base() ? "4" : "1"); }
-    boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3(); }
+    boolean isAnima() { return !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3() && !isKlein() && !isLtx() && !isR2v(); }
     /** the size presets of the selected model: Anima's list, or MOSS-Image's own presets (any size with sides multiple of 16 works) */
-    java.util.List<int[]> sizeList() { return isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
+    java.util.List<int[]> sizeList() { return isR2v() ? java.util.Arrays.asList(R2v.PRESETS) : isLtx() ? java.util.Arrays.asList(Ltx.PRESETS) : isKlein() ? java.util.Arrays.asList(Klein.PRESETS) : isH3() ? java.util.Arrays.asList(H3.PRESETS) : isMage() ? Mage.presets(editBm != null) : java.util.Arrays.asList(isMoss() ? Moss.PRESETS : isQwen() ? Qwen.PRESETS : SIZES); }
     String mossSizeError(int w, int h) { return Moss.sizeError(w, h); }
 
     // ---- model state --------------------------------------------------------------------------
@@ -945,7 +967,8 @@ public class Main extends Base {
         b.setOnClickListener(l); return b;
     }
     void refreshBaseUi() {
-        if (stepsVal != null) { int st = steps(); stepsVal.setText(String.valueOf(st)); stepsVal.setTextColor(st == stepsDef() ? TXT : WARN); }   // an orange number: not the recipe of the model
+        if (stepsVal != null) { int st = steps(); stepsVal.setText(String.valueOf(st)); }
+        if (ltxFramesVal != null) { ltxFramesVal.setText(String.valueOf(vidFrames(ltxLf()))); ltxFpsVal.setText(String.valueOf(ltxFps())); }
         if (cfgVal != null) cfgVal.setText(cfgStr());
         if (cfgRow != null) cfgRow.setAlpha(base() ? 1f : 0.4f);   // a turbo model / turbo LoRA is distilled for CFG 1: the row stays usable but is dimmed
         if (samplerVal != null) samplerVal.setText(smp() + "  ▾");
@@ -998,7 +1021,7 @@ public class Main extends Base {
         final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(16), dp(14), dp(16), dp(10));
         final android.app.AlertDialog[] dlg = new android.app.AlertDialog[1];
         TextView title = text(L.s("Модель", "Model"), 20, TXT, true); title.setPadding(dp(2), 0, 0, dp(6)); col.addView(title);
-        final String[][] groups = {{"anima", "ANIMA"}, {"moss", "MOSS-IMAGE"}, {"qwen", "QWEN-IMAGE"}, {"mage", "MAGE-FLOW"}, {"h3", "MINIMAX-H3"}};
+        final String[][] groups = {{"anima", "ANIMA"}, {"moss", "MOSS-IMAGE"}, {"qwen", "QWEN-IMAGE"}, {"mage", "MAGE-FLOW"}, {"h3", "MINIMAX-H3"}, {"klein", "FLUX.3-KLEIN"}, {"ltx", "LTX-2.5 VIDEO"}, {"r2v", "MINIMAX-H3 REF2VA VIDEO"}};
         for (String[] g : groups) {
             boolean head = false; final java.util.Set<String> seen = new java.util.HashSet<>();
             for (final String id0 : ids) {
@@ -1031,7 +1054,7 @@ public class Main extends Base {
         dlg[0] = builder().setView(sv).create(); dlg[0].show();
         if (dlg[0].getWindow() != null) dlg[0].getWindow().setBackgroundDrawable(framed(20));
     }
-    static String modelGroup(String id) { return H3.is(id) ? "h3" : Moss.is(id) ? "moss" : Qwen.is(id) ? "qwen" : Mage.is(id) ? "mage" : id.endsWith("base") ? "base" : "turbo"; }
+    static String modelGroup(String id) { return R2v.is(id) ? "r2v" : Ltx.is(id) ? "ltx" : Klein.is(id) ? "klein" : H3.is(id) ? "h3" : Moss.is(id) ? "moss" : Qwen.is(id) ? "qwen" : Mage.is(id) ? "mage" : id.endsWith("base") ? "base" : "turbo"; }
     /** an Anima family = the turbo model and its base twin (id + "base") */
     static String famOf(String id) { return id.endsWith("base") ? id.substring(0, id.length() - 4) : id; }
     /** the variant to open for a family: the last one used, else turbo, else base */
@@ -1142,6 +1165,9 @@ public class Main extends Base {
             case "base": return L.s("20–30 шагов · CFG и негативный промпт", "20–30 steps · CFG and negative prompt");
             case "moss": return L.s("описания обычными предложениями, надписи", "plain-sentence prompts, text in pictures");
             case "qwen": return L.s("правка фото, до 3 картинок", "photo editing, up to 3 pictures");
+            case "r2v": return L.s("33B · 4 шага · видео по описанию и фото-референсу, без звука", "33B · 4 steps · video from a prompt and a reference photo, no sound");
+            case "ltx": return L.s("22B · 8 шагов · видео 17 кадров, без звука", "22B · 8 steps · 17-frame video, no sound");
+            case "klein": return L.s("5.6B · 16 шагов · фотореализм, текст на картинках", "5.6B · 16 steps · photorealism, text in pictures");
             case "h3": return L.s("33B · 6 шагов · картинки от 1 МП, минуты на картинку", "33B · 6 steps · pictures from 1 MP, minutes per picture");
             default: return L.s("4 шага · правка фото", "4 steps · photo editing");
         }
@@ -1167,6 +1193,46 @@ public class Main extends Base {
         if (genBtn != null && !busy) genBtn.setText(genLabel());
     }
 
+
+    // ---- video player on the main screen: play button over the finished video, pause button that fades out a second after play, full screen at the bottom right
+    VideoView mv; ImageView mvPlay, mvFs; final Runnable mvFade = () -> { if (mvPlay != null) mvPlay.animate().alpha(0f).setDuration(500).start(); };
+    void buildVideoOverlay() {
+        mv = new VideoView(this); mv.setVisibility(View.GONE); mv.setOnClickListener(v -> vidTap());
+        imgBox.addView(mv, new FrameLayout.LayoutParams(-1, -1, Gravity.CENTER));
+        mvPlay = circleBtn("ic_play", 76); mvPlay.setVisibility(View.GONE); mvPlay.setOnClickListener(v -> vidToggle());
+        imgBox.addView(mvPlay, new FrameLayout.LayoutParams(dp(76), dp(76), Gravity.CENTER));
+        mvFs = circleBtn("ic_fullscreen", 40); mvFs.setVisibility(View.GONE); mvFs.setOnClickListener(v -> {
+            File lf = lastFile; videoUi(lf);
+            if (lf != null) startActivityForResult(new Intent(this, Viewer.class).putExtra("p", new String[]{lf.getPath()}).putExtra("i", 0).putExtra("mode", Gallery.ALL).putExtra("play", true), Viewer.REQ);
+        });
+        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(dp(40), dp(40), Gravity.BOTTOM | Gravity.END); fp.setMargins(0, 0, dp(12), dp(12)); imgBox.addView(mvFs, fp);
+    }
+    /** f = the entry now shown (video: show the play button over its poster), null / a picture: no player */
+    void videoUi(File f) {
+        mv.removeCallbacks(mvFade); try { mv.stopPlayback(); } catch (Exception ignored) { }
+        mv.setVisibility(View.GONE); mvPlay.animate().cancel();
+        boolean vid = f != null && Gallery.videoOf(f) != null;
+        mvPlay.setVisibility(vid ? View.VISIBLE : View.GONE); mvFs.setVisibility(vid ? View.VISIBLE : View.GONE); mvPlay.setAlpha(1f);
+        setBtnIcon(mvPlay, "ic_play");
+        mvPath = vid ? Gallery.videoOf(f).getPath() : null;
+    }
+    String mvPath;
+    void vidToggle() {
+        if (mvPath == null) return;
+        mv.removeCallbacks(mvFade); mvPlay.animate().cancel(); mvPlay.setAlpha(1f);
+        if (mv.getVisibility() != View.VISIBLE) {
+            mv.setVisibility(View.VISIBLE); mv.setVideoPath(mvPath); mv.setOnPreparedListener(mp -> mp.setLooping(true));
+            mv.setOnErrorListener((mp, w, e) -> { Toast.makeText(this, L.s("Не удалось воспроизвести видео", "Cannot play the video"), Toast.LENGTH_SHORT).show(); videoUi(lastFile); return true; });
+            mv.start(); setBtnIcon(mvPlay, "ic_pause"); mv.postDelayed(mvFade, 1000);
+        } else if (mv.isPlaying()) { mv.pause(); setBtnIcon(mvPlay, "ic_play"); }
+        else { mv.start(); setBtnIcon(mvPlay, "ic_pause"); mv.postDelayed(mvFade, 1000); }
+    }
+    /** a tap on the video: shows the button again (it fades out after a second while playing) */
+    void vidTap() {
+        if (mvPath == null) return;
+        if (mv.getVisibility() != View.VISIBLE) { vidToggle(); return; }
+        mv.removeCallbacks(mvFade); mvPlay.animate().cancel(); mvPlay.setAlpha(1f); if (mv.isPlaying()) mv.postDelayed(mvFade, 1000);
+    }
     void updatePlaceholder() {
         if (placeholder == null || phSize == null) return;
         int cw = getResources().getDisplayMetrics().widthPixels - dp(40); double r = Math.max(0.5, Math.min(1.5, (double) resH / Math.max(1, resW)));   // the picture area takes the shape of the chosen size (the picture is fitted inside it)
@@ -1203,6 +1269,9 @@ public class Main extends Base {
     }
     String genLabel() {
         if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
+        if (isR2v()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", R2v.estimate(resW, resH, ltxLf(), editBm != null, steps()));
+        if (isLtx()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", Ltx.estimate(resW, resH, ltxLf(), steps()));
+        if (isKlein()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, Klein.estimate(resW, resH, steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", Klein.estimate(resW, resH, steps()));
         if (isH3()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, H3.estimate(resW, resH, h3Steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", H3.estimate(resW, resH, h3Steps()));
         if (isQwen()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, qwenEst() * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", qwenEst());
         long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * ((resW / 16) * (resH / 16)) / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1))) * count;
@@ -1218,19 +1287,24 @@ public class Main extends Base {
     }
 
     /** token limit of the prompt of the current model (0 = none): Anima keeps 512 text tokens, MOSS-Image and Qwen-Image text-to-image 480 (with their chat template) */
-    int tokLimit() { return isH3() ? 480 : isAnima() ? 512 : isMoss() ? 480 : isQwen() && editBm == null ? 480 : 0; }
+    int tokLimit() { return isR2v() ? 480 : isLtx() ? 400 : isKlein() || isH3() ? 480 : isAnima() ? 512 : isMoss() ? 480 : isQwen() && editBm == null ? 480 : 0; }
+    /** Anima, Qwen, H3 and Klein use the Qwen vocabulary (bundled; an installed Qwen pack is not required) */
+    void ensureTokQ() throws Exception {
+        if (tokQ != null) return;
+        File d = new File(getFilesDir(), "tok"); d.mkdirs();
+        for (String f : new String[]{"tok_vocab.txt", "tok_merges.txt", "tok_special.txt"}) {
+            File o = new File(d, f); if (o.exists()) continue;
+            try (java.io.InputStream in = getAssets().open("tok/" + f); java.io.FileOutputStream w = new java.io.FileOutputStream(o)) { byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) w.write(b, 0, n); }
+        }
+        tokQ = new QwenTok(d.getPath());
+    }
     /** tokens of `text` for the current model (the quality prefix counts for Anima); runs off the UI thread (the vocabulary takes a second to load) */
     int tokCount(String text) throws Exception {
         if (isMoss()) { if (tokM == null) tokM = new QwenTok(Moss.dir(getFilesDir()).getPath()); return tokM.encodePrompt(text).length; }
-        if (tokQ == null) {   // Anima and Qwen use the Qwen vocabulary (bundled; the installed Qwen pack is not required)
-            File d = new File(getFilesDir(), "tok"); d.mkdirs();
-            for (String f : new String[]{"tok_vocab.txt", "tok_merges.txt", "tok_special.txt"}) {
-                File o = new File(d, f); if (o.exists()) continue;
-                try (java.io.InputStream in = getAssets().open("tok/" + f); java.io.FileOutputStream w = new java.io.FileOutputStream(o)) { byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) w.write(b, 0, n); }
-            }
-            tokQ = new QwenTok(d.getPath());
-        }
-        return isH3() ? tokQ.encode(text.isEmpty() ? " " : text).length : isQwen() ? tokQ.encodeQwenImage(text).length : tokQ.encode(text).length + 1;   // Anima: + end token; H3: the prompt verbatim
+        ensureTokQ();
+        if (isR2v()) return tokQ.encode(text.isEmpty() ? " " : text).length;
+        if (isLtx()) { try { return tokG().encode(text.isEmpty() ? " " : text).length; } catch (Exception e) { return 0; } }
+        return isKlein() ? tokQ.encodeKlein(text.isEmpty() ? " " : text).length : isH3() ? tokQ.encode(text.isEmpty() ? " " : text).length : isQwen() ? tokQ.encodeQwenImage(text).length : tokQ.encode(text).length + 1;   // Anima: + end token; H3: the prompt verbatim
     }
     void updateTokens() {
         final int lim = tokLimit();
@@ -1263,11 +1337,11 @@ public class Main extends Base {
             if (loraBox != null) { loraBox.setVisibility(isMoss() && !moss8() && !customTurbo() ? View.VISIBLE : View.GONE); refreshLora(); }
             if (aloraBox != null) { aloraBox.setVisibility(isAnima() ? View.VISIBLE : View.GONE); refreshAnimaLoras(); }
             if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
-            if (editBox != null) { editBox.setVisibility(isQwen() || isMage() ? View.VISIBLE : View.GONE); refreshEdit(); }
+            if (editBox != null) { editBox.setVisibility(isQwen() || isMage() || isLtx() || isR2v() ? View.VISIBLE : View.GONE); refreshEdit(); }
             applyFamily(); updateTokens();
             state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена", "Loaded") : L.s("Выгружена", "Unloaded"));
             loadBtn.setText(isLoaded ? L.s("Выгрузить", "Unload") : L.s("Загрузить", "Load"));
-            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3());
+            loadBtn.setEnabled(!working && !busy && !model.isEmpty() && !isMoss() && !isQwen() && !isMage() && !isH3() && !isKlein() && !isLtx() && !isR2v());
             loadBtn.setVisibility(loadBtn.isEnabled() || (isLoaded && isAnima()) ? View.VISIBLE : View.GONE);
             boolean can = busy ? !cancelled : !working;   // while a picture is made the main button is "Stop"
             genBtn.setEnabled(can);
@@ -1278,7 +1352,7 @@ public class Main extends Base {
     }
 
     void refreshState() {
-        if (isMoss() || isQwen() || isMage() || isH3()) { setModelUi(false, false, ""); return; }
+        if (isMoss() || isQwen() || isMage() || isH3() || isKlein() || isLtx() || isR2v()) { setModelUi(false, false, ""); return; }
         ex.submit(() -> {
             String s = su("sh " + D + "/anima.sh status", true);
             if (s.startsWith("ERR") || s.isEmpty()) {
@@ -1303,7 +1377,7 @@ public class Main extends Base {
     }
 
     void toggleModel() {
-        if (isMoss() || isQwen() || isMage() || isH3()) return;   // nothing to preload
+        if (isMoss() || isQwen() || isMage() || isH3() || isKlein() || isLtx() || isR2v()) return;   // nothing to preload
         final boolean want = !loaded;
         setModelUi(loaded, true, want ? L.s("Загружаю модель…", "Loading the model…") : L.s("Выгружаю модель…", "Unloading the model…"));
         ex.submit(() -> {
@@ -1315,7 +1389,7 @@ public class Main extends Base {
 
     /** anima.sh ships in assets and is rewritten at every start (it is a script, so it may live in the app's data dir) */
     void installScript() {
-        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh", "h3.sh"})
+        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh", "h3.sh", "klein.sh", "ltx.sh", "r2v.sh", "up.sh"})
             try (InputStream in = getAssets().open(nm); FileOutputStream o = new FileOutputStream(new File(D, nm))) {
                 byte[] b = new byte[8192]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n);
             } catch (IOException e) { Toast.makeText(this, nm + ": " + e, Toast.LENGTH_LONG).show(); }
@@ -1367,7 +1441,10 @@ public class Main extends Base {
         if (!busy || cancelled) return;
         cancelled = true;
         setModelUi(loaded, false, "");
-        if (isH3()) ex2.submit(() -> ctlSh.run("sh " + D + "/h3.sh stop < /dev/null >/dev/null 2>&1"));
+        if (isKlein()) ex2.submit(() -> ctlSh.run("sh " + D + "/klein.sh stop < /dev/null >/dev/null 2>&1"));
+        if (isR2v()) ex2.submit(() -> ctlSh.run("sh " + D + "/r2v.sh stop < /dev/null >/dev/null 2>&1"));
+        if (isLtx()) ex2.submit(() -> ctlSh.run("sh " + D + "/ltx.sh stop < /dev/null >/dev/null 2>&1"));
+        else if (isH3()) ex2.submit(() -> ctlSh.run("sh " + D + "/h3.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isMage()) ex2.submit(() -> ctlSh.run("sh " + D + "/mage.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isQwen()) ex2.submit(() -> ctlSh.run("sh " + D + "/qwen.sh stop < /dev/null >/dev/null 2>&1"));
         else if (isMoss()) ex2.submit(() -> ctlSh.run("sh " + D + "/moss.sh stop < /dev/null >/dev/null 2>&1"));
@@ -1403,7 +1480,7 @@ public class Main extends Base {
         if (model.isEmpty()) { openModels(); return; }
         int cw = 0, ch = 0;
         try { cw = Integer.parseInt(wEdit.getText().toString().trim()); ch = Integer.parseInt(hEdit.getText().toString().trim()); } catch (NumberFormatException e) { }
-        String bad = isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
+        String bad = isR2v() ? R2v.sizeError(cw, ch, ltxLf()) : isLtx() ? Ltx.sizeError(cw, ch, ltxLf()) : isKlein() ? Klein.sizeError(cw, ch) : isH3() ? H3.sizeError(cw, ch) : isMoss() ? mossSizeError(cw, ch) : isMage() ? Mage.sizeError(cw, ch) : isQwen() ? Qwen.sizeError(cw, ch) : sizeError(cw, ch);
         if (bad != null) { Toast.makeText(this, bad, Toast.LENGTH_LONG).show(); return; }
         if (cw != resW || ch != resH) setRes(cw, ch);
         final String pr = clean(prompt.getText().toString()).trim();
@@ -1445,7 +1522,7 @@ public class Main extends Base {
                 final Bitmap bm = BitmapFactory.decodeFile(f.getPath());
                 lastBm = bm;
                 ui.post(() -> {
-                    lastFile = f; img.setImageBitmap(bm); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); img.setAlpha(0f); img.animate().alpha(1f).setDuration(250).start();
+                    lastFile = f; videoUi(f); fitBox(bm); img.setImageBitmap(bm); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); img.setAlpha(0f); img.animate().alpha(1f).setDuration(250).start();
                     setFavIcon(false);
                     for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) x.setVisibility(View.VISIBLE);
                     final ScrollView svv = (ScrollView) imgBox.getParent().getParent(); svv.post(() -> svv.smoothScrollTo(0, 0));   // after the image has been laid out
@@ -1464,7 +1541,7 @@ public class Main extends Base {
                 bar.setVisibility(View.GONE);
                 if (!okAny) {   // a preview may still be on screen: back to the last real picture (or the placeholder)
                     Bitmap prev = lastFile != null ? BitmapFactory.decodeFile(lastFile.getPath()) : null;
-                    if (prev != null) img.setImageBitmap(prev); else { img.setVisibility(View.GONE); placeholder.setVisibility(View.VISIBLE); }
+                    if (prev != null) { fitBox(prev); img.setImageBitmap(prev); } else { img.setVisibility(View.GONE); placeholder.setVisibility(View.VISIBLE); }
                 }
                 if (oom) { status.setText(L.s("Остановлено: не хватило памяти", "Stopped: out of memory")); memWarning(); }
                 else if (wasCancelled) status.setText(L.s("Остановлено", "Stopped"));
@@ -1478,6 +1555,9 @@ public class Main extends Base {
 
     /** one picture: loads the model if needed, runs anima.sh, stores the PNG (with the settings inside) in the history; null on failure or Stop */
     File runOne(String pr, String seedS, int w, int h, long t0) {
+        if (isR2v()) return runOneR2v(pr, seedS, w, h, t0);
+        if (isLtx()) return runOneLtx(pr, seedS, w, h, t0);
+        if (isKlein()) return runOneKlein(pr, seedS, w, h, t0);
         if (isH3()) return runOneH3(pr, seedS, w, h, t0);
         if (isMage()) return runOneMage(pr, seedS, w, h, t0);
         if (isQwen()) return runOneQwen(pr, seedS, w, h, t0);
@@ -1618,6 +1698,119 @@ public class Main extends Base {
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/mage/mage.log)", "Generation failed: %s (log files/mage/mage.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }
 
+    /** one FLUX.3 Image Klein picture: tokenise here, text encoder + DiT + VAE on the NPU through klein.sh (log files/klein/klein.log) */
+    File runOneKlein(String pr, String seedS, int w, int h, long t0) {
+        final File home = getFilesDir(), M = Klein.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final int STEPS = steps();
+        setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
+        final int nt;
+        try { ensureTokQ(); nt = Klein.writeIds(tokQ, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
+        if ((w / 16) * (h / 16) + nt > Klein.MAX_KEYS) { ui.post(() -> Toast.makeText(this, L.s("Описание слишком длинное для этого размера: сократите его или выберите размер поменьше", "The prompt is too long for this size: shorten it or pick a smaller size"), Toast.LENGTH_LONG).show()); return null; }
+        final boolean[] done = {false}; final Preview pv = Preview.load(this, "klein"); final File pvf = new File(M, "prev.bin"); pvf.delete();
+        Thread poll = new Thread(() -> {
+            while (!done[0]) {
+                try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                if (pv != null) showPreview(pv.poll(pvf));
+                String s = su("echo $(grep -c '^te:' " + M + "/klein.log) $(grep -c '^step' " + M + "/klein.log) $(grep -c '^vaetile' " + M + "/klein.log)", true);
+                try {
+                    String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), st = Integer.parseInt(a[1]), va = Integer.parseInt(a[2]);
+                    if (va > 0) setProgressUi(97, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (st >= STEPS) setProgressUi(93, L.s("Декодирование…", "Decoding…"), t0);
+                    else if (te > 0) setProgressUi(10 + 82 * st / STEPS, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, STEPS), STEPS), t0);
+                    else setProgressUi(6, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                } catch (Exception ignored) { }
+            }
+        });
+        poll.start();
+        su("rm -f " + q(raw.getPath()) + "; KLEIN_PREVIEW=" + q(new File(M, "prev.bin").getPath()) + " KM=" + q(M.getPath()) + " sh " + D + "/klein.sh " + q(ids.getPath()) + " " + w + " " + h + " " + seedS + " " + STEPS + " " + q(raw.getPath()) + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        done[0] = true;
+        try { poll.join(); } catch (InterruptedException ignored) { }
+        if (cancelled) return null;
+        try {
+            byte[] png = Moss.png(raw, w, h); raw.delete();
+            JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/klein/klein.log)", "Generation failed: %s (log files/klein/klein.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
+    }
+
+
+    GemmaTok gemmaTok; GemmaTok tokG() throws Exception { if (gemmaTok == null) gemmaTok = new GemmaTok(new File(Ltx.dir(getFilesDir()), "tok.bin")); return gemmaTok; }
+    /** one LTX-2.5 video (17 frames, no sound): tokenise here, text encoder + 48-block DiT (8 steps) + VAE on the NPU through ltx.sh (log files/ltx/ltx.log); the gallery entry is the middle frame, the MP4 lies beside it ("video" in the metadata) */
+    File runOneLtx(String pr, String seedS, int w, int h, long t0) {
+        final File home = getFilesDir(), M = Ltx.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "vid.f32"); final int hl = h / 32, wl = w / 32, lf = ltxLf(), fps = ltxFps();
+        setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
+        try { Ltx.writeIds(tokG(), pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
+        final boolean[] done = {false}; final int nst = steps();
+        Thread poll = new Thread(() -> {
+            while (!done[0]) {
+                try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                String s = su("echo $(grep -c '^te:' " + M + "/ltx.log) $(grep -c '^step' " + M + "/ltx.log) $(grep -c '^lvae:' " + M + "/ltx.log)", true);
+                try {
+                    String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), st = Integer.parseInt(a[1]), va = Integer.parseInt(a[2]);
+                    if (va > 0) setProgressUi(96, L.s("Декодирование видео…", "Decoding the video…"), t0);
+                    else if (st >= nst) setProgressUi(92, L.s("Декодирование видео…", "Decoding the video…"), t0);
+                    else if (te > 0) setProgressUi(14 + 78 * st / nst, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, nst), nst), t0);
+                    else setProgressUi(6, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                } catch (Exception ignored) { }
+            }
+        });
+        poll.start();
+        final Bitmap photo = editBm; final File img = new File(M, "img.f32"); String imgArg = "";
+        if (photo != null) {
+            if (!Ltx.encoderInstalled(home)) { ui.post(() -> Toast.makeText(this, L.s("Нет файла кодировщика картинки (files/ltx/vae/etile.bin): видео из картинки недоступно", "The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable"), Toast.LENGTH_LONG).show()); return null; }
+            try { Ltx.writeImage(photo, w, h, img); imgArg = " " + q(img.getPath()); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "image: " + e, Toast.LENGTH_LONG).show()); return null; }
+        }
+        su("rm -f " + q(raw.getPath()) + "; LM=" + q(M.getPath()) + " STEPS=" + steps() + " sh " + D + "/ltx.sh " + q(ids.getPath()) + " " + lf + " " + hl + " " + wl + " " + seedS + " " + q(raw.getPath()) + imgArg + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        img.delete();
+        done[0] = true;
+        try { poll.join(); } catch (InterruptedException ignored) { }
+        if (cancelled) return null;
+        try {
+            setProgressUi(98, L.s("Сохранение видео…", "Saving the video…"), t0);
+            final String stamp = String.valueOf(System.currentTimeMillis()); final File mp4 = new File(Gallery.dir(this), stamp + ".mp4");
+            byte[] png = VideoOut.encode(raw, Ltx.frames(lf), w, h, fps, mp4); raw.delete();
+            JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("video", mp4.getName()).put("frames", Ltx.frames(lf)).put("fps", fps).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            return Gallery.save(this, png, meta);
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/ltx/ltx.log)", "Generation failed: %s (log files/ltx/ltx.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
+    }
+
+    /** one MiniMax-H3 Ref2VA video (text and an optional reference photo): tokenise here, the image encoder, the text encoder, the 50-block DiT (4 steps, turbo LoRA) and the video VAE run on the NPU through r2v.sh (log files/r2v/r2v.log); the gallery entry is the middle frame, the MP4 lies beside it */
+    File runOneR2v(String pr, String seedS, int w, int h, long t0) {
+        final File home = getFilesDir(), M = R2v.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "vid.f32"); final int lh = h / 16, lw = w / 16, T = ltxLf(), fps = ltxFps(), frames = R2v.frames(T), nc = (T - 2) / 5;
+        setProgressUi(3, L.s("Токенизация…", "Tokenising…"), t0);
+        try { ensureTokQ(); R2v.writeIds(tokQ, pr, ids); } catch (Exception e) { ui.post(() -> Toast.makeText(this, "tokenizer: " + e, Toast.LENGTH_LONG).show()); return null; }
+        final boolean[] done = {false}; final int nst = steps();
+        Thread poll = new Thread(() -> {
+            while (!done[0]) {
+                try { Thread.sleep(700); } catch (InterruptedException e) { return; }
+                String s = su("echo $(grep -c '^text encoder' " + M + "/r2v.log) $(grep -c '^step' " + M + "/r2v.log) $(grep -c '^chunk .* done' " + M + "/r2v.log) $(grep -c '^renc:' " + M + "/r2v.log)", true);
+                try {
+                    String[] a = s.split("\\s+"); int te = Integer.parseInt(a[0]), st = Integer.parseInt(a[1]), ch = Integer.parseInt(a[2]);
+                    if (ch > 0 || st >= nst) setProgressUi(80 + 18 * Math.min(ch + 1, nc) / Math.max(nc, 1), L.f("Декодирование видео %d/%d…", "Decoding the video %d/%d…", Math.min(ch + 1, nc), nc), t0);
+                    else if (te > 0) setProgressUi(10 + 70 * st / nst, L.f("Шаг %d/%d", "Step %d/%d", Math.min(st + 1, nst), nst), t0);
+                    else setProgressUi(6, L.s("Кодирование текста на NPU…", "Encoding the text on the NPU…"), t0);
+                } catch (Exception ignored) { }
+            }
+        });
+        poll.start();
+        final Bitmap photo = editBm; final File img = new File(M, "ref_in.f32"); String imgArg = "";
+        if (photo != null) {
+            if (!R2v.encoderInstalled(home)) { done[0] = true; ui.post(() -> Toast.makeText(this, L.s("Нет файла кодировщика картинки (files/r2v/enc/henc.bin): референс-фото недоступно", "The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable"), Toast.LENGTH_LONG).show()); return null; }
+            try { R2v.writeImage(photo, w, h, img); imgArg = " " + q(img.getPath()) + " " + h + " " + w; } catch (Exception e) { done[0] = true; ui.post(() -> Toast.makeText(this, "image: " + e, Toast.LENGTH_LONG).show()); return null; }
+        }
+        su("rm -f " + q(raw.getPath()) + "; STEPS=" + steps() + " LM=" + q(M.getPath()) + " TE=" + q(new File(H3.dir(home), "te").getPath()) + " sh " + D + "/r2v.sh " + q(ids.getPath()) + " " + T + " " + lh + " " + lw + " " + seedS + " " + q(raw.getPath()) + imgArg + " < /dev/null >> " + D + "/gen.log 2>&1", false);
+        img.delete();
+        done[0] = true;
+        try { poll.join(); } catch (InterruptedException ignored) { }
+        if (cancelled) return null;
+        try {
+            setProgressUi(99, L.s("Сохранение видео…", "Saving the video…"), t0);
+            final String stamp = String.valueOf(System.currentTimeMillis()); final File mp4 = new File(Gallery.dir(this), stamp + ".mp4");
+            byte[] png = VideoOut.encode(raw, frames, w, h, fps, mp4); raw.delete();
+            JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("video", mp4.getName()).put("frames", frames).put("fps", fps).put("reference", photo != null).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            return Gallery.save(this, png, meta);
+        } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/r2v/r2v.log)", "Generation failed: %s (log files/r2v/r2v.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
+    }
+
     /** one MiniMax-H3-Image picture: tokenise here, text encoder + DiT + VAE on the NPU through h3.sh (log files/h3/h3.log) */
     File runOneH3(String pr, String seedS, int w, int h, long t0) {
         final File home = getFilesDir(), M = H3.dir(home), ids = new File(M, "ids.i32"), raw = new File(M, "img.f32"); final boolean lora = h3Lora(); final int STEPS = h3Steps();
@@ -1652,9 +1845,15 @@ public class Main extends Base {
     }
 
     /** shows the preview of the picture being made in place of the last result (the final picture replaces it) */
+    /** the picture area takes the shape of the picture it shows (a taller one than the screen is fitted into 70 % of the screen height) */
+    void fitBox(Bitmap b) {
+        if (b == null || b.getWidth() == 0) return;
+        int cw = getResources().getDisplayMetrics().widthPixels - dp(40), mh = (int) (getResources().getDisplayMetrics().heightPixels * 0.7), hh = Math.min(mh, (int) ((long) cw * b.getHeight() / b.getWidth()));
+        ViewGroup.LayoutParams lp = imgBox.getLayoutParams(); if (lp != null && lp.height != hh) { lp.height = hh; imgBox.setLayoutParams(lp); }
+    }
     void showPreview(Bitmap pb) {
         if (pb == null) return;
-        ui.post(() -> { if (!busy) return; img.setImageBitmap(pb); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); });
+        ui.post(() -> { if (!busy) return; videoUi(null); fitBox(pb); img.setImageBitmap(pb); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); });
     }
 
     /** Lab: a turbo LoRA file on the plain pack: overlays (made now, cached by strength) + its sigma table */
@@ -1793,6 +1992,7 @@ public class Main extends Base {
     }
     void updateChips() {
         if (baseRow != null) baseRow.setVisibility(isAnima() ? View.VISIBLE : View.GONE);
+        if (ltxRow != null) ltxRow.setVisibility(isLtx() || isR2v() ? View.VISIBLE : View.GONE);
         if (stepsRow != null) stepsRow.setVisibility(model.isEmpty() ? View.GONE : View.VISIBLE);
         if (countVal != null) countVal.setText(String.valueOf(count));
         if (countBadge != null) { countBadge.setText("×" + count); countBadge.setTextColor(count > 1 ? TXT : DIM); }

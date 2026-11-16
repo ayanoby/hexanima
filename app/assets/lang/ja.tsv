@@ -468,3 +468,68 @@ Loaded	読み込み済み
 Unloaded	未読み込み
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	このモデルは MiniMax-H3-Image Community License Agreement のもとで配布されています(ライセンス本文はファイルと一緒にダウンロードされます)。米国、EU、英国、韓国では使用できず、出力を他の AI モデルの改良に使うこともできません。サイズ:%s GB。ダウンロードしますか?
 Accept and download	同意してダウンロード
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	1フレームあたりのトークン数（%d）は32で割り切れる必要があります（例：512×512、1024×576、768×768）
+Video too large: reduce the size or the frame count	動画が大きすぎます：サイズまたはフレーム数を減らしてください
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	パッチ数（%d）は32で割り切れる必要があります（例：512×512、768×1024、1024×1024）
+The picture is too large to upscale	画像が大きすぎて拡大できません
+Too large for x4: choose x2	×4には大きすぎます：×2を選んでください
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	トークン数（%d）は32で割り切れる必要があります（例：512×384、384×512、512×512）
+Cannot play the video	動画を再生できません
+An upscale is already running	拡大処理がすでに実行中です
+×4 · photo	×4 · 写真
+×4 · anime	×4 · アニメ
+×2 · photo	×2 · 写真
+×2 · anime	×2 · アニメ
+Upscale (Real-ESRGAN, NPU)	拡大（Real-ESRGAN、NPU）
+Download needed	ダウンロードが必要です
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	拡大用ネットワーク（%s、%d MB）はHugging Faceから一度だけダウンロードされます。Real-ESRGANのライセンス：BSD-3。
+anime	アニメ
+photo	写真
+Downloading…	ダウンロード中…
+Download failed: %s	ダウンロードに失敗しました：%s
+Upscaling…	拡大中…
+Upscale failed: %s	拡大に失敗しました：%s
+Done: a new picture in the gallery	完了：ギャラリーに新しい画像があります
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%dフレーム（%d fpsで%.1f秒）
+Frame rate	フレームレート
+Frames	フレーム数
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	モデルが行うノイズ除去のステップ数です。ステップが多いほど細部は細かくなりますが、画像の生成は遅くなり、効果もある程度までです。モデルの推奨値を使ってください：高速モデル（Turbo、Lightning）は約4〜8ステップ、通常のモデルは20〜30ステップです。
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	クリップの長さ（リストはモデルによって異なります：LTXは17〜97フレーム、Ref2VAは22〜90）。長いクリップほど各ステップが遅くなり（アテンションはフレーム数とともに増えます）、デコードにも時間がかかり、メモリに収まる画像サイズも小さくなります。
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	完成したMP4の毎秒フレーム数です。変わるのは再生速度だけです：モデルは24 fpsで学習されているため、24〜25が最も自然に見え、それより低い値はスローモーションになります。
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	写真は参照です：写真の中の人物、動物、物が動画に登場します。プロンプトで何が起こるか、カメラがどう動くかを書いてください。周囲の様子はプロンプトから取られます。
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	参照写真を選んでください（任意）：写真の被写体が動画に登場します。選ばない場合、動画はプロンプトだけから作られます。
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	写真が動画の最初のフレームになります。プロンプトで何が起こるか、カメラがどう動くかを書いてください。
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	動かしたい写真を選んでください（画像から動画）。選ばない場合、動画はプロンプトだけから作られます。
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4ステップ · プロンプトと参照写真からの動画、音声なし
+22B · 8 steps · 17-frame video, no sound	22B · 8ステップ · 17フレームの動画、音声なし
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16ステップ · フォトリアリズム、画像内の文字
+Create video  ·  ~%d s	動画を作成  ·  約%d秒
+Generation failed: %s (log files/klein/klein.log)	生成に失敗しました：%s（ログ files/klein/klein.log）
+Decoding the video…	動画をデコード中…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	画像エンコーダのファイル（files/ltx/vae/etile.bin）がありません：画像から動画は利用できません
+Saving the video…	動画を保存中…
+Generation failed: %s (log files/ltx/ltx.log)	生成に失敗しました：%s（ログ files/ltx/ltx.log）
+Decoding the video %d/%d…	動画をデコード中 %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	画像エンコーダのファイル（files/r2v/enc/henc.bin）がありません：参照写真は利用できません
+Generation failed: %s (log files/r2v/r2v.log)	生成に失敗しました：%s（ログ files/r2v/r2v.log）
+Upscaler	拡大ツール
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	完成した画像をNPUで拡大します。ボタンは画像ビューアにあります。BSD-3  ·  Xintao Wangほか
+Anime	アニメ
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	このモデルはFLUX Kommunity Licenseのもとで配布されています（Black Forest Labs。ライセンス本文はファイルと一緒にダウンロードされます）。利用は非商用に限られ（商用利用はライセンスの条件による場合のみ）、出力を他のAIモデルの学習や改良に使うことはできません。サイズ：%s GB。ダウンロードしますか？
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	このモデルはLTX-2 Community License Agreementのもとで配布されています（Lightricks。ライセンス本文はファイルと一緒にダウンロードされます）。年間収益が1,000万米ドル未満の組織は無料で、ライセンスの利用制限が適用されます。Gemmaテキストエンコーダ（Google）はGemmaの条件のもとで使用されます。サイズ：%s GB。ダウンロードしますか？
+FLUX.3 Klein notices (changes made)	FLUX.3 Kleinの告知（加えた変更）
+LTX-2.5 notices (changes made)	LTX-2.5の告知（加えた変更）
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA（33B）は、プロンプトと、必要に応じて参照写真から動画を作ります。写真の中の人物、動物、物が動画に登場し、周囲の様子と動きはプロンプトから取られます。22〜90フレーム、4ステップ（蒸留したturbo LoRA、CFGなし）、音声なし。ファイル（files/r2v）は手動で配置し、テキストエンコーダはMiniMax-H3-Imageと共有します（files/h3/te）。MiniMax H3 Communityライセンス：米国、EU、英国、韓国では使用できません。
+Ref2VA sizes	Ref2VAのサイズ
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	両辺は32の倍数で、256以上です。1フレームあたりのトークン数（幅/32 × 高さ/32）は32で割り切れる必要があります（例：512×512、768×512、1024×576、768×768、1024×1024）。合計で最大16000トークン（潜在フレーム数 × 1フレームあたりのトークン数）：1024×576で56フレームは約20分、512×512で22フレームは約5分です。クリップの長さとサイズによって、時間はほぼ二乗で変わります。
+LTX sizes	LTXのサイズ
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	両辺は32の倍数で、256以上です。トークン数 3 × （幅/32）× （高さ/32）は32で割り切れる必要があります（例：512×384、384×512、512×512、768×512、768×768）。プロンプトは英語で詳しく書いてください：誰が、何をしているか、光、カメラ。
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Kleinのサイズ
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	両辺は16の倍数で、パッチ数（幅/16 × 高さ/16）は32で割り切れ、最大6144（例：1536×1024）、各辺256以上です。プロンプトは詳しく、一続きの段落として書いてください。
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5（Lightricks、22B、蒸留版）は、プロンプトから短い動画を作ります：17〜97フレーム（既定は17）、MP4のフレームレートは自由に選べ、音声なし。Gemmaテキストエンコーダ、48個のDiTブロック（8ステップ、CFGなし）、VAEはNPUで動作し、1クリップ全体で約1分半かかります。このモデルはダウンロードカタログにあります（約31 GB、LTX-2 Community License）。結果は、履歴のプレビューフレームの隣にあるMP4です（▶ボタン）。
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein（Black Forest Labs、5.6B）は、普通の文章で書かれた長いプロンプトに従い、文字も描けるフォトリアルなモデルです。16ステップ、CFGなし：512×512で約1分、1024×1024で3〜4分。テキストエンコーダ、トランスフォーマー、デコーダはNPUで動作します。このモデルはダウンロードカタログにあります（約9 GB）。FLUX Kommunityライセンス：非商用利用のみ。

@@ -468,3 +468,68 @@ Loaded	Dimuat
 Unloaded	Tidak dimuat
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Model ini didistribusikan di bawah MiniMax-H3-Image Community License Agreement (teks lisensi diunduh bersama file). Tidak boleh digunakan di Amerika Serikat, Uni Eropa, Inggris, atau Korea Selatan, dan hasilnya tidak boleh dipakai untuk meningkatkan model AI lain. Ukuran: %s GB. Unduh?
 Accept and download	Terima dan unduh
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	Token per bingkai (%d) harus habis dibagi 32, mis. 512×512, 1024×576, 768×768
+Video too large: reduce the size or the frame count	Video terlalu besar: kurangi ukuran atau jumlah bingkai
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Jumlah patch (%d) harus habis dibagi 32, mis. 512×512, 768×1024, 1024×1024
+The picture is too large to upscale	Gambar terlalu besar untuk diperbesar
+Too large for x4: choose x2	Terlalu besar untuk ×4: pilih ×2
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	Jumlah token (%d) harus habis dibagi 32, mis. 512×384, 384×512, 512×512
+Cannot play the video	Video tidak dapat diputar
+An upscale is already running	Pembesaran sedang berjalan
+×4 · photo	×4 · foto
+×4 · anime	×4 · anime
+×2 · photo	×2 · foto
+×2 · anime	×2 · anime
+Upscale (Real-ESRGAN, NPU)	Perbesar (Real-ESRGAN, NPU)
+Download needed	Perlu unduhan
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	Jaringan pembesar (%s, %d MB) diunduh sekali dari Hugging Face. Lisensi Real-ESRGAN: BSD-3.
+anime	anime
+photo	foto
+Downloading…	Mengunduh…
+Download failed: %s	Unduhan gagal: %s
+Upscaling…	Memperbesar…
+Upscale failed: %s	Pembesaran gagal: %s
+Done: a new picture in the gallery	Selesai: gambar baru di galeri
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%d bingkai (%.1f dtk pada %d fps)
+Frame rate	Laju bingkai
+Frames	Bingkai
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	Berapa langkah penghilangan derau yang dilakukan model. Lebih banyak langkah: detail lebih halus, tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan jumlah yang disarankan untuk model: model cepat (Turbo, Lightning) butuh sekitar 4–8 langkah, model biasa 20–30.
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	Panjang klip (daftar bergantung pada model: LTX 17–97 bingkai, Ref2VA 22–90). Klip yang lebih panjang membuat setiap langkah lebih lambat (atensi tumbuh seiring jumlah bingkai) dan dekode lebih lama, serta membatasi ukuran gambar yang muat di memori.
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	Bingkai per detik pada MP4 jadi. Ini hanya mengubah kecepatan putar: model dilatih pada 24 fps, jadi 24–25 terlihat paling alami dan nilai lebih rendah memberi gerakan lambat.
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	Foto adalah referensi: orang, hewan, atau benda di dalamnya muncul di video; tulis di deskripsi apa yang terjadi dan bagaimana kamera bergerak. Latarnya diambil dari deskripsi.
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	Pilih foto referensi (opsional): subjek foto muncul di video. Tanpa foto, video dibuat hanya dari deskripsi.
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	Foto menjadi bingkai pertama video; tulis di deskripsi apa yang terjadi dan bagaimana kamera bergerak.
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	Pilih foto untuk dihidupkan (gambar ke video). Tanpa foto, video dibuat hanya dari deskripsi.
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 langkah · video dari deskripsi dan foto referensi, tanpa suara
+22B · 8 steps · 17-frame video, no sound	22B · 8 langkah · video 17 bingkai, tanpa suara
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 langkah · fotorealisme, teks dalam gambar
+Create video  ·  ~%d s	Buat video  ·  ~%d dtk
+Generation failed: %s (log files/klein/klein.log)	Pembuatan gagal: %s (log files/klein/klein.log)
+Decoding the video…	Mendekode video…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	Berkas encoder gambar (files/ltx/vae/etile.bin) tidak ada: gambar ke video tidak tersedia
+Saving the video…	Menyimpan video…
+Generation failed: %s (log files/ltx/ltx.log)	Pembuatan gagal: %s (log files/ltx/ltx.log)
+Decoding the video %d/%d…	Mendekode video %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	Berkas encoder gambar (files/r2v/enc/henc.bin) tidak ada: foto referensi tidak tersedia
+Generation failed: %s (log files/r2v/r2v.log)	Pembuatan gagal: %s (log files/r2v/r2v.log)
+Upscaler	Pembesar
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	Memperbesar gambar yang sudah jadi di NPU. Tombolnya ada di penampil gambar. BSD-3  ·  Xintao Wang et al.
+Anime	Anime
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	Model ini didistribusikan di bawah FLUX Kommunity License (Black Forest Labs; teks lisensi diunduh bersama berkas). Penggunaannya nonkomersial (komersial hanya sesuai ketentuan lisensi) dan hasilnya tidak boleh dipakai untuk melatih atau meningkatkan model AI lain. Ukuran: %s GB. Unduh?
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	Model ini didistribusikan di bawah LTX-2 Community License Agreement (Lightricks; teks lisensi diunduh bersama berkas): gratis untuk organisasi dengan pendapatan tahunan di bawah 10 juta USD, dan batasan penggunaan dalam lisensi berlaku. Encoder teks Gemma (Google) dipakai berdasarkan ketentuan Gemma. Ukuran: %s GB. Unduh?
+FLUX.3 Klein notices (changes made)	Pemberitahuan FLUX.3 Klein (perubahan yang dibuat)
+LTX-2.5 notices (changes made)	Pemberitahuan LTX-2.5 (perubahan yang dibuat)
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) membuat video dari deskripsi dan, secara opsional, foto referensi: orang, hewan, atau benda di foto muncul di video, sedangkan latar dan gerakan berasal dari deskripsi. 22–90 bingkai, 4 langkah (LoRA turbo hasil distilasi, tanpa CFG), tanpa suara. Berkasnya (files/r2v) dipasang manual, encoder teks dipakai bersama MiniMax-H3-Image (files/h3/te). Lisensi MiniMax H3 Community: tidak untuk AS, UE, Inggris, dan Korea.
+Ref2VA sizes	Ukuran Ref2VA
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	Kedua sisi kelipatan 32, minimal 256; token per bingkai (lebar/32 × tinggi/32) harus habis dibagi 32, mis. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Paling banyak 16000 token total (bingkai laten × token per bingkai): 1024×576 menghasilkan 56 bingkai dalam ~20 menit, 512×512 menghasilkan 22 bingkai dalam ~5 menit. Panjang dan ukuran klip mengubah waktu hampir secara kuadratik.
+LTX sizes	Ukuran LTX
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Kedua sisi kelipatan 32, minimal 256; jumlah token 3 × (lebar/32) × (tinggi/32) harus habis dibagi 32, misalnya 512×384, 384×512, 512×512, 768×512, 768×768. Tulis deskripsi secara rinci dan dalam bahasa Inggris: siapa, apa yang dilakukan, cahaya, kamera.
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Ukuran Klein
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Kedua sisi kelipatan 16, jumlah patch (lebar/16 × tinggi/16) habis dibagi 32 dan paling banyak 6144 (misalnya 1536×1024), minimal 256 per sisi. Tulis deskripsi secara rinci, sebagai satu paragraf yang utuh.
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, hasil distilasi) membuat video pendek dari deskripsi: 17–97 bingkai (bawaan 17), laju bingkai MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memerlukan sekitar satu setengah menit. Model ini ada di katalog unduhan (sekitar 31 GB; LTX-2 Community License). Hasilnya berupa MP4 di samping bingkai pratinjau di riwayat (tombol ▶).
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein (Black Forest Labs, 5.6B) adalah model fotorealistis yang mengikuti deskripsi panjang yang ditulis dengan kalimat biasa dan dapat menggambar teks. 16 langkah, tanpa CFG: sekitar satu menit untuk 512×512, 3–4 menit untuk 1024×1024. Encoder teks, transformer, dan dekoder berjalan di NPU. Model ini ada di katalog unduhan (sekitar 9 GB). Lisensi FLUX Kommunity: hanya untuk penggunaan nonkomersial.

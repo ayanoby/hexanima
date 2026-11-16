@@ -207,7 +207,7 @@ public class History extends Base {
 
     /** short model tag for the corner of a tile */
     static String shortModel(String n) {
-        if (n.contains("MOSS")) return "MOSS"; if (n.contains("Qwen")) return n.contains("8 step") ? "Qwen 8" : "Qwen"; if (n.contains("Mage")) return "Mage";
+        if (n.contains("MOSS")) return "MOSS"; if (n.contains("Qwen")) return n.contains("8 step") ? "Qwen 8" : "Qwen"; if (n.contains("Mage")) return "Mage"; if (n.contains("Klein")) return "Klein"; if (n.contains("LTX")) return "LTX";
         String s = n.contains("RealSkin") ? "Real" : n.contains("Harem") ? "Harem" : "";
         if (s.isEmpty()) return n.length() > 8 ? n.substring(0, 8) : n;
         return s + (n.contains("2.9B") ? " 2.9B" : n.contains("2B") || n.contains("1.3") || n.contains("LH3D") ? " 2B" : "") + (n.contains("(base)") ? " base" : "");
@@ -236,6 +236,9 @@ public class History extends Base {
         if (!mname.isEmpty()) {
             TextView badge = text(shortModel(mname), 10, 0xFFFFFFFF, true); badge.setBackground(bg(0x99000000, 8)); badge.setPadding(dp(6), dp(2), dp(6), dp(2));
             FrameLayout.LayoutParams bp = new FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.START); bp.setMargins(dp(6), 0, 0, dp(6)); fl.addView(badge, bp);
+        }
+        if (Gallery.videoOf(f) != null) {   // a video entry: a play mark in the middle (not a button: a tap opens the entry like any other)
+            android.widget.ImageView pm = circleBtn("ic_play", 40); pm.setClickable(false); fl.addView(pm, new FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER));
         }
         float asp = 1.3f; int pw = mo.optInt("w"), ph2 = mo.optInt("h"); if (pw > 0 && ph2 > 0) asp = Math.max(0.7f, Math.min(1.6f, ph2 / (float) pw));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(cell - dp(6), (int) ((cell - dp(6)) * asp)); lp.setMargins(dp(3), dp(3), dp(3), dp(3));

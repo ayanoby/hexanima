@@ -6,20 +6,17 @@ import android.os.Build;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Can this phone run the models? only Hexagon V69 (Snapdragon 8 Gen 1 / 8+ Gen 1) is supported; V79 (Snapdragon 8 Elite) support is switched off, see V79_ENABLED. */
+/** Can this phone run the models? only Hexagon V69 (Snapdragon 8 Gen 1 / 8+ Gen 1) is supported. */
 final class Compat {
     static String soc() { return Build.VERSION.SDK_INT >= 31 ? Build.SOC_MODEL : Build.HARDWARE; }
     /** Hexagon generation of the NPU by SoC model ("" = unknown): the QNN contexts (text encoder, VAE) are compiled per generation */
-    /** Snapdragon 8 Elite (V79) was withdrawn in 1.2.2: the HMX is silently unavailable after an interrupted run and large sizes come out as noise there (see PITFALLS.md); the code stays for a later port */
-    static final boolean V79_ENABLED = false;
     static String dspArch() {
         String s = soc();
         if (s.equals("SM8475") || s.equals("SM8450")) return "v69";
-        if (V79_ENABLED && s.equals("SM8750")) return "v79";
         return "";
     }
     static boolean chipOk() { return !dspArch().isEmpty(); }
-    static String archLabel() { return "Hexagon " + dspArch().toUpperCase() + (dspArch().equals("v79") ? L.s(", экспериментально", ", experimental") : ""); }
+    static String archLabel() { return "Hexagon " + dspArch().toUpperCase(); }
     static boolean chipAllowed(Context c) { return chipOk() || c.getSharedPreferences("anima", 0).getBoolean("chip_override", false); }
     static void allowChip(Context c) { c.getSharedPreferences("anima", 0).edit().putBoolean("chip_override", true).apply(); }
 

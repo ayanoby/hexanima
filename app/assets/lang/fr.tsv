@@ -468,3 +468,68 @@ Loaded	Chargé
 Unloaded	Déchargé
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Le modèle est distribué sous la MiniMax-H3-Image Community License Agreement (le texte de la licence est téléchargé avec les fichiers). Il ne doit pas être utilisé aux États-Unis, dans l'Union européenne, au Royaume-Uni ni en Corée du Sud, et ses résultats ne doivent pas servir à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
 Accept and download	Accepter et télécharger
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	Le nombre de tokens par image (%d) doit être divisible par 32, par ex. 512×512, 1024×576, 768×768
+Video too large: reduce the size or the frame count	Vidéo trop grande : réduisez la taille ou le nombre d'images
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Le nombre de patchs (%d) doit être divisible par 32, par ex. 512×512, 768×1024, 1024×1024
+The picture is too large to upscale	L'image est trop grande pour être agrandie
+Too large for x4: choose x2	Trop grand pour ×4 : choisissez ×2
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	Le nombre de tokens (%d) doit être divisible par 32, par ex. 512×384, 384×512, 512×512
+Cannot play the video	Impossible de lire la vidéo
+An upscale is already running	Un agrandissement est déjà en cours
+×4 · photo	×4 · photo
+×4 · anime	×4 · anime
+×2 · photo	×2 · photo
+×2 · anime	×2 · anime
+Upscale (Real-ESRGAN, NPU)	Agrandir (Real-ESRGAN, NPU)
+Download needed	Téléchargement nécessaire
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	Le réseau d'agrandissement (%s, %d Mo) est téléchargé une seule fois depuis Hugging Face. Licence de Real-ESRGAN : BSD-3.
+anime	anime
+photo	photo
+Downloading…	Téléchargement…
+Download failed: %s	Échec du téléchargement : %s
+Upscaling…	Agrandissement…
+Upscale failed: %s	Échec de l'agrandissement : %s
+Done: a new picture in the gallery	Terminé : une nouvelle image dans la galerie
+%d fps	%d ips
+%d frames (%.1f s at %d fps)	%d images (%.1f s à %d ips)
+Frame rate	Fréquence d'images
+Frames	Images
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	Combien d'étapes de débruitage le modèle effectue. Plus d'étapes : des détails plus fins, mais une image plus lente, et seulement jusqu'à un certain point. Utilisez le nombre recommandé pour le modèle : les modèles rapides (Turbo, Lightning) demandent environ 4–8 étapes, les modèles ordinaires 20–30.
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	Durée du clip (la liste dépend du modèle : LTX 17–97 images, Ref2VA 22–90). Les clips plus longs ralentissent chaque étape (l'attention croît avec le nombre d'images), allongent le décodage et limitent la taille d'image qui tient en mémoire.
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	Images par seconde du MP4 final. Cela ne change que la vitesse de lecture : le modèle a été entraîné à 24 ips, donc 24–25 paraît le plus naturel et les valeurs plus basses donnent un effet de ralenti.
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	La photo sert de référence : la personne, l'animal ou l'objet qu'elle montre apparaît dans la vidéo ; dites dans la description ce qui se passe et comment la caméra bouge. Le décor vient de la description.
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	Choisissez une photo de référence (facultatif) : le sujet de la photo apparaît dans la vidéo. Sans photo, la vidéo est créée à partir de la description seule.
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	La photo devient la première image de la vidéo ; dites dans la description ce qui se passe et comment la caméra bouge.
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	Choisissez une photo pour lui donner vie (image vers vidéo). Sans photo, la vidéo est créée à partir de la description seule.
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 étapes · vidéo à partir d'une description et d'une photo de référence, sans son
+22B · 8 steps · 17-frame video, no sound	22B · 8 étapes · vidéo de 17 images, sans son
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 étapes · photoréalisme, texte dans les images
+Create video  ·  ~%d s	Créer la vidéo  ·  ~%d s
+Generation failed: %s (log files/klein/klein.log)	Échec de la génération : %s (journal files/klein/klein.log)
+Decoding the video…	Décodage de la vidéo…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	Le fichier de l'encodeur d'images (files/ltx/vae/etile.bin) est absent : image vers vidéo n'est pas disponible
+Saving the video…	Enregistrement de la vidéo…
+Generation failed: %s (log files/ltx/ltx.log)	Échec de la génération : %s (journal files/ltx/ltx.log)
+Decoding the video %d/%d…	Décodage de la vidéo %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	Le fichier de l'encodeur d'images (files/r2v/enc/henc.bin) est absent : la photo de référence n'est pas disponible
+Generation failed: %s (log files/r2v/r2v.log)	Échec de la génération : %s (journal files/r2v/r2v.log)
+Upscaler	Agrandisseur
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	Agrandit une image terminée sur le NPU. Le bouton se trouve dans la visionneuse d'images. BSD-3  ·  Xintao Wang et al.
+Anime	Anime
+%s / %s GB	%s / %s Go
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	Le modèle est distribué sous la FLUX Kommunity License (Black Forest Labs ; le texte de la licence est téléchargé avec les fichiers). L'usage est non commercial (usage commercial uniquement selon les conditions de la licence) et ses résultats ne doivent pas servir à entraîner ni à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	Le modèle est distribué sous la LTX-2 Community License Agreement (Lightricks ; le texte de la licence est téléchargé avec les fichiers) : gratuit pour les organisations dont le chiffre d'affaires annuel est inférieur à 10 millions de dollars, et les restrictions d'usage de la licence s'appliquent. L'encodeur de texte Gemma (Google) est utilisé selon les conditions de Gemma. Taille : %s Go. Télécharger ?
+FLUX.3 Klein notices (changes made)	Mentions FLUX.3 Klein (modifications apportées)
+LTX-2.5 notices (changes made)	Mentions LTX-2.5 (modifications apportées)
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) crée une vidéo à partir d'une description et, en option, d'une photo de référence : la personne, l'animal ou l'objet de la photo apparaît dans la vidéo, tandis que le décor et le mouvement viennent de la description. 22–90 images, 4 étapes (LoRA turbo distillée, sans CFG), sans son. Les fichiers (files/r2v) sont placés à la main, l'encodeur de texte est partagé avec MiniMax-H3-Image (files/h3/te). Licence MiniMax H3 Community : pas pour les États-Unis, l'UE, le Royaume-Uni et la Corée.
+Ref2VA sizes	Tailles Ref2VA
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	Les deux côtés sont des multiples de 32, au moins 256 ; les tokens par image (largeur/32 × hauteur/32) doivent être divisibles par 32, par ex. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Au plus 16000 tokens au total (images latentes × tokens par image) : 1024×576 donne 56 images en ~20 minutes, 512×512 donne 22 images en ~5 minutes. La durée et la taille du clip font varier le temps presque de façon quadratique.
+LTX sizes	Tailles LTX
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Les deux côtés sont des multiples de 32, au moins 256 ; le nombre de tokens 3 × (largeur/32) × (hauteur/32) doit être divisible par 32, par exemple 512×384, 384×512, 512×512, 768×512, 768×768. Rédigez la description en détail et en anglais : qui, ce qu'il fait, la lumière, la caméra.
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Tailles Klein
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Les deux côtés sont des multiples de 16, le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32 et au plus 6144 (par exemple 1536×1024), au moins 256 par côté. Rédigez la description en détail, en un paragraphe continu.
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, distillé) crée une courte vidéo à partir d'une description : 17–97 images (17 par défaut), la fréquence d'images du MP4 au choix, sans son. L'encodeur de texte Gemma, les 48 blocs DiT (8 étapes, sans CFG) et le VAE tournent sur le NPU ; un clip complet prend environ une minute et demie. Le modèle est dans le catalogue de téléchargement (environ 31 Go ; LTX-2 Community License). Le résultat est un MP4 à côté d'une image d'aperçu dans l'historique (le bouton ▶).
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein (Black Forest Labs, 5.6B) est un modèle photoréaliste qui suit de longues descriptions écrites en phrases ordinaires et dessine du texte. 16 étapes, sans CFG : environ une minute pour 512×512, 3–4 minutes pour 1024×1024. L'encodeur de texte, le transformeur et le décodeur tournent sur le NPU. Le modèle est dans le catalogue de téléchargement (environ 9 Go). Licence FLUX Kommunity : usage non commercial uniquement.

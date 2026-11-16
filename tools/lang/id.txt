@@ -468,3 +468,68 @@
 467	Tidak dimuat
 468	Model ini didistribusikan di bawah MiniMax-H3-Image Community License Agreement (teks lisensi diunduh bersama file). Tidak boleh digunakan di Amerika Serikat, Uni Eropa, Inggris, atau Korea Selatan, dan hasilnya tidak boleh dipakai untuk meningkatkan model AI lain. Ukuran: %s GB. Unduh?
 469	Terima dan unduh
+470	Token per bingkai (%d) harus habis dibagi 32, mis. 512×512, 1024×576, 768×768
+471	Video terlalu besar: kurangi ukuran atau jumlah bingkai
+472	Jumlah patch (%d) harus habis dibagi 32, mis. 512×512, 768×1024, 1024×1024
+473	Gambar terlalu besar untuk diperbesar
+474	Terlalu besar untuk ×4: pilih ×2
+475	Jumlah token (%d) harus habis dibagi 32, mis. 512×384, 384×512, 512×512
+476	Video tidak dapat diputar
+477	Pembesaran sedang berjalan
+478	×4 · foto
+479	×4 · anime
+480	×2 · foto
+481	×2 · anime
+482	Perbesar (Real-ESRGAN, NPU)
+483	Perlu unduhan
+484	Jaringan pembesar (%s, %d MB) diunduh sekali dari Hugging Face. Lisensi Real-ESRGAN: BSD-3.
+485	anime
+486	foto
+487	Mengunduh…
+488	Unduhan gagal: %s
+489	Memperbesar…
+490	Pembesaran gagal: %s
+491	Selesai: gambar baru di galeri
+492	%d fps
+493	%d bingkai (%.1f dtk pada %d fps)
+494	Laju bingkai
+495	Bingkai
+496	Berapa langkah penghilangan derau yang dilakukan model. Lebih banyak langkah: detail lebih halus, tetapi gambar lebih lambat, dan hanya sampai batas tertentu. Gunakan jumlah yang disarankan untuk model: model cepat (Turbo, Lightning) butuh sekitar 4–8 langkah, model biasa 20–30.
+497	Panjang klip (daftar bergantung pada model: LTX 17–97 bingkai, Ref2VA 22–90). Klip yang lebih panjang membuat setiap langkah lebih lambat (atensi tumbuh seiring jumlah bingkai) dan dekode lebih lama, serta membatasi ukuran gambar yang muat di memori.
+498	Bingkai per detik pada MP4 jadi. Ini hanya mengubah kecepatan putar: model dilatih pada 24 fps, jadi 24–25 terlihat paling alami dan nilai lebih rendah memberi gerakan lambat.
+499	Foto adalah referensi: orang, hewan, atau benda di dalamnya muncul di video; tulis di deskripsi apa yang terjadi dan bagaimana kamera bergerak. Latarnya diambil dari deskripsi.
+500	Pilih foto referensi (opsional): subjek foto muncul di video. Tanpa foto, video dibuat hanya dari deskripsi.
+501	Foto menjadi bingkai pertama video; tulis di deskripsi apa yang terjadi dan bagaimana kamera bergerak.
+502	Pilih foto untuk dihidupkan (gambar ke video). Tanpa foto, video dibuat hanya dari deskripsi.
+503	33B · 4 langkah · video dari deskripsi dan foto referensi, tanpa suara
+504	22B · 8 langkah · video 17 bingkai, tanpa suara
+505	5.6B · 16 langkah · fotorealisme, teks dalam gambar
+506	Buat video  ·  ~%d dtk
+507	Pembuatan gagal: %s (log files/klein/klein.log)
+508	Mendekode video…
+509	Berkas encoder gambar (files/ltx/vae/etile.bin) tidak ada: gambar ke video tidak tersedia
+510	Menyimpan video…
+511	Pembuatan gagal: %s (log files/ltx/ltx.log)
+512	Mendekode video %d/%d…
+513	Berkas encoder gambar (files/r2v/enc/henc.bin) tidak ada: foto referensi tidak tersedia
+514	Pembuatan gagal: %s (log files/r2v/r2v.log)
+515	Pembesar
+516	Memperbesar gambar yang sudah jadi di NPU. Tombolnya ada di penampil gambar. BSD-3  ·  Xintao Wang et al.
+517	Anime
+518	%s / %s GB
+519	Model ini didistribusikan di bawah FLUX Kommunity License (Black Forest Labs; teks lisensi diunduh bersama berkas). Penggunaannya nonkomersial (komersial hanya sesuai ketentuan lisensi) dan hasilnya tidak boleh dipakai untuk melatih atau meningkatkan model AI lain. Ukuran: %s GB. Unduh?
+520	Model ini didistribusikan di bawah LTX-2 Community License Agreement (Lightricks; teks lisensi diunduh bersama berkas): gratis untuk organisasi dengan pendapatan tahunan di bawah 10 juta USD, dan batasan penggunaan dalam lisensi berlaku. Encoder teks Gemma (Google) dipakai berdasarkan ketentuan Gemma. Ukuran: %s GB. Unduh?
+521	Pemberitahuan FLUX.3 Klein (perubahan yang dibuat)
+522	Pemberitahuan LTX-2.5 (perubahan yang dibuat)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	MiniMax-H3 Ref2VA (33B) membuat video dari deskripsi dan, secara opsional, foto referensi: orang, hewan, atau benda di foto muncul di video, sedangkan latar dan gerakan berasal dari deskripsi. 22–90 bingkai, 4 langkah (LoRA turbo hasil distilasi, tanpa CFG), tanpa suara. Berkasnya (files/r2v) dipasang manual, encoder teks dipakai bersama MiniMax-H3-Image (files/h3/te). Lisensi MiniMax H3 Community: tidak untuk AS, UE, Inggris, dan Korea.
+527	Ukuran Ref2VA
+528	Kedua sisi kelipatan 32, minimal 256; token per bingkai (lebar/32 × tinggi/32) harus habis dibagi 32, mis. 512×512, 768×512, 1024×576, 768×768, 1024×1024. Paling banyak 16000 token total (bingkai laten × token per bingkai): 1024×576 menghasilkan 56 bingkai dalam ~20 menit, 512×512 menghasilkan 22 bingkai dalam ~5 menit. Panjang dan ukuran klip mengubah waktu hampir secara kuadratik.
+529	Ukuran LTX
+530	Kedua sisi kelipatan 32, minimal 256; jumlah token 3 × (lebar/32) × (tinggi/32) harus habis dibagi 32, misalnya 512×384, 384×512, 512×512, 768×512, 768×768. Tulis deskripsi secara rinci dan dalam bahasa Inggris: siapa, apa yang dilakukan, cahaya, kamera.
+531	FLUX.3 Image Klein
+533	Ukuran Klein
+534	Kedua sisi kelipatan 16, jumlah patch (lebar/16 × tinggi/16) habis dibagi 32 dan paling banyak 6144 (misalnya 1536×1024), minimal 256 per sisi. Tulis deskripsi secara rinci, sebagai satu paragraf yang utuh.
+535	LTX-2.5 (Lightricks, 22B, hasil distilasi) membuat video pendek dari deskripsi: 17–97 bingkai (bawaan 17), laju bingkai MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memerlukan sekitar satu setengah menit. Model ini ada di katalog unduhan (sekitar 31 GB; LTX-2 Community License). Hasilnya berupa MP4 di samping bingkai pratinjau di riwayat (tombol ▶).
+536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) adalah model fotorealistis yang mengikuti deskripsi panjang yang ditulis dengan kalimat biasa dan dapat menggambar teks. 16 langkah, tanpa CFG: sekitar satu menit untuk 512×512, 3–4 menit untuk 1024×1024. Encoder teks, transformer, dan dekoder berjalan di NPU. Model ini ada di katalog unduhan (sekitar 9 GB). Lisensi FLUX Kommunity: hanya untuk penggunaan nonkomersial.

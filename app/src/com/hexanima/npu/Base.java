@@ -121,6 +121,16 @@ abstract class Base extends Activity {
 
     /** the page colour with the thin outline: dialogs and sheets */
     GradientDrawable framed(float radius) { GradientDrawable g = bg(BG, radius); g.setStroke(dp(1), LINE); return g; }
+    /** round translucent button with a white icon (video play / pause / full screen) */
+    android.widget.ImageView circleBtn(String name, int sizeDp) {
+        android.widget.ImageView v = new android.widget.ImageView(this); v.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+        GradientDrawable g = new GradientDrawable(); g.setShape(GradientDrawable.OVAL); g.setColor(0x99000000); g.setStroke(dp(1.5f), 0x55FFFFFF); v.setBackground(g);
+        v.setTag(sizeDp); setBtnIcon(v, name); return v;
+    }
+    void setBtnIcon(android.widget.ImageView v, String name) {
+        int sz = (Integer) v.getTag(), p = dp(sz * 0.28f); v.setImageResource(getResources().getIdentifier(name, "drawable", getPackageName()));
+        v.setPadding(p + (name.equals("ic_play") ? dp(sz * 0.03f) : 0), p, p, p);   // the triangle looks centred a little right of the box centre
+    }
     GradientDrawable bg(int color, float radius) { GradientDrawable g = new GradientDrawable(); g.setColor(color); if (color == CARD) { if (cardDrawables.size() > 600) cardDrawables.removeIf(r -> r.get() == null); cardDrawables.add(new java.lang.ref.WeakReference<>(g)); } g.setCornerRadius(dp(radius)); if (color == CARD) g.setStroke(dp(1), LINE); return g; }   // surfaces carry a thin outline
 
     Drawable vec(String name, int tint, int sizeDp) { Drawable d = getResources().getDrawable(getResources().getIdentifier(name, "drawable", getPackageName()), getTheme()).mutate(); d.setBounds(0, 0, dp(sizeDp), dp(sizeDp)); d.setTint(tint); return d; }

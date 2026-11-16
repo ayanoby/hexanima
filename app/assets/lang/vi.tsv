@@ -468,3 +468,68 @@ Loaded	Đã tải
 Unloaded	Chưa tải
 The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	Mô hình được phân phối theo MiniMax-H3-Image Community License Agreement (văn bản giấy phép được tải cùng các tệp). Không được dùng tại Hoa Kỳ, Liên minh châu Âu, Vương quốc Anh và Hàn Quốc, và kết quả không được dùng để cải thiện các mô hình AI khác. Dung lượng: %s GB. Tải xuống?
 Accept and download	Chấp nhận và tải xuống
+Tokens per frame (%d) must be divisible by 32, e.g. 512×512, 1024×576, 768×768	Số token mỗi khung hình (%d) phải chia hết cho 32, ví dụ 512×512, 1024×576, 768×768
+Video too large: reduce the size or the frame count	Video quá lớn: hãy giảm kích thước hoặc số khung hình
+Patch count (%d) must be divisible by 32, e.g. 512×512, 768×1024, 1024×1024	Số patch (%d) phải chia hết cho 32, ví dụ 512×512, 768×1024, 1024×1024
+The picture is too large to upscale	Ảnh quá lớn để phóng to
+Too large for x4: choose x2	Quá lớn cho ×4: hãy chọn ×2
+Token count (%d) must be divisible by 32, e.g. 512×384, 384×512, 512×512	Số token (%d) phải chia hết cho 32, ví dụ 512×384, 384×512, 512×512
+Cannot play the video	Không thể phát video
+An upscale is already running	Một lần phóng to đang chạy
+×4 · photo	×4 · ảnh
+×4 · anime	×4 · anime
+×2 · photo	×2 · ảnh
+×2 · anime	×2 · anime
+Upscale (Real-ESRGAN, NPU)	Phóng to (Real-ESRGAN, NPU)
+Download needed	Cần tải xuống
+The upscaling network (%s, %d MB) is downloaded once from Hugging Face. Real-ESRGAN licence: BSD-3.	Mạng phóng to (%s, %d MB) được tải một lần từ Hugging Face. Giấy phép Real-ESRGAN: BSD-3.
+anime	anime
+photo	ảnh
+Downloading…	Đang tải xuống…
+Download failed: %s	Tải xuống thất bại: %s
+Upscaling…	Đang phóng to…
+Upscale failed: %s	Phóng to thất bại: %s
+Done: a new picture in the gallery	Xong: một ảnh mới trong thư viện
+%d fps	%d fps
+%d frames (%.1f s at %d fps)	%d khung hình (%.1f giây ở %d fps)
+Frame rate	Tốc độ khung hình
+Frames	Khung hình
+How many denoising steps the model takes. More steps: finer detail but a slower picture, and only up to a point. Use the number recommended for the model: fast models (Turbo, Lightning) need about 4–8 steps, regular ones 20–30.	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số bước được khuyến nghị cho mô hình: mô hình nhanh (Turbo, Lightning) cần khoảng 4–8 bước, mô hình thường 20–30.
+Clip length (the list depends on the model: LTX 17–97 frames, Ref2VA 22–90). Longer clips make every step slower (attention grows with the number of frames) and the decoding longer, and limit the picture size that fits in memory.	Độ dài clip (danh sách phụ thuộc vào mô hình: LTX 17–97 khung hình, Ref2VA 22–90). Clip dài hơn làm mỗi bước chậm hơn (attention tăng theo số khung hình) và giải mã lâu hơn, đồng thời giới hạn kích thước ảnh vừa với bộ nhớ.
+Frames per second of the finished MP4. It only changes the playback speed: the model was trained at 24 fps, so 24–25 looks the most natural and lower values give slow motion.	Số khung hình mỗi giây của MP4 hoàn chỉnh. Chỉ thay đổi tốc độ phát: mô hình được huấn luyện ở 24 fps, nên 24–25 trông tự nhiên nhất, giá trị thấp hơn cho chuyển động chậm.
+The photo is a reference: the person, animal or object in it appears in the video; say in the prompt what happens and how the camera moves. Take the setting from the prompt.	Ảnh là tham chiếu: người, con vật hoặc đồ vật trong ảnh xuất hiện trong video; hãy viết trong mô tả điều gì xảy ra và máy quay chuyển động thế nào. Bối cảnh lấy từ mô tả.
+Pick a reference photo (optional): the subject of the photo appears in the video. Without one the video is made from the prompt alone.	Chọn ảnh tham chiếu (tùy chọn): chủ thể của ảnh xuất hiện trong video. Nếu không có, video chỉ được tạo từ mô tả.
+The photo becomes the first frame of the video; say in the prompt what happens and how the camera moves.	Ảnh trở thành khung hình đầu tiên của video; hãy viết trong mô tả điều gì xảy ra và máy quay chuyển động thế nào.
+Pick a photo to bring it to life (image to video). Without one the video is made from the prompt alone.	Chọn một ảnh để làm cho nó sống động (ảnh thành video). Nếu không có ảnh, video chỉ được tạo từ mô tả.
+33B · 4 steps · video from a prompt and a reference photo, no sound	33B · 4 bước · video từ mô tả và ảnh tham chiếu, không có âm thanh
+22B · 8 steps · 17-frame video, no sound	22B · 8 bước · video 17 khung hình, không có âm thanh
+5.6B · 16 steps · photorealism, text in pictures	5.6B · 16 bước · chân thực như ảnh chụp, chữ trong ảnh
+Create video  ·  ~%d s	Tạo video  ·  ~%d giây
+Generation failed: %s (log files/klein/klein.log)	Tạo thất bại: %s (nhật ký files/klein/klein.log)
+Decoding the video…	Đang giải mã video…
+The image encoder file (files/ltx/vae/etile.bin) is missing: image to video is unavailable	Thiếu tệp bộ mã hóa ảnh (files/ltx/vae/etile.bin): không dùng được ảnh thành video
+Saving the video…	Đang lưu video…
+Generation failed: %s (log files/ltx/ltx.log)	Tạo thất bại: %s (nhật ký files/ltx/ltx.log)
+Decoding the video %d/%d…	Đang giải mã video %d/%d…
+The image encoder file (files/r2v/enc/henc.bin) is missing: the reference photo is unavailable	Thiếu tệp bộ mã hóa ảnh (files/r2v/enc/henc.bin): không dùng được ảnh tham chiếu
+Generation failed: %s (log files/r2v/r2v.log)	Tạo thất bại: %s (nhật ký files/r2v/r2v.log)
+Upscaler	Bộ phóng to
+Enlarges a finished picture on the NPU. The button is in the picture viewer. BSD-3  ·  Xintao Wang et al.	Phóng to một ảnh đã hoàn tất trên NPU. Nút nằm trong trình xem ảnh. BSD-3  ·  Xintao Wang và cộng sự
+Anime	Anime
+%s / %s GB	%s / %s GB
+The model is distributed under the FLUX Kommunity License (Black Forest Labs; the licence text downloads with the files). Use is non-commercial (commercial use only on the licence's terms) and its outputs must not be used to train or improve other AI models. Size: %s GB. Download?	Mô hình được phân phối theo FLUX Kommunity License (Black Forest Labs; văn bản giấy phép được tải cùng các tệp). Chỉ dùng phi thương mại (dùng thương mại chỉ theo điều khoản của giấy phép) và kết quả không được dùng để huấn luyện hoặc cải thiện các mô hình AI khác. Kích thước: %s GB. Tải xuống?
+The model is distributed under the LTX-2 Community License Agreement (Lightricks; the licence text downloads with the files): free for organisations with annual revenue under 10 million USD, and the use restrictions of the licence apply. The Gemma text encoder (Google) is used under the Gemma terms. Size: %s GB. Download?	Mô hình được phân phối theo LTX-2 Community License Agreement (Lightricks; văn bản giấy phép được tải cùng các tệp): miễn phí cho tổ chức có doanh thu hằng năm dưới 10 triệu USD, và áp dụng các hạn chế sử dụng của giấy phép. Bộ mã hóa văn bản Gemma (Google) được dùng theo điều khoản của Gemma. Kích thước: %s GB. Tải xuống?
+FLUX.3 Klein notices (changes made)	Thông báo FLUX.3 Klein (các thay đổi đã thực hiện)
+LTX-2.5 notices (changes made)	Thông báo LTX-2.5 (các thay đổi đã thực hiện)
+LTX-2.5 Video	LTX-2.5 Video
+MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
+MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) tạo video từ mô tả và, tùy chọn, một ảnh tham chiếu: người, con vật hoặc đồ vật trong ảnh xuất hiện trong video, còn bối cảnh và chuyển động lấy từ mô tả. 22–90 khung hình, 4 bước (LoRA turbo chưng cất, không CFG), không có âm thanh. Các tệp (files/r2v) được đặt thủ công, bộ mã hóa văn bản dùng chung với MiniMax-H3-Image (files/h3/te). Giấy phép MiniMax H3 Community: không dành cho Hoa Kỳ, EU, Vương quốc Anh và Hàn Quốc.
+Ref2VA sizes	Kích thước Ref2VA
+Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × height/32) must be divisible by 32, e.g. 512×512, 768×512, 1024×576, 768×768, 1024×1024. At most 16000 tokens in total (latent frames × tokens per frame): 1024×576 gives 56 frames in ~20 minutes, 512×512 gives 22 frames in ~5 minutes. Clip length and size change the time almost quadratically.	Cả hai cạnh là bội số của 32, tối thiểu 256; số token mỗi khung hình (rộng/32 × cao/32) phải chia hết cho 32, ví dụ 512×512, 768×512, 1024×576, 768×768, 1024×1024. Tối đa 16000 token tổng cộng (khung hình tiềm ẩn × token mỗi khung hình): 1024×576 cho 56 khung hình trong ~20 phút, 512×512 cho 22 khung hình trong ~5 phút. Độ dài và kích thước clip làm thời gian thay đổi gần như theo bình phương.
+LTX sizes	Kích thước LTX
+Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Cả hai cạnh là bội số của 32, tối thiểu 256; số token 3 × (rộng/32) × (cao/32) phải chia hết cho 32, ví dụ 512×384, 384×512, 512×512, 768×512, 768×768. Hãy viết mô tả chi tiết và bằng tiếng Anh: ai, họ làm gì, ánh sáng, máy quay.
+FLUX.3 Image Klein	FLUX.3 Image Klein
+Klein sizes	Kích thước Klein
+Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Cả hai cạnh là bội số của 16, số patch (rộng/16 × cao/16) chia hết cho 32 và tối đa 6144 (ví dụ 1536×1024), tối thiểu 256 mỗi cạnh. Hãy viết mô tả chi tiết, thành một đoạn văn liền mạch.
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, chưng cất) tạo một video ngắn từ mô tả: 17–97 khung hình (mặc định 17), tốc độ khung hình của MP4 tùy chọn, không có âm thanh. Bộ mã hóa văn bản Gemma, 48 khối DiT (8 bước, không CFG) và VAE chạy trên NPU; một clip hoàn chỉnh mất khoảng một phút rưỡi. Mô hình có trong danh mục tải xuống (khoảng 31 GB; LTX-2 Community License). Kết quả là một MP4 cạnh khung hình xem trước trong lịch sử (nút ▶).
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. The model is in the download catalog (about 9 GB). FLUX Kommunity licence: non-commercial use only.	FLUX.3 Image Klein (Black Forest Labs, 5.6B) là mô hình chân thực như ảnh chụp, hiểu các mô tả dài viết bằng câu thông thường và vẽ được chữ. 16 bước, không CFG: khoảng một phút cho 512×512, 3–4 phút cho 1024×1024. Bộ mã hóa văn bản, transformer và bộ giải mã chạy trên NPU. Mô hình có trong danh mục tải xuống (khoảng 9 GB). Giấy phép FLUX Kommunity: chỉ dùng phi thương mại.

@@ -468,3 +468,68 @@
 467	Chưa tải
 468	Mô hình được phân phối theo MiniMax-H3-Image Community License Agreement (văn bản giấy phép được tải cùng các tệp). Không được dùng tại Hoa Kỳ, Liên minh châu Âu, Vương quốc Anh và Hàn Quốc, và kết quả không được dùng để cải thiện các mô hình AI khác. Dung lượng: %s GB. Tải xuống?
 469	Chấp nhận và tải xuống
+470	Số token mỗi khung hình (%d) phải chia hết cho 32, ví dụ 512×512, 1024×576, 768×768
+471	Video quá lớn: hãy giảm kích thước hoặc số khung hình
+472	Số patch (%d) phải chia hết cho 32, ví dụ 512×512, 768×1024, 1024×1024
+473	Ảnh quá lớn để phóng to
+474	Quá lớn cho ×4: hãy chọn ×2
+475	Số token (%d) phải chia hết cho 32, ví dụ 512×384, 384×512, 512×512
+476	Không thể phát video
+477	Một lần phóng to đang chạy
+478	×4 · ảnh
+479	×4 · anime
+480	×2 · ảnh
+481	×2 · anime
+482	Phóng to (Real-ESRGAN, NPU)
+483	Cần tải xuống
+484	Mạng phóng to (%s, %d MB) được tải một lần từ Hugging Face. Giấy phép Real-ESRGAN: BSD-3.
+485	anime
+486	ảnh
+487	Đang tải xuống…
+488	Tải xuống thất bại: %s
+489	Đang phóng to…
+490	Phóng to thất bại: %s
+491	Xong: một ảnh mới trong thư viện
+492	%d fps
+493	%d khung hình (%.1f giây ở %d fps)
+494	Tốc độ khung hình
+495	Khung hình
+496	Số bước khử nhiễu mà mô hình thực hiện. Nhiều bước hơn: chi tiết mịn hơn nhưng ảnh chậm hơn, và chỉ đến một mức nhất định. Hãy dùng số bước được khuyến nghị cho mô hình: mô hình nhanh (Turbo, Lightning) cần khoảng 4–8 bước, mô hình thường 20–30.
+497	Độ dài clip (danh sách phụ thuộc vào mô hình: LTX 17–97 khung hình, Ref2VA 22–90). Clip dài hơn làm mỗi bước chậm hơn (attention tăng theo số khung hình) và giải mã lâu hơn, đồng thời giới hạn kích thước ảnh vừa với bộ nhớ.
+498	Số khung hình mỗi giây của MP4 hoàn chỉnh. Chỉ thay đổi tốc độ phát: mô hình được huấn luyện ở 24 fps, nên 24–25 trông tự nhiên nhất, giá trị thấp hơn cho chuyển động chậm.
+499	Ảnh là tham chiếu: người, con vật hoặc đồ vật trong ảnh xuất hiện trong video; hãy viết trong mô tả điều gì xảy ra và máy quay chuyển động thế nào. Bối cảnh lấy từ mô tả.
+500	Chọn ảnh tham chiếu (tùy chọn): chủ thể của ảnh xuất hiện trong video. Nếu không có, video chỉ được tạo từ mô tả.
+501	Ảnh trở thành khung hình đầu tiên của video; hãy viết trong mô tả điều gì xảy ra và máy quay chuyển động thế nào.
+502	Chọn một ảnh để làm cho nó sống động (ảnh thành video). Nếu không có ảnh, video chỉ được tạo từ mô tả.
+503	33B · 4 bước · video từ mô tả và ảnh tham chiếu, không có âm thanh
+504	22B · 8 bước · video 17 khung hình, không có âm thanh
+505	5.6B · 16 bước · chân thực như ảnh chụp, chữ trong ảnh
+506	Tạo video  ·  ~%d giây
+507	Tạo thất bại: %s (nhật ký files/klein/klein.log)
+508	Đang giải mã video…
+509	Thiếu tệp bộ mã hóa ảnh (files/ltx/vae/etile.bin): không dùng được ảnh thành video
+510	Đang lưu video…
+511	Tạo thất bại: %s (nhật ký files/ltx/ltx.log)
+512	Đang giải mã video %d/%d…
+513	Thiếu tệp bộ mã hóa ảnh (files/r2v/enc/henc.bin): không dùng được ảnh tham chiếu
+514	Tạo thất bại: %s (nhật ký files/r2v/r2v.log)
+515	Bộ phóng to
+516	Phóng to một ảnh đã hoàn tất trên NPU. Nút nằm trong trình xem ảnh. BSD-3  ·  Xintao Wang và cộng sự
+517	Anime
+518	%s / %s GB
+519	Mô hình được phân phối theo FLUX Kommunity License (Black Forest Labs; văn bản giấy phép được tải cùng các tệp). Chỉ dùng phi thương mại (dùng thương mại chỉ theo điều khoản của giấy phép) và kết quả không được dùng để huấn luyện hoặc cải thiện các mô hình AI khác. Kích thước: %s GB. Tải xuống?
+520	Mô hình được phân phối theo LTX-2 Community License Agreement (Lightricks; văn bản giấy phép được tải cùng các tệp): miễn phí cho tổ chức có doanh thu hằng năm dưới 10 triệu USD, và áp dụng các hạn chế sử dụng của giấy phép. Bộ mã hóa văn bản Gemma (Google) được dùng theo điều khoản của Gemma. Kích thước: %s GB. Tải xuống?
+521	Thông báo FLUX.3 Klein (các thay đổi đã thực hiện)
+522	Thông báo LTX-2.5 (các thay đổi đã thực hiện)
+523	LTX-2.5 Video
+525	MiniMax H3 Ref2VA Video
+526	MiniMax-H3 Ref2VA (33B) tạo video từ mô tả và, tùy chọn, một ảnh tham chiếu: người, con vật hoặc đồ vật trong ảnh xuất hiện trong video, còn bối cảnh và chuyển động lấy từ mô tả. 22–90 khung hình, 4 bước (LoRA turbo chưng cất, không CFG), không có âm thanh. Các tệp (files/r2v) được đặt thủ công, bộ mã hóa văn bản dùng chung với MiniMax-H3-Image (files/h3/te). Giấy phép MiniMax H3 Community: không dành cho Hoa Kỳ, EU, Vương quốc Anh và Hàn Quốc.
+527	Kích thước Ref2VA
+528	Cả hai cạnh là bội số của 32, tối thiểu 256; số token mỗi khung hình (rộng/32 × cao/32) phải chia hết cho 32, ví dụ 512×512, 768×512, 1024×576, 768×768, 1024×1024. Tối đa 16000 token tổng cộng (khung hình tiềm ẩn × token mỗi khung hình): 1024×576 cho 56 khung hình trong ~20 phút, 512×512 cho 22 khung hình trong ~5 phút. Độ dài và kích thước clip làm thời gian thay đổi gần như theo bình phương.
+529	Kích thước LTX
+530	Cả hai cạnh là bội số của 32, tối thiểu 256; số token 3 × (rộng/32) × (cao/32) phải chia hết cho 32, ví dụ 512×384, 384×512, 512×512, 768×512, 768×768. Hãy viết mô tả chi tiết và bằng tiếng Anh: ai, họ làm gì, ánh sáng, máy quay.
+531	FLUX.3 Image Klein
+533	Kích thước Klein
+534	Cả hai cạnh là bội số của 16, số patch (rộng/16 × cao/16) chia hết cho 32 và tối đa 6144 (ví dụ 1536×1024), tối thiểu 256 mỗi cạnh. Hãy viết mô tả chi tiết, thành một đoạn văn liền mạch.
+535	LTX-2.5 (Lightricks, 22B, chưng cất) tạo một video ngắn từ mô tả: 17–97 khung hình (mặc định 17), tốc độ khung hình của MP4 tùy chọn, không có âm thanh. Bộ mã hóa văn bản Gemma, 48 khối DiT (8 bước, không CFG) và VAE chạy trên NPU; một clip hoàn chỉnh mất khoảng một phút rưỡi. Mô hình có trong danh mục tải xuống (khoảng 31 GB; LTX-2 Community License). Kết quả là một MP4 cạnh khung hình xem trước trong lịch sử (nút ▶).
+536	FLUX.3 Image Klein (Black Forest Labs, 5.6B) là mô hình chân thực như ảnh chụp, hiểu các mô tả dài viết bằng câu thông thường và vẽ được chữ. 16 bước, không CFG: khoảng một phút cho 512×512, 3–4 phút cho 1024×1024. Bộ mã hóa văn bản, transformer và bộ giải mã chạy trên NPU. Mô hình có trong danh mục tải xuống (khoảng 9 GB). Giấy phép FLUX Kommunity: chỉ dùng phi thương mại.

@@ -1,0 +1,14 @@
+# Notice
+
+This FLUX Model is licensed by Black Forest Labs Inc. under the FLUX Kommunity License. Copyright Black Forest Labs Inc. IN NO EVENT SHALL BLACK FOREST LABS INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH USE OF THIS MODEL.
+
+**These files are a Derivative of the FLUX Model: Black Forest Labs' FLUX.3 Image Klein (https://huggingface.co/black-forest-labs/flux-3-image-klein) has been modified.** They are not an official product of Black Forest Labs and are not endorsed or approved by it.
+
+What was changed:
+- The transformer weights were quantised to 8-bit tiles for the Hexagon matrix unit (HMX) and rearranged into the block files `img*.bin`, `txt*.bin`, `sgl*.bin`; small tensors are kept in `glue/`.
+- The Qwen3-VL-4B-Instruct text encoder (Qwen team, Apache License 2.0) was converted the same way (`te/`), including its token embeddings.
+- The autoencoder was exported as a Qualcomm QNN HTP context binary for Hexagon v69 (Snapdragon 8 Gen 1 / 8+ Gen 1), built with QAIRT 2.28 (`vae/`).
+
+The use restrictions of the FLUX Kommunity License apply to these files in full (see `LICENSE`): non-commercial use, or commercial use only as a Qualifying User under Section 2.a; no use of the model or its outputs to improve another AI model; no military, surveillance or biometric use; export controls. Any rights to use these files are granted directly by Black Forest Labs under that license.
+
+HexAnima is an independent, unofficial project, not affiliated with Black Forest Labs or the Qwen team.

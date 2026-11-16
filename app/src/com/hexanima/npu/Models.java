@@ -17,7 +17,7 @@ import org.json.JSONObject;
  * Layout: files/anima/{te*.bin, te_embed.f16, vae.bin} (common), files/anima/m_ID/{small.bin, blkNN.bin}, files/sd/{ID.safetensors stub, llm stub, taew2_1.safetensors}.
  */
 final class Models {
-    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage, h3; }   // speed: seconds per picture at 512x768
+    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage, h3, klein, ltx; boolean anima() { return !moss && !qwen && !mage && !h3 && !klein && !ltx; } }   // speed: seconds per picture at 512x768
     interface Progress { void on(long done, long total, String what); }
 
     final File anima, sd, home;
@@ -41,6 +41,7 @@ final class Models {
     long commonSize;
     List<Item> catalog(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { return catalog5(get(base + "catalog9.json"), base); } catch (Exception e9) { }   // catalog9.json = catalog8 + FLUX.3 Image Klein and LTX-2.5 Video (1.7.0+; older apps would not know the families)
         try { return catalog5(get(base + "catalog8.json"), base); } catch (Exception e8) { }   // catalog8.json = catalog7 + MiniMax-H3-Image (1.6.0+; older apps would not know the family)
         try { return catalog5(get(base + "catalog7.json"), base); } catch (Exception e7) { }   // catalog7.json = catalog6 + the common files with the 512 token text encoder (1.5.4+; older apps expect 128 tokens)
         try { return catalog5(get(base + "catalog6.json"), base); } catch (Exception e6) { }   // catalog6.json = catalog5 + the MiaoMiao MOSS fine-tunes (older apps do not read it)
@@ -75,7 +76,7 @@ final class Models {
                 it.manifest = packUrl(p, base) + p.optString("manifest", "manifest.json");
                 it.desc = m.optString("desc", ""); it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.author = m.optString("author", "");
                 it.speed = md.optInt("speed", 0); String f = m.optString("family", "Anima");
-                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3");
+                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3"); it.klein = f.equals("FLUX.3-Klein"); it.ltx = f.equals("LTX-2.5");
                 out.add(it);
             }
         }
@@ -84,9 +85,9 @@ final class Models {
     static String packUrl(JSONObject p, String base) { String u = p.has("url") ? p.optString("url") : base + p.optString("path"); return u.endsWith("/") ? u : u + "/"; }
 
     // ---- state ----------------------------------------------------------------------------------
-    File modelDir(String id) { return H3.is(id) ? H3.dir(home) : Moss.is(id) ? Moss.dir(home) : Mage.is(id) ? Mage.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
+    File modelDir(String id) { return R2v.is(id) ? R2v.dir(home) : Ltx.is(id) ? Ltx.dir(home) : Klein.is(id) ? Klein.dir(home) : H3.is(id) ? H3.dir(home) : Moss.is(id) ? Moss.dir(home) : Mage.is(id) ? Mage.dir(home) : Qwen.is(id) ? Qwen.dir(home) : new File(anima, "m_" + id); }
     File doneMark(File dir) { return new File(dir, ".installed"); }
-    boolean modelInstalled(String id) { if (H3.is(id)) return H3.installed(home); if (Moss.is(id)) return Moss.installed(home) && (Moss.is8(id) ? Moss.installed8(home) : Moss.isRs(id) ? Moss.installedRs(home, id) : id.equals(mossId())); if (Qwen.is(id)) return Qwen.is8(id) ? Qwen.installed8(home) : Qwen.installed(home) && id.equals(qwenId()); if (Mage.is(id)) return Mage.installed(home) && id.equals(mageId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
+    boolean modelInstalled(String id) { if (R2v.is(id)) return R2v.installed(home); if (Ltx.is(id)) return Ltx.installed(home); if (Klein.is(id)) return Klein.installed(home); if (H3.is(id)) return H3.installed(home); if (Moss.is(id)) return Moss.installed(home) && (Moss.is8(id) ? Moss.installed8(home) : Moss.isRs(id) ? Moss.installedRs(home, id) : id.equals(mossId())); if (Qwen.is(id)) return Qwen.is8(id) ? Qwen.installed8(home) : Qwen.installed(home) && id.equals(qwenId()); if (Mage.is(id)) return Mage.installed(home) && id.equals(mageId()); return commonInstalled() && doneMark(modelDir(id)).exists() && new File(sd, id + ".safetensors").exists(); }
     /** v69 keeps the original "common" folder (older apps use it); other Hexagon generations have their own QNN contexts in common_<arch> */
     static String commonDir() { String a = Compat.dspArch(); return a.isEmpty() || a.equals("v69") ? "common" : "common_" + a; }
     boolean commonInstalled() { return doneMark(new File(anima, commonDir())).exists(); }
@@ -100,6 +101,9 @@ final class Models {
         if (Qwen.installed(home)) out.add(qwenId()); if (Qwen.installed8(home)) out.add(Qwen.ID8);
         if (Mage.installed(home)) out.add(mageId());
         if (H3.installed(home)) out.add(H3.ID);
+        if (Klein.installed(home)) out.add(Klein.ID);
+        if (Ltx.installed(home)) out.add(Ltx.ID);
+        if (R2v.installed(home)) out.add(R2v.ID);
         File[] ds = anima.listFiles();
         if (ds != null) for (File d : ds) if (d.getName().startsWith("m_") && modelInstalled(d.getName().substring(2))) out.add(d.getName().substring(2));
         java.util.Collections.sort(out);
@@ -115,22 +119,25 @@ final class Models {
             case Moss.IDRS: return "MiaoMiao RealSkin · MOSS-Image 1.0";
             case Moss.IDHM: return "MiaoMiao Harem · MOSS-Image 1.1";
             case H3.ID: return "MiniMax-H3-Image";
+            case Klein.ID: return "FLUX.3 Image Klein";
+            case Ltx.ID: return "LTX-2.5 Video";
+            case R2v.ID: return "MiniMax H3 Ref2VA Video";
             default: return name;
         }
     }
     // ---- names given by the user (a pencil in the model picker) -------------------------------------------------
     /** the key an alias is stored under: both variants of an Anima model share one (the turbo id and id + "base") */
-    static String aliasKey(String id) { return Qwen.is(id) ? "qwen" : Moss.is(id) ? (Moss.isRs(id) ? id : "moss") : H3.is(id) || Mage.is(id) ? id : (id.endsWith("base") ? id.substring(0, id.length() - 4) : id); }
+    static String aliasKey(String id) { return Qwen.is(id) ? "qwen" : Moss.is(id) ? (Moss.isRs(id) ? id : "moss") : H3.is(id) || Mage.is(id) || Klein.is(id) || Ltx.is(id) || R2v.is(id) ? id : (id.endsWith("base") ? id.substring(0, id.length() - 4) : id); }
     File aliasFile() { return new File(home, "model_names.json"); }
     String alias(String key) { try { String v = new JSONObject(read(aliasFile())).optString(key, ""); return v.isEmpty() ? null : v; } catch (Exception e) { return null; } }
     void setAlias(String key, String name) {
         JSONObject j; try { j = new JSONObject(read(aliasFile())); } catch (Exception e) { j = new JSONObject(); }
         try { if (name == null || name.trim().isEmpty()) j.remove(key); else j.put(key, name.trim()); try (FileWriter w = new FileWriter(aliasFile())) { w.write(j.toString()); } } catch (Exception ignored) { }
     }
-    String name(String id) { String al = alias(aliasKey(id)); if (al != null && !Qwen.is8(id) && !Moss.is8(id)) return al + (!Qwen.is(id) && !Moss.is(id) && !H3.is(id) && !Mage.is(id) && id.endsWith("base") ? " (base)" : ""); if (H3.is(id)) return niceName(id, ""); if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
+    String name(String id) { String al = alias(aliasKey(id)); if (al != null && !Qwen.is8(id) && !Moss.is8(id)) return al + (!Qwen.is(id) && !Moss.is(id) && !H3.is(id) && !Mage.is(id) && !Klein.is(id) && !Ltx.is(id) && !R2v.is(id) && id.endsWith("base") ? " (base)" : ""); if (H3.is(id) || Klein.is(id) || Ltx.is(id) || R2v.is(id)) return niceName(id, ""); if (Qwen.is8(id) || Moss.is8(id) || Moss.isRs(id)) return niceName(id, ""); try { return niceName(id, new JSONObject(read(new File(modelDir(id), "meta.json"))).getString("name")); } catch (Exception e) { return id; } }
 
     /** seconds per picture at 512x768 (from the catalog at install time; models installed before that get the measured value of their size class) */
-    int speed(String id) { if (H3.is(id)) return 110; if (Moss.isRs(id)) return speed(mossId()); if (Qwen.is8(id)) return 80; if (Moss.is8(id)) return 3 * speed(mossId()) / 2; try { int v = new JSONObject(read(new File(modelDir(id), "meta.json"))).optInt("speed", 0); if (v > 0) return v; } catch (Exception e) { } return id.contains("29") ? 12 : 7; }
+    int speed(String id) { if (R2v.is(id)) return 120; if (Ltx.is(id)) return 95; if (Klein.is(id)) return 60; if (H3.is(id)) return 110; if (Moss.isRs(id)) return speed(mossId()); if (Qwen.is8(id)) return 80; if (Moss.is8(id)) return 3 * speed(mossId()) / 2; try { int v = new JSONObject(read(new File(modelDir(id), "meta.json"))).optInt("speed", 0); if (v > 0) return v; } catch (Exception e) { } return id.contains("29") ? 12 : 7; }
 
     static byte[] readBytes(File f) throws IOException {
         try (FileInputStream in = new FileInputStream(f)) { byte[] b = new byte[(int) f.length()]; int o = 0; for (int n; o < b.length && (n = in.read(b, o, b.length - o)) > 0; ) o += n; return b; }
@@ -219,7 +226,7 @@ final class Models {
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
             fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); return;
         }
-        if (H3.is(it.id)) {   // MiniMax-H3-Image: raw files (with the licence texts) into files/h3; the marker is set once every file is verified
+        if (H3.is(it.id) || Klein.is(it.id) || Ltx.is(it.id)) {   // MiniMax-H3-Image, FLUX.3 Klein, LTX-2.5: raw files (with the licence texts) into files/h3; the marker is set once every file is verified
             doneMark(dir).delete(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); doneMark(dir).createNewFile(); return;
         }
         doneMark(dir).delete();
@@ -247,7 +254,7 @@ final class Models {
         if (Qwen.is8(id)) { deleteTree(new File(dir, "dit8")); new File(dir, "glue8.bin").delete(); deleteTree(new File(dir, "v8")); deleteTree(new File(dir, "cache8")); return; }   // only the extra pack; the default Qwen stays
         if (Moss.isRs(id)) { deleteTree(new File(dir, Moss.sub(id))); deleteTree(new File(dir, "v" + Moss.sub(id))); return; }
         if (Moss.is8(id)) { deleteTree(new File(dir, "lora8")); new File(dir, "glue8.bin").delete(); return; }
-        if (Moss.is(id) || Qwen.is(id) || Mage.is(id) || H3.is(id)) { deleteTree(dir); return; }
+        if (Moss.is(id) || Qwen.is(id) || Mage.is(id) || H3.is(id) || Klein.is(id) || Ltx.is(id) || R2v.is(id)) { deleteTree(dir); return; }
         File[] fs = dir.listFiles(); if (fs != null) for (File f : fs) f.delete();
         dir.delete(); new File(sd, id + ".safetensors").delete();
     }

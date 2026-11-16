@@ -57,16 +57,18 @@ final class Gallery {
     }
 
     /** soft delete / restore: move the pair between gallery/ and gallery/trash/ */
+    /** a video entry (LTX): the MP4 named in the metadata lies beside the poster PNG */
+    static File videoOf(File png) { String v = meta(png).optString("video", ""); return v.isEmpty() ? null : new File(png.getParentFile(), v); }
     static void move(File png, File to) {
-        File dst = new File(to, png.getName());
-        png.renameTo(dst); json(png).renameTo(json(dst));
+        File dst = new File(to, png.getName()); File vid = videoOf(png);
+        png.renameTo(dst); json(png).renameTo(json(dst)); if (vid != null) vid.renameTo(new File(to, vid.getName()));
         dst.setLastModified(System.currentTimeMillis());
     }
     static void trash(Context c, File png) { move(png, trashDir(c)); }
     static void restore(Context c, File png) { move(png, dir(c)); }
 
     /** permanent delete */
-    static void delete(File png) { png.delete(); json(png).delete(); }
+    static void delete(File png) { File vid = videoOf(png); png.delete(); json(png).delete(); if (vid != null) vid.delete(); }
 
     static void purgeOld(Context c) {
         long limit = System.currentTimeMillis() - TRASH_DAYS * 86400000L;
@@ -76,7 +78,13 @@ final class Gallery {
     /** copy into the phone gallery (Pictures/Anima) */
     static Uri export(Context c, File png) throws IOException {
         ContentValues cv = new ContentValues();
-        JSONObject m = meta(png);
+        JSONObject m = meta(png); File vid = videoOf(png);
+        if (vid != null) {   // the video goes to Movies/Anima
+            cv.put(MediaStore.Video.Media.DISPLAY_NAME, "anima_" + m.optInt("w") + "x" + m.optInt("h") + "_" + m.optString("seed", "0") + "_" + vid.getName()); cv.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4"); cv.put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Anima");
+            Uri vu = c.getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, cv);
+            try (OutputStream o = c.getContentResolver().openOutputStream(vu); InputStream in = new FileInputStream(vid)) { byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n); }
+            return vu;
+        }
         cv.put(MediaStore.Images.Media.DISPLAY_NAME, "anima_" + m.optInt("w") + "x" + m.optInt("h") + "_" + m.optString("seed", "0") + "_" + png.getName());
         cv.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
         cv.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Anima");
@@ -130,8 +138,9 @@ final class Gallery {
 
     static void share(Context c, List<File> pngs) {
         ArrayList<Uri> us = new ArrayList<>();
-        for (File f : pngs) us.add(uri(f));
-        Intent s = new Intent(us.size() == 1 ? Intent.ACTION_SEND : Intent.ACTION_SEND_MULTIPLE).setType("image/png").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        boolean allVideo = pngs.size() == 1 && videoOf(pngs.get(0)) != null;
+        for (File f : pngs) us.add(allVideo ? uri(videoOf(f)) : uri(f));
+        Intent s = new Intent(us.size() == 1 ? Intent.ACTION_SEND : Intent.ACTION_SEND_MULTIPLE).setType(allVideo ? "video/mp4" : "image/png").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         if (us.size() == 1) s.putExtra(Intent.EXTRA_STREAM, us.get(0)); else s.putParcelableArrayListExtra(Intent.EXTRA_STREAM, us);
         ClipData cd = ClipData.newRawUri("", us.get(0));
         for (int i = 1; i < us.size(); i++) cd.addItem(new ClipData.Item(us.get(i)));
@@ -141,8 +150,8 @@ final class Gallery {
     static void share(Context c, File png) { share(c, java.util.Collections.singletonList(png)); }
 
     static void view(Context c, File png) {
-        Uri u = uri(png);
-        Intent v = new Intent(Intent.ACTION_VIEW).setDataAndType(u, "image/png").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        File vid = videoOf(png); Uri u = vid != null ? uri(vid) : uri(png);
+        Intent v = new Intent(Intent.ACTION_VIEW).setDataAndType(u, vid != null ? "video/mp4" : "image/png").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         v.setClipData(ClipData.newRawUri("", u));
         c.startActivity(v);
     }

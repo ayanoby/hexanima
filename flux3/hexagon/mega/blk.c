@@ -74,6 +74,7 @@ static void rot_run(const u16 *A, u16 *O, int ns, int nct, const u16 *hn_dram, u
 }
 /* LayerNorm (with mean) with two row kinds: slabs < ns0 use M/N, the others M1/N1 */
 static void p_lnn2(void *a, int i, int n) { par_t *p = (par_t *)a; for (int s = i; s < p->ns; s += n) { const int k = s >= p->ns0; k_lnmod_s(p->x + (size_t)s * NCB * 1024, p->h + (size_t)s * NCB * T16, 1, k ? p->M1 : p->M, k ? p->N1 : p->N, p->eps); } }
+static void p_rms2(void *a, int i, int n) { par_t *p = (par_t *)a; for (int s = i; s < p->ns; s += n) { const int k = s >= p->ns0; k_rmsmod_s(p->x + (size_t)s * NCB * 1024, p->h + (size_t)s * NCB * T16, 1, k ? p->M1 : p->M, k ? p->N1 : p->N, p->eps); } }
 static void p_lnn(void *a, int i, int n) { par_t *p = (par_t *)a; for (int s = i; s < p->ns; s += n) k_lnmod_s(p->x + (size_t)s * NCB * 1024, p->h + (size_t)s * NCB * T16, 1, p->M, p->N, 1e-6f); }
 
 /* ---------------- attention (joint, NHEAD heads, last key tile masked) ---------------- */
@@ -248,6 +249,56 @@ static void attn_run(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, i
   }
 }
 
+/* SeedVR2 window attention: plain attention (keys fit in VTCM) with up to two partially valid key tiles given in g_pk/g_pmi/g_pm (row independent masks), wnp of them */
+static void attn_win(const u16 *q, const u16 *k, const u16 *v, u16 *o, int nq, int nkv, int wnp, int qcb, int kcb, int grp, uint8_t *vt) {
+  const int nkb = nkv / 32; g_qcb = qcb; g_kcb = kcb; g_grp = grp; const int hdt = g_hdt;
+  u16 *KT = (u16 *)vt, *Vw = KT + (size_t)hdt * nkb * T16, *Qh = Vw + (size_t)(hdt + 1) * nkb * T16;           /* Qh also receives O */
+  u16 *Sb[2], *Pb[2]; Sb[0] = Qh + (size_t)nq * hdt * T16; Sb[1] = Sb[0] + (size_t)nkb * T16; Pb[0] = Sb[1] + (size_t)nkb * T16; Pb[1] = Pb[0] + (size_t)nkb * T16;
+  u16 *Ob = Pb[1] + (size_t)nkb * T16;                                                                  /* 5 tiles: 4 + sum */
+  for (size_t i = 0; i < (size_t)nkb * T16; i++) Vw[(size_t)hdt * nkb * T16 + i] = 0x3C00;               /* ones n-block */
+  for (int h = 0; h < qcb / hdt; h++) {
+    ah_t a = {k, v, q, o, nkb, h, nq, KT, Vw, Qh};
+    uint64_t c0 = PC(); pool_run(p_attn_setup, &a); g_acc[0] += PC() - c0;
+    for (int s = 0; s <= nq; s++) {
+      const int b = s & 1;
+      uint64_t c1 = PC();
+      const int nks = nkb;
+      if (s < nq) {
+        for (int nb = 0; nb < nks; nb++) {
+          hmx_acc((uint8_t *)(Qh + (size_t)s * hdt * T16), (hdt << 11) | 0x7C, (uint8_t *)(KT + (size_t)nb * hdt * T16), (hdt << 11) - 1);
+          hmx_store((uint8_t *)(Sb[b] + (size_t)nb * T16), 0);
+        }
+      }
+      g_acc[1] += PC() - c1;
+      
+      sm_t sm = {Sb[b], Pb[b], nks, 0, 0, wnp, g_pk, g_pmi, (const HVX_Vector *)g_pm};
+      uint64_t c2 = PC();
+      if (s < nq) pool_start(p_softmax, &sm);
+      if (s > 0) {   /* PV for slab s-1 while the workers run softmax(s) */
+        const u16 *P = Pb[(s - 1) & 1];
+        const int nkp = nkb;
+        for (int j = 0; j < hdt + 1; j++) {
+          for (int k0 = 0; k0 < nkp; k0 += 32) { int c = nkp - k0 < 32 ? nkp - k0 : 32; hmx_acc((uint8_t *)(P + (size_t)k0 * T16), (c << 11) | 0x7C, (uint8_t *)(Vw + ((size_t)j * nkb + k0) * T16), (c << 11) - 1); }
+          hmx_store((uint8_t *)(Ob + (size_t)j * T16), 0);
+        }
+        uint64_t c3 = PC(); g_acc[2] += c3 - c2;
+        k_rowscale_sum(Ob, hdt, Ob + (size_t)hdt * T16);
+        g_acc[3] += PC() - c3;
+        vcp(Qh + (size_t)(s - 1) * hdt * T16, Ob, hdt * 2048);   /* O replaces the (already consumed) Q slab */
+      }
+      uint64_t c4 = PC(); if (s < nq) pool_wait(); g_acc[4] += PC() - c4;
+    }
+    uint64_t c5 = PC(); pool_run(p_attn_flush, &a); g_acc[5] += PC() - c5;
+  }
+}
+
+
+static inline u16 f2h_c(float f) {   /* round-to-nearest-even fp32 -> fp16 bits (host-side tables: biases) */
+  union { uint32_t u; float f; } c; c.f = f; uint32_t x = c.u, sgn = (x >> 16) & 0x8000, e = (x >> 23) & 255, m = x & 0x7fffff, h;
+  if (e >= 143) return (u16)(sgn | 0x7bff); if (e <= 102) return (u16)sgn;
+  if (e < 113) { m |= 0x800000; uint32_t sh = 126 - e; h = m >> sh; uint32_t rem = m & ((1u << sh) - 1), half = 1u << (sh - 1); if (rem > half || (rem == half && (h & 1))) h++; return (u16)(sgn | h); }
+  h = ((e - 112) << 10) | (m >> 13); uint32_t rem = m & 0x1fff; if (rem > 0x1000 || (rem == 0x1000 && (h & 1))) h++; return (u16)(sgn | h);
+}
 /* ---------------- block ---------------- */
 static uint32_t us_now(void) { return (uint32_t)HAP_perf_get_time_us(); }
 
@@ -617,6 +668,64 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
     g_rope_eps = 1e-6f; gemm_set_q8(1);
     goto done;
   }
+  if (meta[M_MODE] == 100) {   /* SeedVR2-3B DiT layer (anima/seedvr2): rows = [vid slabs of all windows, each window padded to 32 | 2 text slabs (58 valid)]; kinds: slabs < M_NIMG vid, the rest text.
+                                 Window table (int32 x3 per window: first vid slab, vid slabs, valid vid rows) at M_LD, M_A0 = number of windows. Attention per window: q = the window's vid slabs (and the text slabs),
+                                 keys = the window's vid slabs + the 2 text slabs (staged at M_LQ / M_LO), partial tiles masked; the text outputs of all windows are averaged (M_LU: fp32 accumulators + temporary O).
+                                 Pack (anima/seedvr2/export_seedvr2.py): header int32 offsets [2 + 8 * set + k], k = Q K V O GU DN VEC; set 0 = vid (or shared), 1 = txt. VEC f32: mod (attn shift, scale, gate, mlp shift, scale, gate) x 2560, q gain @15360, k gain @15488, o bias @15616. */
+    const int32_t *h4 = (const int32_t *)wts; uint32_t po[2][7]; for (int st = 0; st < 2; st++) for (int k = 0; k < 7; k++) po[st][k] = (uint32_t)h4[2 + 8 * st + k];
+    const int nv = meta[M_NIMG], nt = ns - nv, nwin = meta[M_A0], D_ = 2560; const int sl0[2] = {0, nv}, sln[2] = {nv, nt};
+    const int32_t *wt = (const int32_t *)BUF(M_LD); u16 *kst = (u16 *)BUF(M_LQ), *vst = (u16 *)BUF(M_LO); uint8_t *lu = (uint8_t *)BUF(M_LU);
+    HVX_Vector *acc = (HVX_Vector *)lu; u16 *otmp = (u16 *)(lu + 2 * 80 * 32 * 128);
+    const float *vec[2] = {(const float *)(wts + po[0][6]), (const float *)(wts + po[1][6])};
+    static HVX_Vector LM1[MAXNCB] __attribute__((aligned(128))), LN1[MAXNCB] __attribute__((aligned(128)));
+    static u16 g_bias[2][80 * 64] __attribute__((aligned(128)));
+    gemm_set_q8(3); g_hdt = 4; P.M1 = LM1; P.N1 = LN1; P.ns0 = nv; P.eps = 1e-5f;
+    for (int kd = 0; kd < 2; kd++) for (int t = 0; t < 80; t++) for (int l = 0; l < 64; l++) g_bias[kd][t * 64 + l] = f2h_c(vec[kd][15616 + t * 32 + (l >> 1)]);
+    /* ---- attention half ---- */
+    k_rms_prep(LM, LN, vec[0] + D_, vec[0], g_zero); k_rms_prep(LM1, LN1, vec[1] + D_, vec[1], g_zero); pool_run(p_rms2, &P); TICK();
+    for (int kd = 0; kd < 2; kd++) {
+      const int n = sln[kd], s0 = sl0[kd]; if (!n) continue; const size_t ro = (size_t)s0 * NCB * T16;
+      gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 3; e.rope = 1; e.gain = vec[kd] + 15360; e.cosT = cosT + (size_t)s0 * 2048; e.sinT = sinT + (size_t)s0 * 2048;
+      gemm_run_geo(h16 + ro, n * 32, 2560, WB(po[kd][0]), 2560, q16 + ro, vt, &e, 0);
+      e.gain = vec[kd] + 15488; gemm_run_geo(h16 + ro, n * 32, 2560, WB(po[kd][1]), 2560, k16 + ro, vt, &e, 0);
+      gemm_run_geo(h16 + ro, n * 32, 2560, WB(po[kd][2]), 2560, v16 + ro, vt, 0, 0);
+    } TICK();
+    { const size_t TS = (size_t)NCB * T16;   /* halfwords per slab */
+      for (int w = 0; w < nwin; w++) {
+        const int vs0 = wt[3 * w], nvw = wt[3 * w + 1], nval = wt[3 * w + 2], nkb = nvw + 2;
+        vcp(kst, k16 + vs0 * TS, (size_t)nvw * TS * 2); vcp(kst + (size_t)nvw * TS, k16 + (size_t)nv * TS, 2 * TS * 2);
+        vcp(vst, v16 + vs0 * TS, (size_t)nvw * TS * 2); vcp(vst + (size_t)nvw * TS, v16 + (size_t)nv * TS, 2 * TS * 2);
+        int np = 0; const int c1 = nval - (nvw - 1) * 32, c2 = 58 - 32;
+        if (c1 < 32) { g_pk[np] = nvw - 1; g_pmi[np] = 0; np++; } g_pk[np] = nvw + 1; g_pmi[np] = 1; np++;
+        for (int m = 0; m < 2; m++) { const int c = m == 0 ? c1 : c2; for (int p = 0; p < 16; p++) for (int l = 0; l < 64; l++) g_pm[(m * 16 + p) * 64 + l] = (l >> 1) < c ? 0 : 0xFFFF; }
+        attn_win(q16 + vs0 * TS, kst, vst, o16 + vs0 * TS, nvw, nkb * 32, np, NCB, NCB, 1, vt);
+        attn_win(q16 + (size_t)nv * TS, kst, vst, otmp, 2, nkb * 32, np, NCB, NCB, 1, vt);
+        for (int t = 0; t < 2 * NCB; t++) k_pool_acc(acc + (size_t)t * 32, otmp + (size_t)t * T16, w == 0);
+      }
+      for (int t = 0; t < 2 * NCB; t++) k_pool_fin(o16 + (size_t)nv * TS + (size_t)t * T16, acc + (size_t)t * 32, 1.0f / nwin);
+    } TICK();
+    for (int kd = 0; kd < 2; kd++) {
+      const int n = sln[kd], s0 = sl0[kd]; if (!n) continue; const size_t ro = (size_t)s0 * NCB * T16;
+      gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 1; e.x32 = x + (size_t)s0 * NCB * 1024; e.gate = vec[kd] + 2 * D_; e.bias16 = g_bias[kd];
+      gemm_run_geo(o16 + ro, n * 32, 2560, WB(po[kd][3]), 2560, t16 + ro, vt, &e, 0);
+    } TICK();
+    /* ---- MLP half ---- */
+    k_rms_prep(LM, LN, vec[0] + 4 * D_, vec[0] + 3 * D_, g_zero); k_rms_prep(LM1, LN1, vec[1] + 4 * D_, vec[1] + 3 * D_, g_zero); pool_run(p_rms2, &P); TICK();
+    for (int kd = 0; kd < 2; kd++) {
+      const int n = sln[kd], s0 = sl0[kd]; if (!n) continue; const size_t ro = (size_t)s0 * NCB * T16, rm = (size_t)s0 * 216 * T16;
+      gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 6; e.tabs = g_tabs2; e.scr = g_scr;   /* silu(gate_j) * up_j, n-blocks interleaved */
+      gemm_run_geo(h16 + ro, n * 32, 2560, WB(po[kd][4]), 13824, mid + rm, vt, &e, 0);
+    } TICK();
+    for (int kd = 0; kd < 2; kd++) {
+      const int n = sln[kd], s0 = sl0[kd]; if (!n) continue; const size_t ro = (size_t)s0 * NCB * T16, rm = (size_t)s0 * 216 * T16;
+      const gemm_geo_t d0 = {216, 216, 0, 0, 0, 0}, d1 = {216, 216, 108, 0, 0, 0};   /* K = 6912 in two halves of 3456 */
+      gemm_run_geo(mid + rm, n * 32, 3456, WB(po[kd][5]), 2560, t16 + ro, vt, 0, &d0);
+      gemm_epi_t e; memset(&e, 0, sizeof e); e.mode = 4; e.x32 = x + (size_t)s0 * NCB * 1024; e.gate = vec[kd] + 5 * D_; e.prev = t16 + ro;
+      gemm_run_geo(mid + rm, n * 32, 3456, WB(po[kd][5]), 2560, t16 + ro, vt, &e, &d1);
+    } TICK();
+    gemm_set_q8(1);
+    goto done;
+  }
   if (meta[M_MODE] == 70) {   /* FLUX.3 Klein DiT block (anima/flux3): PARALLEL block, x += gate * (O(attn(LNmod(x))) + DN(silu(g) * u)), hidden 3072 (96 tiles), 24 heads x 128, ffn 9216, plain int8 (no ConvRot).
                                  slabs [0, M_NIMG) kind 0 rows, the rest kind 1 (padding at the very end masked through M_NVALID); mod = 2 kinds x [shift, scale, gate] x 3072 f32 */
     const int nimg = meta[M_NIMG]; const float *mk[2] = {mod, mod + 3 * 3072}; const float *gn = (const float *)(wts + KL_GAIN);
@@ -827,6 +936,7 @@ int mega_block(remote_handle64 hd, const int *meta, int nmeta, int wfd, int bfd,
   const size_t xb = (size_t)meta[M_NTOK] * DIM * 4;
   if (meta[M_FIRST] && meta[M_MODE] != 61) { cache_sync(g_blob + meta[M_X], xb); cache_sync(g_blob + meta[M_COS], (size_t)meta[M_NTOK] / 32 * 8192); cache_sync(g_blob + meta[M_SIN], (size_t)meta[M_NTOK] / 32 * 8192); }
   if ((meta[M_MODE] == 50 || meta[M_MODE] == 51 || meta[M_MODE] == 80 || meta[M_MODE] == 81 || meta[M_MODE] == 82 || meta[M_MODE] == 90 || meta[M_MODE] == 91 || meta[M_MODE] == 92) && meta[M_FIRST]) cache_sync(g_blob + meta[M_HN], 131072);
+  if (meta[M_MODE] == 100) cache_sync(g_blob + meta[M_LD], (size_t)meta[M_A0] * 12 + 128);   /* SeedVR2 window table written by the host */
   if (meta[M_NPRE]) { const size_t own = (size_t)meta[M_NTOK] * DIM * 2, pre = (size_t)meta[M_NPRE] * 32 * DIM * 2; cache_sync(g_blob + meta[M_K] + own, pre); cache_sync(g_blob + meta[M_V] + own, pre); }
   if (meta[M_MODE] == 61) { cache_sync(g_blob + meta[M_H], (size_t)meta[M_NTOK] / 32 * meta[M_NCB] * 2048); cache_sync(g_blob + meta[M_LQ], (size_t)meta[M_NTOK] / 32 * 4 * 2048); }   /* Mage VAE GEMM: host-written A tiles + bias pattern */
   int r = mega_block_impl(hd, meta, nmeta, wfd, mod, modlen, times, ntimes, rc);

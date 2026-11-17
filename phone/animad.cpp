@@ -372,7 +372,7 @@ int main(int argc, char** argv) {
         }
         fprintf(stderr, "animad: chain ready %.1fs (text encoder on NPU: %s)\n", now() - t0, te.empty() ? "no" : "yes");
     }
-    auto handle = [&](const std::string& dir, int steps, const std::string& vd, int cm) {   // cm = DiT calls per step: 2 with CFG (the positive, then the negative prompt)
+    auto handle = [&](const std::string& dir, int steps, const std::string& vd, int cm, const std::string& nagp) {   // cm = DiT calls per step: 2 with CFG (the positive, then the negative prompt)
     std::vector<f32> ctx512, ctxt[2];  // adapter output [512,1024]; ctxt[k] = transposed copy of prompt k for the chain (st_ctx.raw)
     if (te.empty() && serve) writefile(dir + "/qh.cpu", "", 0);  // no NPU text encoder: sd.cpp computes it
     if (!te.empty()) for (int kp = 0; kp < cm; kp++) {  // sd.cpp (SD_TE_MODE=extern) writes qids.bin/qids.shape (Qwen token ids) and waits for qh.bin(.done) or qh.cpu (= compute it yourself); once per prompt (CFG: the negative one too)
@@ -436,6 +436,11 @@ int main(int argc, char** argv) {
             for (int i = 0; i < 512; i++) for (int c = 0; c < 1024; c++) ctxt[kp][(size_t)c * 512 + i] = ctx512[(size_t)i * 1024 + c];
             writefile(ph + "/st_ctx.raw", ctxt[kp].data(), ctxt[kp].size() * 4);
         } else if (cm > 1) writefile(ph + "/st_ctx.raw", ctxt[kp].data(), ctxt[kp].size() * 4);
+        // NAG test mode (ANIMAD_NAG="scale,tau,alpha", sd-cli run with --cfg-scale ANIMAD_NAG_CFG so that it encodes the negative prompt): the positive call is skipped (zeros), the negative call runs ONE
+        // pass with both contexts; its velocity v is written divided by (1-cfg) so that sd.cpp's uncond + cfg*(cond-uncond) with cond = 0 gives exactly v
+        const char* nagenv = !nagp.empty() ? nagp.c_str() : getenv("ANIMAD_NAG"); const bool nag = nagenv && cm == 2 && !test;
+        if (nag && kp == 0) { std::vector<f32> z((size_t)16 * H * Wd, 0.f); writefile(dir + "/out_" + sn + ".bin", z.data(), z.size() * 4); writefile(dir + "/out_" + sn + ".bin.done", "", 0); continue; }
+        if (nag) { writefile(ph + "/st_ctx.raw", ctxt[0].data(), ctxt[0].size() * 4); writefile(ph + "/st_ctx2.raw", ctxt[1].data(), ctxt[1].size() * 4); }
         // timestep embedding
         std::vector<f32> tp(D), emb(D), lora(6144), tmp(D);
         for (int i = 0; i < D / 2; i++) { f32 a = t * expf(-logf(10000.f) * i / (D / 2)); tp[i] = cosf(a); tp[i + D / 2] = sinf(a); }
@@ -476,7 +481,8 @@ int main(int argc, char** argv) {
         std::string src = "in_x.raw";
         for (size_t k = 0; k < ch.size(); k++) {
             std::string dst = "chain_x" + std::to_string(k) + (hmx && k + 1 < ch.size() ? ".x32" : ".raw");   // HMX stages pass tiles directly
-            fprintf(ch[k].in, "run %s st_emb.raw st_lora.raw st_ctx.raw %s %d %d %u\n", src.c_str(), dst.c_str(), gh, gw, skipmask);
+            if (nag) fprintf(ch[k].in, "run %s st_emb.raw st_lora.raw st_ctx.raw %s %d %d %u st_ctx2.raw %s\n", src.c_str(), dst.c_str(), gh, gw, skipmask, [&] { std::string a = nagenv; for (auto& c : a) if (c == ',') c = ' '; return a; }().c_str());
+            else fprintf(ch[k].in, "run %s st_emb.raw st_lora.raw st_ctx.raw %s %d %d %u\n", src.c_str(), dst.c_str(), gh, gw, skipmask);
             fflush(ch[k].in);
             std::string r = waitline(ch[k], "done", "error");
             if (r[0] != 'd') die("chainrun error", r);
@@ -527,11 +533,12 @@ int main(int argc, char** argv) {
             }
             out.swap(vf);
         }
-        if (const char* hm = getenv("ANIMAD_HOME")) if ((kp == 0 && (si < steps - 1 || getenv("ANIMA_PREVIEW_ALL"))) && !getenv("ANIMA_NOPREVIEW")) {   // preview: the x0 estimate x - t*v (DiT-space latent [16][H][W]) for the app, written atomically
+        if (const char* hm = getenv("ANIMAD_HOME")) if ((kp == (nag ? 1 : 0) && (si < steps - 1 || getenv("ANIMA_PREVIEW_ALL"))) && !getenv("ANIMA_NOPREVIEW")) {   // preview: the x0 estimate x - t*v (DiT-space latent [16][H][W]) for the app, written atomically
             std::vector<f32> xo((size_t)16 * Hf * Wf); for (size_t i = 0; i < xo.size(); i++) xo[i] = xfull[i] - t * out[i];
             const std::string pf = std::string(hm) + "/prev.bin", tmp = pf + ".tmp"; FILE* f = fopen(tmp.c_str(), "wb");
             if (f) { int hdr[4] = {Hf, Wf, 16, si}; fwrite(hdr, 4, 4, f); fwrite(xo.data(), 4, xo.size(), f); fclose(f); rename(tmp.c_str(), pf.c_str()); }
         }
+        if (nag) { const float k1 = 1.f / (1.f - (getenv("ANIMAD_NAG_CFG") ? (float)atof(getenv("ANIMAD_NAG_CFG")) : 2.f)); for (auto& v : out) v *= k1; }
         writefile(dir + "/out_" + sn + ".bin", out.data(), out.size() * 4);
         writefile(dir + "/out_" + sn + ".bin.done", "", 0);
         fprintf(stderr, "animad: step %d t=%.4f total %.2fs (prelude %.2f, npu %.2f, final+io %.2f)\n", n, t, now() - ts, tb - ts, npu / 1000, now() - tb - npu / 1000);
@@ -604,9 +611,9 @@ int main(int argc, char** argv) {
                     std::string rd = dir + "/" + nm;
                     if (access((rd + "/start").c_str(), F_OK) || !access((rd + "/finished").c_str(), F_OK)) continue;
                     auto sb = readfile(rd + "/start");
-                    int st = 0, cmv = 1; sscanf(std::string(sb.begin(), sb.end()).c_str(), "%d %d", &st, &cmv);   // "start": steps [calls per step]
+                    int st = 0, cmv = 1; char nb[64] = ""; sscanf(std::string(sb.begin(), sb.end()).c_str(), "%d %d %63s", &st, &cmv, nb);   // "start": steps [calls per step [NAG "scale,tau,alpha"]]
                     double tr = now();
-                    handle(rd, st > 0 ? st : 4, rd + "/vae", cmv == 2 ? 2 : 1);
+                    handle(rd, st > 0 ? st : 4, rd + "/vae", cmv == 2 ? 2 : 1, nb);
                     writefile(rd + "/finished", "", 0);
                     fprintf(stderr, "animad: request %s done in %.1fs\n", nm.c_str(), now() - tr);
                     did = true;
@@ -616,7 +623,7 @@ int main(int argc, char** argv) {
             if (!access((dir + "/quit").c_str(), F_OK)) break;
         }
     } else {
-        handle(dir, steps, getenv("SD_VAE_DIR") ? getenv("SD_VAE_DIR") : "", 1);
+        handle(dir, steps, getenv("SD_VAE_DIR") ? getenv("SD_VAE_DIR") : "", 1, "");
     }
     if (!vae.empty()) { fprintf(vae[0].in, "quit\n"); fflush(vae[0].in); }
     if (!te.empty()) { fprintf(te[0].in, "quit\n"); fflush(te[0].in); }

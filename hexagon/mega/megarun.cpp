@@ -91,8 +91,8 @@ static Layout layout(int T, int WN = 0) {
   sz[M_COS] = sz[M_SIN] = (size_t)(T / 32) * 2 * 1024 * 4;
   const size_t Tw = WN ? (size_t)WN * 32 : (size_t)T;   // rows of the per-window buffers
   sz[M_H] = sz[M_Q] = sz[M_O] = sz[M_T] = Tw * D * 2; sz[M_K] = sz[M_V] = (size_t)T * D * 2;
-  sz[M_MID] = Tw * 8192 * 2; sz[M_CK] = sz[M_CV] = (size_t)NCTX * D * 2;
-  static const int order[] = {M_X, M_CTX, M_MOD, M_COS, M_SIN, M_H, M_Q, M_K, M_V, M_O, M_T, M_MID, M_CK, M_CV};
+  sz[M_MID] = Tw * 8192 * 2; sz[M_CK] = sz[M_CV] = sz[M_CK2] = sz[M_CV2] = (size_t)NCTX * D * 2; sz[M_CTX2] = (size_t)NCTX * 1024 * 2;
+  static const int order[] = {M_X, M_CTX, M_MOD, M_COS, M_SIN, M_H, M_Q, M_K, M_V, M_O, M_T, M_MID, M_CK, M_CV, M_CTX2, M_CK2, M_CV2};
   size_t off = 0;
   for (int id : order) { L.meta[id] = (int)off; off += up(sz[id]); }
 #define WO(x) (g_q8 ? WQ(x) : (x))
@@ -320,7 +320,7 @@ int main(int argc, char** argv) {
     std::istringstream ss(line); std::string cmd; ss >> cmd;
     if (cmd == "quit") break;
     if (cmd != "run") continue;
-    std::string xi, em, lo, cx, xo; int gh = 48, gw = 32; unsigned skipmask = 0; ss >> xi >> em >> lo >> cx >> xo >> gh >> gw >> skipmask;
+    std::string xi, em, lo, cx, xo, cx2; int gh = 48, gw = 32; unsigned skipmask = 0; float nags = 5, nagt = 2.5f, naga = 0.25f; ss >> xi >> em >> lo >> cx >> xo >> gh >> gw >> skipmask >> cx2 >> nags >> nagt >> naga;   // optional: negative context file + NAG scale, tau, alpha
     int T = gh * gw;
     auto skipped = [&](int k) { return first + k < 32 && ((skipmask >> (first + k)) & 1); };   // the mask has 32 bits: blocks 32+ (2.9B models) are never skipped
     auto xb = readfile(xi), eb = readfile(em), lb = readfile(lo), cb = readfile(cx);
@@ -338,6 +338,8 @@ int main(int argc, char** argv) {
     Layout L = layout(T, WN);
     if (gh != cur_gh || gw != cur_gw) { make_rope(gh, gw, (f32*)(blob + L.meta[M_COS]), (f32*)(blob + L.meta[M_SIN])); cur_gh = gh; cur_gw = gw; }
     to_ctx16((const f32*)cb.data(), (__fp16*)(blob + L.meta[M_CTX]));
+    L.meta[M_NAG] = 0;
+    if (!cx2.empty()) { auto c2 = readfile(cx2); if (c2.size() == (size_t)1024 * NCTX * 4) { to_ctx16((const f32*)c2.data(), (__fp16*)(blob + L.meta[M_CTX2])); L.meta[M_NAG] = getenv("MEGA_NAG_REF") ? 2 : 1; memcpy(&L.meta[M_NAGS], &nags, 4); memcpy(&L.meta[M_NAGT], &nagt, 4); memcpy(&L.meta[M_NAGA], &naga, 4); } }
     bool xin32 = xi.size() > 4 && xi.compare(xi.size() - 4, 4, ".x32") == 0;
     if (xin32) memcpy(blob + L.meta[M_X], xb.data(), (size_t)D * T * 4); else to_x32((const f32*)xb.data(), (f32*)(blob + L.meta[M_X]), T);
     { dma_buf_sync_ sy = {(1ull << 2) | 3}; ioctl(blobfd, DMA_BUF_IOCTL_SYNC_, &sy); }   // END|RW: flush CPU writes

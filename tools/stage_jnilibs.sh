@@ -15,4 +15,6 @@ F3=${FLUX3_DIR:-flux3}; SK=$F3/hexagon/mega/bld/v69/libmega_skel.so
 [ -f mage/magerun/out/magerun ] && cp mage/magerun/out/magerun $J/libmagerun.so && cp $SK $J/libmageskel.so
 [ -f ltx/runner/out/ltxrun ] && cp ltx/runner/out/ltxrun $J/libltxrun.so && cp $SK $J/libltxskel.so && cp ltx/vae/runner/out/lvae $J/liblvae.so
 [ -f h3/hexagon/mega/out/r2vrun ] && cp h3/hexagon/mega/out/r2vrun $J/libr2vrun.so && cp $SK $J/libr2vskel.so && cp $F3/hexagon/mega/out/vaerun $J/libr2vae.so && cp h3/vae/out/henc $J/libr2enc.so
+# SeedVR2 (optional): the driver svsr, the DiT runner svrun and the shared DSP skel (MODE 100) under its own name; its VAE tiles run in libvaerun.so
+[ -f seedvr2/svsr_s ] && cp seedvr2/svsr_s $J/libsvsr.so && cp flux3/hexagon/mega/out/svrun_s $J/libsvrun.so && cp $SK $J/libsvrskel.so
 ls -la $J

@@ -33,6 +33,44 @@ static void p_add(void *a, int i, int n) { par_t *p = (par_t *)a; for (int s = i
 static void p_rope(void *a, int i, int n) { par_t *p = (par_t *)a; for (int s = i; s < p->ns; s += n) k_rmsrope(p->q + (size_t)s * NCB * T16, p->g, p->rope ? p->c + (size_t)s * 2048 : 0, p->rope ? p->s + (size_t)s * 2048 : 0, p->rope); }
 static void p_gelu(void *a, int i, int n) { par_t *p = (par_t *)a; size_t per = (p->nvec + n - 1) / n, o = per * i, e = o + per > p->nvec ? p->nvec : o + per; if (o < e) k_gelu2(p->q + o * 64, e - o, g_t2, g_scr + 8 * i); }
 
+/* ---------------- NAG: normalized attention guidance on the cross-attention output ----------------
+   z = positive attention output (o16, in place), n = the one with the negative context. Per token: zt = s*z - (s-1)*n; if |zt|_1 / |z|_1 > tau: zt *= tau * |z|_1 / |zt|_1; out = alpha*zt + (1-alpha)*z.
+   Scalar code (a test path): fp16 <-> fp32 by hand, tile element (row r, col c) of a 32x32 tile is at (r>>1)*64 + c*2 + (r&1). */
+static inline float h2f(u16 h) {
+  uint32_t s = (uint32_t)(h & 0x8000) << 16, e = (h >> 10) & 31, m = h & 1023, r;
+  if (e == 0) { if (m == 0) r = s; else { e = 1; while (!(m & 1024)) { m <<= 1; e--; } m &= 1023; r = s | ((e + 112) << 23) | (m << 13); } }
+  else if (e == 31) r = s | 0x7f800000u | (m << 13); else r = s | ((e + 112) << 23) | (m << 13);
+  union { uint32_t u; float f; } c; c.u = r; return c.f;
+}
+static inline u16 f2h(float f) {
+  union { uint32_t u; float f; } c; c.f = f; uint32_t x = c.u, s = (x >> 16) & 0x8000, e = (x >> 23) & 255, m = x & 0x7fffff, h;
+  if (e >= 143) return (u16)(s | 0x7bff);
+  if (e <= 102) return (u16)s;
+  if (e < 113) { m |= 0x800000; uint32_t sh = 126 - e; h = m >> sh; uint32_t rem = m & ((1u << sh) - 1), half = 1u << (sh - 1); if (rem > half || (rem == half && (h & 1))) h++; return (u16)(s | h); }
+  h = ((e - 112) << 10) | (m >> 13); uint32_t rem = m & 0x1fff; if (rem > 0x1000 || (rem == 0x1000 && (h & 1))) h++;
+  return (u16)(s | h);
+}
+typedef struct { u16 *z; const u16 *n; int ns; float s, tau, alpha; } nag_t;
+static float g_nagbuf[8][2048] __attribute__((aligned(128)));
+static HVX_Vector g_nagv[8][2 * NCB] __attribute__((aligned(128)));
+static void p_nag_hvx(void *a, int idx, int nw) { nag_t *p = (nag_t *)a; for (int sl = idx; sl < p->ns; sl += nw) k_nag_slab(p->z + (size_t)sl * NCB * T16, p->n + (size_t)sl * NCB * T16, p->s, p->tau, p->alpha, g_nagv[idx & 7]); }
+static void p_nag(void *a, int idx, int nw) {
+  nag_t *p = (nag_t *)a; float *b = g_nagbuf[idx & 7];
+  for (int sl = idx; sl < p->ns; sl += nw)
+    for (int r = 0; r < 32; r++) {
+      const size_t ro = (size_t)(r >> 1) * 64 + (r & 1); float lp = 0, lt = 0;
+      for (int cb = 0; cb < NCB; cb++) {
+        const u16 *zp = p->z + ((size_t)sl * NCB + cb) * T16 + ro, *np = p->n + ((size_t)sl * NCB + cb) * T16 + ro;
+        for (int c = 0; c < 32; c++) { float zv = h2f(zp[c * 2]), nv = h2f(np[c * 2]), t = p->s * zv - (p->s - 1.f) * nv; b[cb * 32 + c] = t; lp += zv < 0 ? -zv : zv; lt += t < 0 ? -t : t; }
+      }
+      float sc = 1.f; if (lp > 0 && lt > p->tau * lp) sc = p->tau * lp / lt;
+      for (int cb = 0; cb < NCB; cb++) {
+        u16 *zp = p->z + ((size_t)sl * NCB + cb) * T16 + ro;
+        for (int c = 0; c < 32; c++) zp[c * 2] = f2h(p->alpha * sc * b[cb * 32 + c] + (1.f - p->alpha) * h2f(zp[c * 2]));
+      }
+    }
+}
+
 /* ---------------- attention ---------------- */
 typedef struct { const u16 *k, *v, *q; u16 *o; int nkb, h, nq; u16 *KT, *Vw, *Qh; } ah_t;
 static void p_attn_setup(void *a, int idx, int n) {   /* build K^T and V(+ones) weight tiles for head h, copy Q tiles */
@@ -245,10 +283,19 @@ static int mega_block_impl(remote_handle64 hd, const int *meta, int nmeta, int w
       { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, nw, DIM, (u16 *)WB(M_WSO), DIM, t16, vt, &e); } TICK();
     } else if (site == 1) {
       gemm_run(h16, nw, DIM, (u16 *)WB(M_WCQ), DIM, q16, vt);
-      gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCK), DIM, ck16, vt); gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCV), DIM, cv16, vt); TICK();
+      gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCK), DIM, ck16, vt); gemm_run((u16 *)BUF(M_CTX), nctx, 1024, (u16 *)WB(M_WCV), DIM, cv16, vt);
+      u16 *ck2 = (u16 *)BUF(M_CK2), *cv2 = (u16 *)BUF(M_CV2); const int nag = meta[M_NAG];
+      if (nag) { gemm_run((u16 *)BUF(M_CTX2), nctx, 1024, (u16 *)WB(M_WCK), DIM, ck2, vt); gemm_run((u16 *)BUF(M_CTX2), nctx, 1024, (u16 *)WB(M_WCV), DIM, cv2, vt); }
+      TICK();
       P.rope = 0; P.g = gain + 256; P.q = q16; pool_run(p_rope, &P);
-      P.ns = nc; P.g = gain + 384; P.q = ck16; pool_run(p_rope, &P); P.ns = ns; TICK();
-      attn_run(q16, ck16, cv16, o16, ns, nctx, vt); TICK();
+      P.ns = nc; P.g = gain + 384; P.q = ck16; pool_run(p_rope, &P); if (nag) { P.q = ck2; pool_run(p_rope, &P); } P.ns = ns; TICK();
+      attn_run(q16, ck16, cv16, o16, ns, nctx, vt);
+      if (nag) {   /* the negative context: its output goes to t16 (free until the output projection), then both are combined into o16 */
+        attn_run(q16, ck2, cv2, t16, ns, nctx, vt);
+        nag_t Nt; Nt.z = o16; Nt.n = t16; Nt.ns = ns; memcpy(&Nt.s, &meta[M_NAGS], 4); memcpy(&Nt.tau, &meta[M_NAGT], 4); memcpy(&Nt.alpha, &meta[M_NAGA], 4);
+        pool_run(nag == 2 ? p_nag : p_nag_hvx, &Nt);   /* 2 = scalar reference (MEGA_NAG_REF), 1 = HVX */
+      }
+      TICK();
       { gemm_epi_t e = {1, x, gt, 0, 0}; gemm_run_ex(o16, nw, DIM, (u16 *)WB(M_WCO), DIM, t16, vt, &e); } TICK();
     } else {
       { gemm_epi_t e = {2, 0, 0, g_t2, g_scr}; gemm_run_ex(h16, nw, DIM, (u16 *)WB(M_WM1), 8192, mid, vt, &e); } TICK();

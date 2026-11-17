@@ -64,3 +64,5 @@ void k_rowmax_chunk(const uint16_t *S, int nkb, int p0, int p1, const HVX_Vector
 void k_softmax_fixed(const uint16_t *S, uint16_t *P, int nkb, const uint16_t *exp_tab, HVX_Vector *scratch, int p0, int p1, const HVX_Vector *kmask, const HVX_Vector *mx);
 void k_acc_tile(HVX_Vector *acc, const uint16_t *t16, int first);
 void k_final_acc(uint16_t *O, const HVX_Vector *acc, int nt);
+void k_pool_acc(HVX_Vector *acc, const uint16_t *t16, int first);
+void k_pool_fin(uint16_t *o16, const HVX_Vector *acc, float scale);

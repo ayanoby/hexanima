@@ -799,3 +799,17 @@ void k_gate_slab(uint16_t *o, const uint16_t *gl, int nheads, int hdt) {
     for (int j = 0; j < hdt; j++) { HVX_Vector *t = &ov[(h * hdt + j) * 16 + p]; *t = Q6_Vhf_equals_Vqf16(Q6_Vqf16_vmpy_VhfVhf(*t, m)); }
   }
 }
+
+/* SeedVR2 text pooling: acc (fp32, 2 qf32 vectors per fp16 vector, 32 vectors per 32x32 tile pair-interleaved like the fp16 tile) += tile; fin: out = acc * scale as fp16 tile */
+void k_pool_acc(HVX_Vector *acc, const uint16_t *t16, int first) {
+  const HVX_Vector *v = (const HVX_Vector *)t16;
+  for (int j = 0; j < 16; j++) {
+    const HVX_VectorPair w = widen_hf(v[j]);
+    if (first) { acc[2 * j] = QF2SF(Q6_V_lo_W(w)); acc[2 * j + 1] = QF2SF(Q6_V_hi_W(w)); }
+    else { acc[2 * j] = QF2SF(Q6_Vqf32_vadd_VsfVsf(acc[2 * j], QF2SF(Q6_V_lo_W(w)))); acc[2 * j + 1] = QF2SF(Q6_Vqf32_vadd_VsfVsf(acc[2 * j + 1], QF2SF(Q6_V_hi_W(w)))); }
+  }
+}
+void k_pool_fin(uint16_t *o16, const HVX_Vector *acc, float scale) {
+  HVX_Vector *v = (HVX_Vector *)o16; const HVX_Vector vs = splat_f(scale);
+  for (int j = 0; j < 16; j++) v[j] = Q6_Vhf_equals_Wqf32(Q6_W_vcombine_VV(MULSF(acc[2 * j + 1], vs), MULSF(acc[2 * j], vs)));
+}

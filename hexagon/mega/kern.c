@@ -390,3 +390,40 @@ void k_final_acc(uint16_t *O, const HVX_Vector *acc, int nt) {
   }
 }
 
+
+/* NAG on one slab of 32 tokens (NCB tiles of 32x32 halfwords, tile element (r,c) at (r>>1)*64 + c*2 + (r&1): one vector = a row pair, even halfwords = row 2k, odd = row 2k+1).
+   z = positive attention output (in place), n = the one with the negative context. Per token: t = s*z - (s-1)*n; sc = min(1, tau*|z|_1/|t|_1); out = alpha*sc*t + (1-alpha)*z.
+   scr: 2*NCB vectors (t of one row pair, kept as fp32 between the two passes). */
+void k_nag_slab(uint16_t *z, const uint16_t *n, float s, float tau, float alpha, HVX_Vector *scr) {
+  const HVX_Vector vs = splat_f(s), vs1 = splat_f(s - 1.f), vtau = splat_f(tau), vone = splat_f(1.f), vbeta = splat_f(1.f - alpha), vzero = Q6_V_vzero(), vabsm = Q6_V_vsplat_R(0x7fffffff);
+  for (int k = 0; k < 16; k++) {
+    HVX_Vector pe = vzero, po = vzero, te = vzero, to = vzero;   /* qf32 accumulators of |z| and |t| (even / odd row of the pair) */
+    for (int cb = 0; cb < NCB; cb++) {
+      const size_t o = (size_t)cb * 1024 + k * 64;
+      const HVX_VectorPair wz = widen_hf(*(const HVX_Vector *)(z + o)), wn = widen_hf(*(const HVX_Vector *)(n + o));
+      for (int h = 0; h < 2; h++) {
+        const HVX_Vector zv = QF2SF(h ? Q6_V_hi_W(wz) : Q6_V_lo_W(wz)), nv = QF2SF(h ? Q6_V_hi_W(wn) : Q6_V_lo_W(wn));
+        const HVX_Vector tv = QF2SF(Q6_Vqf32_vsub_Vqf32Vqf32(MULSF(zv, vs), MULSF(nv, vs1)));
+        scr[cb * 2 + h] = tv;
+        const HVX_Vector az = Q6_V_vand_VV(zv, vabsm), at = Q6_V_vand_VV(tv, vabsm);
+        if (h) { po = Q6_Vqf32_vadd_Vqf32Vsf(po, az); to = Q6_Vqf32_vadd_Vqf32Vsf(to, at); } else { pe = Q6_Vqf32_vadd_Vqf32Vsf(pe, az); te = Q6_Vqf32_vadd_Vqf32Vsf(te, at); }
+      }
+    }
+    HVX_Vector ac[2];   /* alpha*sc per half (row parity) */
+    for (int h = 0; h < 2; h++) {
+      const HVX_Vector lp = QF2SF(lane_sum(h ? po : pe)), lt = QF2SF(lane_sum(h ? to : te));
+      const HVX_Vector cand = QF2SF(MULSF(QF2SF(MULSF(vtau, lp)), recip_sf(Q6_Vsf_vmax_VsfVsf(lt, splat_f(1e-20f)))));
+      ac[h] = QF2SF(MULSF(Q6_Vsf_vmin_VsfVsf(cand, vone), splat_f(alpha)));
+    }
+    for (int cb = 0; cb < NCB; cb++) {
+      const size_t o = (size_t)cb * 1024 + k * 64;
+      const HVX_VectorPair wz = widen_hf(*(const HVX_Vector *)(z + o));
+      HVX_Vector r[2];
+      for (int h = 0; h < 2; h++) {
+        const HVX_Vector zv = QF2SF(h ? Q6_V_hi_W(wz) : Q6_V_lo_W(wz));
+        r[h] = Q6_Vqf32_vadd_Vqf32Vqf32(MULSF(scr[cb * 2 + h], ac[h]), MULSF(zv, vbeta));
+      }
+      *(HVX_Vector *)(z + o) = Q6_Vhf_equals_Wqf32(Q6_W_vcombine_VV(r[1], r[0]));
+    }
+  }
+}

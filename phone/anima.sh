@@ -61,7 +61,7 @@ fi
 case "${CFG:-1}" in 1|1.0|1.00) CFG=;; esac   # no CFG at scale 1: sd.cpp then makes one DiT pass per step
 ID=r$(date +%s)$$
 OUT=${3:-/sdcard/Download/anima_$ID.png}
-mkdir -p $ROOT/$ID/vae && chmod -R 777 $ROOT/$ID && echo ${STEPS:-4} ${CFG:+2} > $ROOT/$ID/start   # CFG=<scale> (>1): two DiT passes per step, NEG=<negative prompt>
+mkdir -p $ROOT/$ID/vae && chmod -R 777 $ROOT/$ID && echo ${STEPS:-4} ${CFG:+2} ${NAGP} > $ROOT/$ID/start   # CFG=<scale> (>1): two DiT passes per step, NEG=<negative prompt>; NAGP=<scale,tau,alpha> (with CFG=2): negative guidance for turbo packs in ONE pass (animad NAG mode)
 V=${V:-1}   # the NPU VAE graph is 512x768; animad tiles larger latents through it
 if [ -z "$ANIMA_NOSERVE" ]; then
   printf 'p=%s\ns=%s\nn=%s\no=%s\nd=%s\nw=%s\nh=%s\nv=%s\nc=%s\nnp=%s\nsm=%s\nsc=%s\n' "${PREFIX:-best quality, score_7, score_9, very aesthetic, ultra detailed, fair skin, high contrast, anime coloring, }$1" "${2:--1}" "${STEPS:-4}" "$OUT" "$ROOT/$ID" "${W:-512}" "${H:-768}" "$V" "${CFG:-1}" "${NEG:-worst quality, low quality, blurry, bad anatomy}" "${SAMPLER:-euler}" "${SCHED:-}" > $SQ/job.tmp

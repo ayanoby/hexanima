@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /** MiniMax-H3 Ref2VA (33B DiT, reference-to-video) on the NPU: text (+ one reference photo) to video, 4 distilled steps with the turbo LoRA (no CFG), no sound yet. Files under files/r2v (blk/adaln/lora packs, glue, vae/ = video VAE decoder, enc/henc.bin = image encoder);
- *  the Qwen3-VL text encoder is the one of MiniMax-H3-Image (files/h3/te). Not in the download catalog: the converted files are put into files/r2v by hand (anima/h3, phone/install_r2v.sh). MiniMax H3 Community License applies. */
+ *  the Qwen3-VL text encoder is the one of MiniMax-H3-Image (files/h3/te). In the download catalog since 1.8.2 (catalog10.json, pack in ayanoby/hexanima-r2v-packs; MiniMax-H3-Image has to be installed first for its text encoder); the files can still be put into files/r2v by hand (anima/h3, phone/install_r2v.sh). MiniMax H3 Community License applies. */
 final class R2v {
     static final String ID = "r2v-video";
     static boolean is(String id) { return id != null && id.startsWith("r2v-"); }
@@ -15,6 +15,8 @@ final class R2v {
         return new File(d, ".installed").exists() && new File(d, "blk49.bin").exists() && new File(d, "adaln49.bin").exists() && new File(d, "r1.bin").exists() && new File(d, "vpp_w.f32").exists() && new File(d, "lora/lora49.bin").exists() && new File(d, "lora/lorar1.bin").exists()
             && new File(d, "vae/vb35.bin").exists() && new File(d, "vae/glue/po_w.f16").exists() && new File(H3.dir(home), "te/lay49.bin").exists();
     }
+    /** the text encoder of MiniMax-H3-Image (files/h3/te): all the video model needs from it */
+    static boolean teInstalled(File home) { return new File(H3.dir(home), "te/lay49.bin").exists(); }
     static boolean encoderInstalled(File home) { return new File(dir(home), "enc/henc.bin").exists(); }
     static final int STEPS = 4, MAX_STEPS = 12, FPS = 24;   // 4 = the turbo LoRA's schedule; other counts use the same shifted sigma schedule (fewer: rougher, more: not trained for)
     /** latent frames T = 5n + 2 (n >= 1): frames = 17n + 5 (22, 39, 56, 73, 90) */

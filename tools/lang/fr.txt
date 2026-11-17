@@ -621,3 +621,7 @@
 623	SeedVR2 nécessite un téléchargement : le modèle (environ 3,6 Go, Apache 2.0, converti pour le NPU) est téléchargé une seule fois depuis Hugging Face. De préférence en Wi-Fi.
 624	Pas assez d'espace libre : environ %.1f Go sont nécessaires
 625	SeedVR2 : %.1f sur %.1f Go
+626	Installez d'abord MiniMax-H3-Image : le modèle vidéo utilise son encodeur de texte.
+627	Le modèle est distribué sous la MiniMax-H3 Community License Agreement (le texte de la licence est téléchargé avec les fichiers). Il ne doit pas être utilisé aux États-Unis, dans l'Union européenne, au Royaume-Uni ni en Corée du Sud, et ses résultats ne doivent pas servir à améliorer d'autres modèles d'IA. Taille : %s Go. Télécharger ?
+628	MiniMax-H3 Ref2VA (33B) crée une vidéo à partir d'un prompt et, en option, d'une photo de référence : la personne, l'animal ou l'objet de la photo apparaît dans la vidéo, tandis que le décor et le mouvement viennent du prompt. 22–90 images, 4 étapes (LoRA turbo distillée, sans CFG), sans son. Il se télécharge dans l'écran « Modèles » après MiniMax-H3-Image : ils partagent l'encodeur de texte. Licence MiniMax H3 Community : pas pour les États-Unis, l'UE, le Royaume-Uni et la Corée.
+629	Un agrandisseur par diffusion : la meilleure qualité, plus lent. À choisir dans l'écran « Agrandir ». Apache 2.0  ·  ByteDance Seed

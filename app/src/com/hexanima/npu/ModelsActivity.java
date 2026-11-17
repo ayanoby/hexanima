@@ -119,7 +119,7 @@ public class ModelsActivity extends Base {
     /** one line of the catalog: a model with its variants (Anima turbo + base, Qwen 4 step + 8 step) */
     static final class Entry { String key, name, family, line = ""; final List<Models.Item> v = new ArrayList<>(); final List<String> lbl = new ArrayList<>(); }
 
-    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : it.h3 ? "MiniMax-H3" : it.klein ? "FLUX.3-Klein" : it.ltx ? "LTX-2.5" : "Anima"; }
+    static String familyOf(Models.Item it) { return it.moss ? "MOSS-Image" : it.qwen ? "Qwen-Image" : it.mage ? "Mage-Flow" : it.h3 || it.r2v ? "MiniMax-H3" : it.klein ? "FLUX.3-Klein" : it.ltx ? "LTX-2.5" : "Anima"; }
     static String lineOf(Models.Item it) { String n = it.name; return n.contains("RealSkin") ? "RealSkin" : n.contains("3D Harem") ? "3D Harem" : "Harem"; }
 
     List<Entry> entries() {
@@ -307,6 +307,45 @@ public class ModelsActivity extends Base {
             }
         }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.bottomMargin = dp(8); list.addView(c, lp);
+        // SeedVR2 (diffusion upscaler, Apache 2.0): one download of the whole model; also offered by the Upscale screen the first time it is used
+        LinearLayout sc = new LinearLayout(this); sc.setOrientation(LinearLayout.VERTICAL); sc.setBackground(bg(CARD, 14)); sc.setPadding(dp(16), dp(12), dp(16), dp(12));
+        sc.addView(text("SeedVR2 ×2 / ×3 / ×4", 16, TXT, true));
+        TextView sm = text(L.s("Диффузионный апскейлер: лучшее качество, медленнее. Выбирается на экране «Увеличение». Apache 2.0  ·  ByteDance Seed", "A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed"), 13, DIM, false); sm.setPadding(0, dp(3), 0, dp(2)); sc.addView(sm);
+        final boolean shave = SeedVr.has(getFilesDir()), sbusy = downloading && "up-seedvr".equals(dlId);
+        LinearLayout sr = new LinearLayout(this); sr.setGravity(android.view.Gravity.CENTER_VERTICAL); sr.setPadding(0, dp(10), 0, 0);
+        sr.addView(text(L.s("Модель", "Model") + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", SeedVr.SIZE / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        if (shave && !sbusy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; Models.deleteTree(SeedVr.dir(getFilesDir())); render(); }); sr.addView(del); }
+        else if (!sbusy) {
+            Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", String.format("%.2f", SeedVr.SIZE / 1e9)), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+            bt.setOnClickListener(v -> startSeed()); sr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
+        }
+        sc.addView(sr);
+        if (sbusy) {
+            ProgressBar pb = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); pb.setMax(1000);
+            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(ACC)); pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(LINE));
+            LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-1, dp(3)); pl.topMargin = dp(10); sc.addView(pb, pl); bars.put("up-seedvr", pb);
+            TextView tv = text(dlMsg, 12, DIM, false); tv.setPadding(0, dp(6), 0, 0); sc.addView(tv); msgs.put("up-seedvr", tv);
+            TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); sc.addView(x);
+        }
+        LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-1, -2); sl.bottomMargin = dp(8); list.addView(sc, sl);
+    }
+
+    void startSeed() {
+        if (downloading) return;
+        long need = SeedVr.SIZE; if (getFilesDir().getUsableSpace() < need + 100_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(need)), Toast.LENGTH_LONG).show(); return; }
+        downloading = true; dlId = "up-seedvr"; dlDone = 0; dlTotal = need; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        render();
+        new Thread(() -> {
+            String err = null;
+            try { SeedVr.download(app, (n, tot, what) -> { dlDone = n; dlTotal = tot; dlMsg = L.f("%s / %s ГБ", "%s / %s GB", String.format("%.2f", n / 1e9), String.format("%.2f", tot / 1e9)); }, cancel); }
+            catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: можно продолжить", "Cancelled: you can resume"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
+            final String msg = err; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); render(); });
+        }).start();
     }
 
     void startUp(final boolean anime) {
@@ -337,6 +376,12 @@ public class ModelsActivity extends Base {
         }
         if (it.h3) {   // the MiniMax licence has to be seen before the download: territories, outputs, notices
             builder().setTitle("MiniMax-H3-Image").setMessage(L.f("Модель распространяется по MiniMax-H3-Image Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3-Image Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size)))
+                .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+            return;
+        }
+        if (it.r2v) {   // the video model needs the text encoder of MiniMax-H3-Image; the same licence has to be seen
+            if (!R2v.teInstalled(getFilesDir())) { builder().setTitle("MiniMax-H3 Ref2VA").setMessage(L.s("Сначала установите MiniMax-H3-Image: видео-модель использует её текстовый энкодер.", "Install MiniMax-H3-Image first: the video model uses its text encoder.")).setPositiveButton("OK", null).show(); return; }
+            builder().setTitle("MiniMax-H3 Ref2VA").setMessage(L.f("Модель распространяется по MiniMax-H3 Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3 Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size)))
                 .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
             return;
         }

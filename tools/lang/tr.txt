@@ -621,3 +621,7 @@
 623	SeedVR2 için indirme gerekiyor: model (yaklaşık 3,6 GB, Apache 2.0, NPU için dönüştürüldü) Hugging Face'ten bir kez indirilir. Wi-Fi ile daha iyi.
 624	Yeterli boş alan yok: yaklaşık %.1f GB gerekli
 625	SeedVR2: %.1f / %.1f GB
+626	Önce MiniMax-H3-Image'ı kurun: video modeli onun metin kodlayıcısını kullanır.
+627	Model, MiniMax-H3 Community License Agreement kapsamında dağıtılır (lisans metni dosyalarla birlikte indirilir). ABD, Avrupa Birliği, Birleşik Krallık ve Güney Kore'de kullanılamaz ve çıktıları diğer yapay zekâ modellerini geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
+628	MiniMax-H3 Ref2VA (33B), bir istemden ve isteğe bağlı olarak bir referans fotoğraftan video üretir: fotoğraftaki kişi, hayvan veya nesne videoda görünür, ortam ve hareket ise istemden gelir. 22–90 kare, 4 adım (damıtılmış turbo LoRA, CFG yok), sessiz. MiniMax-H3-Image'dan sonra Modeller ekranından indirilir: metin kodlayıcıyı paylaşırlar. MiniMax H3 Community lisansı: ABD, AB, Birleşik Krallık ve Kore için değil.
+629	Bir difüzyon büyütücü: en iyi kalite, daha yavaş. Büyüt ekranında seçin. Apache 2.0  ·  ByteDance Seed

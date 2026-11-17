@@ -17,7 +17,7 @@ import org.json.JSONObject;
  * Layout: files/anima/{te*.bin, te_embed.f16, vae.bin} (common), files/anima/m_ID/{small.bin, blkNN.bin}, files/sd/{ID.safetensors stub, llm stub, taew2_1.safetensors}.
  */
 final class Models {
-    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage, h3, klein, ltx; boolean anima() { return !moss && !qwen && !mage && !h3 && !klein && !ltx; } }   // speed: seconds per picture at 512x768
+    static class Item { String id, name, desc, descEn, params = "", quant = "", author = "", manifest; long size; int speed; boolean moss, qwen, mage, h3, klein, ltx, r2v; boolean anima() { return !moss && !qwen && !mage && !h3 && !klein && !ltx && !r2v; } }   // speed: seconds per picture at 512x768
     interface Progress { void on(long done, long total, String what); }
 
     final File anima, sd, home;
@@ -41,6 +41,7 @@ final class Models {
     long commonSize;
     List<Item> catalog(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
+        try { return catalog5(get(base + "catalog10.json"), base); } catch (Exception e10) { }   // catalog10.json = catalog9 + MiniMax-H3 Ref2VA Video (1.8.2+; older apps would not know the family)
         try { return catalog5(get(base + "catalog9.json"), base); } catch (Exception e9) { }   // catalog9.json = catalog8 + FLUX.3 Image Klein and LTX-2.5 Video (1.7.0+; older apps would not know the families)
         try { return catalog5(get(base + "catalog8.json"), base); } catch (Exception e8) { }   // catalog8.json = catalog7 + MiniMax-H3-Image (1.6.0+; older apps would not know the family)
         try { return catalog5(get(base + "catalog7.json"), base); } catch (Exception e7) { }   // catalog7.json = catalog6 + the common files with the 512 token text encoder (1.5.4+; older apps expect 128 tokens)
@@ -76,7 +77,7 @@ final class Models {
                 it.manifest = packUrl(p, base) + p.optString("manifest", "manifest.json");
                 it.desc = m.optString("desc", ""); it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.author = m.optString("author", "");
                 it.speed = md.optInt("speed", 0); String f = m.optString("family", "Anima");
-                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3"); it.klein = f.equals("FLUX.3-Klein"); it.ltx = f.equals("LTX-2.5");
+                it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3"); it.klein = f.equals("FLUX.3-Klein"); it.ltx = f.equals("LTX-2.5"); it.r2v = f.equals("MiniMax-H3-Video");
                 out.add(it);
             }
         }
@@ -226,7 +227,8 @@ final class Models {
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
             fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); return;
         }
-        if (H3.is(it.id) || Klein.is(it.id) || Ltx.is(it.id)) {   // MiniMax-H3-Image, FLUX.3 Klein, LTX-2.5: raw files (with the licence texts) into files/h3; the marker is set once every file is verified
+        if (R2v.is(it.id) && !R2v.teInstalled(home)) throw new IOException(L.s("Сначала установите MiniMax-H3-Image: видео-модель использует её текстовый энкодер.", "Install MiniMax-H3-Image first: the video model uses its text encoder."));
+        if (H3.is(it.id) || Klein.is(it.id) || Ltx.is(it.id) || R2v.is(it.id)) {   // MiniMax-H3-Image, FLUX.3 Klein, LTX-2.5, MiniMax-H3 Ref2VA: raw files (with the licence texts) into the model folder; the marker is set once every file is verified
             doneMark(dir).delete(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); doneMark(dir).createNewFile(); return;
         }
         doneMark(dir).delete();

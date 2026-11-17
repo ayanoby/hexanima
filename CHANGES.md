@@ -1,5 +1,10 @@
 # Changes
 
+## 1.8.2
+
+- **MiniMax-H3 Ref2VA video is in the download catalog** (`catalog10.json`, read by apps from 1.8.2; older apps keep `catalog9.json`; `tools/make_catalog10.py` builds it). It is listed under MiniMax-H3 on the Models screen, the pack (221 files, 37 GB, with `LICENSE` and `NOTICE`) is in `ayanoby/hexanima-r2v-packs` with a manifest of sizes and hashes, and the download asks for the MiniMax-H3 Community License first. MiniMax-H3-Image has to be installed before it (the video model uses its text encoder); the app says so. Copying the files by hand still works. Translations: the new strings in the 11 other languages.
+- **SeedVR2 on the Models screen:** the Upscaler section has a SeedVR2 card (3.53 GB, Download / Delete, progress and cancel like the other downloads), next to Real-ESRGAN.
+
 ## 1.8.1
 
 - **SeedVR2 downloads itself:** the first time you pick SeedVR2 in Upscale the app asks and downloads the model (3.6 GB, Apache 2.0) from `ayanoby/hexanima-upscale` (`seedvr2/manifest.json` lists sizes and hashes): resumable, verified, a free-space check first. No more copying files by hand. Translations: the 3 new strings in the 11 other languages.

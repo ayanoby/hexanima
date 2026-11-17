@@ -10,6 +10,8 @@ import org.json.JSONObject;
  *  (int8 blocks on the HMX, window attention, see seedvr2/NOTES.md) in ONE step and decoded again. Files in files/seedvr2: pack/blkNN.bin (+ glue/), vae/svr_enc_t64.bin and svr_dec_t64.bin; the helper is svr.sh -> libsvsr.so. */
 final class SeedVr {
     static File dir(File home) { return new File(home, "seedvr2"); }
+    /** size of the whole model (the manifest on Hugging Face: 221 files), for the Models screen */
+    static final long SIZE = 3530467697L;
     static final String BASE = "https://huggingface.co/ayanoby/hexanima-upscale/resolve/main/seedvr2/";
     /** the files of the model with sizes and hashes (manifest.json of the Hugging Face repository) */
     static org.json.JSONArray files() throws Exception {

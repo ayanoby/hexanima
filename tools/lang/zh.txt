@@ -621,3 +621,7 @@
 623	SeedVR2 需要下载：模型（约 3.6 GB，Apache 2.0，已为 NPU 转换）只需从 Hugging Face 下载一次。建议使用 Wi-Fi。
 624	可用空间不足：大约需要 %.1f GB
 625	SeedVR2：%.1f / %.1f GB
+626	请先安装 MiniMax-H3-Image：视频模型使用它的文本编码器。
+627	该模型按 MiniMax-H3 Community License Agreement 分发（许可文本会随文件一起下载）。不得在美国、欧盟、英国或韩国使用，其输出不得用于改进其他 AI 模型。大小：%s GB。是否下载？
+628	MiniMax-H3 Ref2VA（33B）可根据提示词以及可选的参考照片生成视频：照片中的人物、动物或物体会出现在视频里，而场景和动作来自提示词。22–90 帧，4 步（蒸馏的 turbo LoRA，无 CFG），无声音。在“模型”界面中于 MiniMax-H3-Image 之后下载：两者共用文本编码器。MiniMax H3 Community 许可：不适用于美国、欧盟、英国和韩国。
+629	扩散式放大器：画质最佳，速度较慢。在“放大”界面中选择。Apache 2.0  ·  ByteDance Seed

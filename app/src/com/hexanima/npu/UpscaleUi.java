@@ -26,11 +26,25 @@ final class UpscaleUi {
             startUpscale(act, f, an, hf, done);
         }).show();
     }
+    void askSeedDownload(final Base act, final File f, final JSONObject m, final int scale, final java.util.function.Consumer<File> done) {
+        act.builder().setTitle("SeedVR2").setMessage(L.s("Нужна загрузка: модель (около 3,6 ГБ, Apache 2.0, переведена для NPU) скачивается один раз с Hugging Face. Лучше по Wi-Fi.", "SeedVR2 needs a download: the model (about 3.6 GB, Apache 2.0, converted for the NPU) is downloaded once from Hugging Face. Better on Wi-Fi."))
+            .setPositiveButton(L.s("Скачать", "Download"), (d, i) -> {
+                if (act.getFilesDir().getUsableSpace() < 4_000_000_000L) { Toast.makeText(act, L.f("Мало места: нужно около %.1f ГБ", "Not enough free space: about %.1f GB are needed", 4.0), Toast.LENGTH_LONG).show(); return; }
+                busy = true; final java.util.concurrent.atomic.AtomicBoolean cancel = new java.util.concurrent.atomic.AtomicBoolean();
+                final android.app.AlertDialog dlg = act.builder().setTitle(L.s("Загрузка…", "Downloading…")).setMessage("0 %").setCancelable(false).setNegativeButton(L.s("Отмена", "Cancel"), (dd, w) -> cancel.set(true)).create(); dlg.show();
+                new Thread(() -> {
+                    String err = null;
+                    try { SeedVr.download(act, (n, tot, what) -> act.runOnUiThread(() -> dlg.setMessage(L.f("SeedVR2: %.1f из %.1f ГБ", "SeedVR2: %.1f of %.1f GB", n / 1e9, tot / 1e9))), cancel); } catch (Throwable e) { err = cancel.get() ? "" : String.valueOf(e.getMessage() != null ? e.getMessage() : e); }
+                    final String er = err;
+                    act.runOnUiThread(() -> { dlg.dismiss(); busy = false; if (er != null) { if (!er.isEmpty()) Toast.makeText(act, L.f("Не удалось скачать: %s", "Download failed: %s", er), Toast.LENGTH_LONG).show(); return; } seedVr(act, f, m, scale, done); });
+                }).start();
+            }).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+    }
     /** SeedVR2-3B (one-step diffusion) on the NPU: the result becomes a new picture next to this one */
     void seedVr(final Base act, final File f, final JSONObject m, final int scale, final java.util.function.Consumer<File> done) {
         int[] o = SeedVr.outSize(m.optInt("w", 512), m.optInt("h", 512), scale); String bad = SeedVr.sizeError(o[0], o[1]);
         if (bad != null) { Toast.makeText(act, bad, Toast.LENGTH_LONG).show(); return; }
-        if (!SeedVr.has(act.getFilesDir())) { act.builder().setTitle("SeedVR2").setMessage(L.s("Модель SeedVR2 (около 3,6 ГБ) ещё не установлена: файлы должны лежать в files/seedvr2 (pack/, vae/). Загрузка из каталога появится позже.", "The SeedVR2 model (about 3.6 GB) is not installed yet: the files must be in files/seedvr2 (pack/, vae/). Download from the catalog will come later.")).setPositiveButton("OK", null).show(); return; }
+        if (!SeedVr.has(act.getFilesDir())) { askSeedDownload(act, f, m, scale, done); return; }
         busy = true; final android.app.AlertDialog dlg = act.builder().setTitle("SeedVR2 ×" + scale).setMessage(L.s("Подготовка…", "Preparing…")).setCancelable(false).setNegativeButton(L.s("Остановить", "Stop"), (d, i) -> new Thread(() -> SeedVr.stop(sh, act.getFilesDir())).start()).create(); dlg.show();
         new Thread(() -> {
             File nf = null; String err = null;

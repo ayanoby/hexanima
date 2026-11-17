@@ -10,6 +10,21 @@ import org.json.JSONObject;
  *  (int8 blocks on the HMX, window attention, see seedvr2/NOTES.md) in ONE step and decoded again. Files in files/seedvr2: pack/blkNN.bin (+ glue/), vae/svr_enc_t64.bin and svr_dec_t64.bin; the helper is svr.sh -> libsvsr.so. */
 final class SeedVr {
     static File dir(File home) { return new File(home, "seedvr2"); }
+    static final String BASE = "https://huggingface.co/ayanoby/hexanima-upscale/resolve/main/seedvr2/";
+    /** the files of the model with sizes and hashes (manifest.json of the Hugging Face repository) */
+    static org.json.JSONArray files() throws Exception {
+        java.net.HttpURLConnection h = Models.open(BASE + "manifest.json", 0);
+        try (InputStream in = h.getInputStream(); ByteArrayOutputStream o = new ByteArrayOutputStream()) { byte[] b = new byte[1 << 14]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n); return new JSONObject(o.toString("UTF-8")).getJSONArray("files"); }
+    }
+    /** downloads what is missing (finished files are kept, partial ones resume); progress = bytes done of the whole model */
+    static void download(Context c, Models.Progress pg, java.util.concurrent.atomic.AtomicBoolean cancel) throws Exception {
+        org.json.JSONArray a = files(); long total = Models.total(a), done = 0;
+        for (int i = 0; i < a.length(); i++) {
+            final JSONObject f = a.getJSONObject(i); final long before = done;
+            Models.fetch(BASE + f.getString("path"), new File(dir(c.getFilesDir()), f.getString("path")), f.getLong("size"), f.optString("sha256", null), n -> { if (pg != null) pg.on(before + n, total, f.optString("path")); }, cancel);
+            done += f.getLong("size");
+        }
+    }
     /** the DiT works on 16 x 16 pixel tokens in the DSP buffers: 16384 tokens (about 4.2 megapixels) is the limit of the FastRPC mapping */
     static final long MAX_TOKENS = 16384;
     static final String[] GLUE = {"txt0", "vid_in_w", "vid_in_b", "out_w", "out_b", "out_norm", "out_scale", "out_shift", "meta.json"};

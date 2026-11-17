@@ -618,3 +618,6 @@ The picture button above the prompt field picks a photo and finds its Danbooru t
 The video is larger than 1280x768 (720p): not supported	视频大于 1280x768（720p）：不支持
 %d×%d: larger than 1280x768 (720p), not supported	%d×%d：大于 1280x768（720p），不支持
 In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	在菜单 → 放大 → 视频中，RIFE v4.6 网络（hzwer，MIT）会在片段的每对帧之间绘制新帧：×2 或 ×4，使动作更流畅（每秒 12 → 24 或 48 帧）。它在 NPU 上运行，声音保持不变，结果进入图库。支持最大 1280x768（720p）的视频；每种尺寸会下载一个小型网络（12–40 MB）。×4 时 3 秒高清视频约需一分半钟，小尺寸会快好几倍。硬切镜头不做插帧。图片尺寸不变：只是更流畅。
+SeedVR2 needs a download: the model (about 3.6 GB, Apache 2.0, converted for the NPU) is downloaded once from Hugging Face. Better on Wi-Fi.	SeedVR2 需要下载：模型（约 3.6 GB，Apache 2.0，已为 NPU 转换）只需从 Hugging Face 下载一次。建议使用 Wi-Fi。
+Not enough free space: about %.1f GB are needed	可用空间不足：大约需要 %.1f GB
+SeedVR2: %.1f of %.1f GB	SeedVR2：%.1f / %.1f GB

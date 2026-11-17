@@ -618,3 +618,6 @@
 620	Video lớn hơn 1280x768 (720p): không được hỗ trợ
 621	%d×%d: lớn hơn 1280x768 (720p), không được hỗ trợ
 622	Trong menu → Phóng to → Video, mạng RIFE v4.6 (hzwer, MIT) vẽ thêm các khung hình mới giữa mỗi cặp khung hình của clip: x2 hoặc x4, để chuyển động mượt hơn (12 → 24 hoặc 48 khung hình mỗi giây). Nó chạy trên NPU, âm thanh được giữ nguyên và kết quả vào thư viện. Video đến 1280x768 (720p) hoạt động được; với mỗi kích thước sẽ tải một mạng nhỏ (12–40 MB). Khoảng một phút rưỡi cho 3 giây video HD ở x4, nhanh hơn nhiều lần ở kích thước nhỏ. Các đoạn cắt đột ngột không được nội suy. Kích thước ảnh không đổi: chỉ độ mượt được cải thiện.
+623	SeedVR2 cần tải xuống: mô hình (khoảng 3,6 GB, Apache 2.0, đã chuyển đổi cho NPU) chỉ tải một lần từ Hugging Face. Nên dùng Wi-Fi.
+624	Không đủ dung lượng trống: cần khoảng %.1f GB
+625	SeedVR2: %.1f / %.1f GB

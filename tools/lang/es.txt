@@ -618,3 +618,6 @@
 620	El vídeo es mayor que 1280x768 (720p): no es compatible
 621	%d×%d: mayor que 1280x768 (720p), no es compatible
 622	En el menú → Ampliar → Vídeo la red RIFE v4.6 (hzwer, MIT) dibuja fotogramas nuevos entre cada par de fotogramas de tu clip: x2 o x4, para que el movimiento sea más fluido (de 12 a 24 o 48 fotogramas por segundo). Se ejecuta en la NPU, el sonido se conserva y el resultado va a la galería. Funcionan vídeos de hasta 1280x768 (720p); para cada tamaño se descarga una red pequeña (12–40 MB). Aproximadamente un minuto y medio para 3 segundos de vídeo HD a x4, varias veces más rápido en tamaños pequeños. Los cortes bruscos no se interpolan. El tamaño de la imagen no cambia: solo mejora la fluidez.
+623	SeedVR2 necesita una descarga: el modelo (unos 3,6 GB, Apache 2.0, convertido para la NPU) se descarga una sola vez desde Hugging Face. Mejor con Wi-Fi.
+624	No hay suficiente espacio libre: se necesitan unos %.1f GB
+625	SeedVR2: %.1f de %.1f GB

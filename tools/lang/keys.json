@@ -621,5 +621,8 @@
 "The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.",
 "The video is larger than 1280x768 (720p): not supported",
 "%d×%d: larger than 1280x768 (720p), not supported",
-"In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves."
+"In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.",
+"SeedVR2 needs a download: the model (about 3.6 GB, Apache 2.0, converted for the NPU) is downloaded once from Hugging Face. Better on Wi-Fi.",
+"Not enough free space: about %.1f GB are needed",
+"SeedVR2: %.1f of %.1f GB"
 ]

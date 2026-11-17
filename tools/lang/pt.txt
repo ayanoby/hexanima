@@ -618,3 +618,6 @@
 620	O vídeo é maior que 1280x768 (720p): não suportado
 621	%d×%d: maior que 1280x768 (720p), não suportado
 622	No menu → Ampliar → Vídeo, a rede RIFE v4.6 (hzwer, MIT) desenha novos quadros entre cada par de quadros do seu clipe: x2 ou x4, para o movimento ficar mais suave (de 12 para 24 ou 48 quadros por segundo). Ela roda na NPU, o som é mantido e o resultado vai para a galeria. Vídeos de até 1280x768 (720p) funcionam; para cada tamanho é baixada uma pequena rede (12–40 MB). Cerca de um minuto e meio para 3 segundos de vídeo HD em x4, várias vezes mais rápido em tamanhos pequenos. Cortes secos não são interpolados. O tamanho da imagem não muda: só a suavidade melhora.
+623	O SeedVR2 precisa de um download: o modelo (cerca de 3,6 GB, Apache 2.0, convertido para a NPU) é baixado uma única vez do Hugging Face. Melhor no Wi-Fi.
+624	Espaço livre insuficiente: são necessários cerca de %.1f GB
+625	SeedVR2: %.1f de %.1f GB

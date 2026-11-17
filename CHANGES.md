@@ -1,5 +1,9 @@
 # Changes
 
+## 1.8.1
+
+- **SeedVR2 downloads itself:** the first time you pick SeedVR2 in Upscale the app asks and downloads the model (3.6 GB, Apache 2.0) from `ayanoby/hexanima-upscale` (`seedvr2/manifest.json` lists sizes and hashes): resumable, verified, a free-space check first. No more copying files by hand. Translations: the 3 new strings in the 11 other languages.
+
 ## 1.8.0
 
 A new **Upscale screen** (main menu ⋮ → Upscale) with pictures and video, a **picture-to-tags** button for Anima, **more frames per second** in a video (RIFE), and the SeedVR2 diffusion upscaler on the NPU.

@@ -618,3 +618,6 @@
 620	Video 1280x768'den (720p) büyük: desteklenmiyor
 621	%d×%d: 1280x768'den (720p) büyük, desteklenmiyor
 622	Menüde → Büyüt → Video'da RIFE v4.6 ağı (hzwer, MIT) klibinizin her iki karesi arasına yeni kareler çizer: x2 veya x4, böylece hareket daha akıcı olur (saniyede 12 → 24 veya 48 kare). NPU üzerinde çalışır, ses korunur ve sonuç galeriye gider. 1280x768'e (720p) kadar videolar çalışır; her boyut için küçük bir ağ (12–40 MB) indirilir. x4'te 3 saniyelik HD video için yaklaşık bir buçuk dakika, küçük boyutlarda birkaç kat daha hızlı. Sert kesmeler ara kare almaz. Resim boyutu değişmez: yalnızca akıcılık artar.
+623	SeedVR2 için indirme gerekiyor: model (yaklaşık 3,6 GB, Apache 2.0, NPU için dönüştürüldü) Hugging Face'ten bir kez indirilir. Wi-Fi ile daha iyi.
+624	Yeterli boş alan yok: yaklaşık %.1f GB gerekli
+625	SeedVR2: %.1f / %.1f GB

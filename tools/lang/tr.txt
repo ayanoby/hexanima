@@ -536,3 +536,85 @@
 537	Çok büyük: resimlerle birlikte en fazla %d yama
 538	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT lisansı) 4 adımda bir prompt ile resim çizer ve fotoğraf düzenler, resim başına yaklaşık 12 saniye. Metin kodlayıcı, ViT, transformer ve VAE'nin hepsi NPU'da çalışır; indirme yaklaşık 8,7 GB. Bir fotoğrafı düzenlemek için "Fotoğraf düzenle" bloğunda seçin ve neyin değişeceğini yazın; en fazla iki referans resim daha ekleyip isteminizde onlara değinebilirsiniz ("resim 1", "resim 2").
 539	İki kenar da 16'nın katı olmalı ve yama sayısı (genişlik/16 × yükseklik/16) 32'ye bölünebilmeli. Model pencereler halinde çalışır, bu yüzden boyutta kesin bir sınır yoktur: bir resim ya da resimleriyle birlikte bir düzenleme (her resim sonuçla aynı sayıda yama kullanır) toplamda en fazla 24576 yama olabilir, örneğin 2048×2048 (yaklaşık 3,5 dakika) veya üç resimli 1024×768. Boyut büyüdükçe süre uzar: süre yaklaşık olarak yama sayısının karesiyle artar.
+524	LTX-2.5 (Lightricks, 22B, damıtılmış) bir istemden kısa bir video üretir: 17–97 kare (varsayılan 17), MP4 için istediğiniz kare hızı, sessiz. Gemma metin kodlayıcı, 48 DiT bloğu (8 adım, CFG yok) ve VAE NPU üzerinde çalışır; bütün bir klip yaklaşık bir buçuk dakika sürer. Model dosyaları (yaklaşık 27 GB) files/ltx içine elle konur; model indirme kataloğunda yoktur (LTX-2 Community License). Sonuç, geçmişte bir önizleme karesinin yanında bir MP4'tür (▶ düğmesi).
+532	FLUX.3 Image Klein (Black Forest Labs, 5,6B), düz cümlelerle yazılmış uzun istemleri izleyen ve yazı çizen fotogerçekçi bir modeldir. 16 adım, CFG yok: 512×512 için yaklaşık bir dakika, 1024×1024 için 3–4 dakika. Metin kodlayıcı, transformer ve çözücü NPU üzerinde çalışır. FLUX Kommunity lisansı (yalnızca ticari olmayan kullanım), bu yüzden model şimdilik elle kurulur ve katalogda yoktur.
+541	Galeriye kaydet
+542	Favorilerden çıkar
+543	Favorilere ekle
+544	Yeniden kullan (istem ve tohum)
+545	Büyüt…
+546	×2 · SeedVR2 (difüzyon, en iyi kalite)
+547	Büyüt (NPU)
+548	SeedVR2 modeli (yaklaşık 3,6 GB) henüz kurulu değil: dosyalar files/seedvr2 içinde olmalı (pack/, vae/). Katalogdan indirme daha sonra gelecek.
+549	Hazırlanıyor…
+550	Tekrar (yeni tohum)
+551	Bir resimden etiketler
+552	Büyüt
+553	Bu model için biçim
+554	Şablon
+555	Örnek 
+556	WD EVA02 Tagger v3 modeli (SmilingWolf, Apache-2.0, %d MB, NPU için dönüştürüldü) bir kez indirilir. Bir resmin Danbooru etiketlerini bulur: bunları Anima için istemde kullanın. Yaklaşık 3 saniye sürer.
+557	Etiketler aranıyor…
+558	Yaklaşık 5 saniye
+559	etiket bulunamadı
+560	Resmin etiketleri
+561	Kullan
+562	Ekle
+563	Turbo için negatif istem (NAG, deney)
+564	CFG olmadan Turbo'da çalışır: metin dikkati negatif istem için bir kez daha çalıştırılır (alanı isteminin altında görünür), modelin ikinci bir geçişi olmaz. Güç: negatiften ne kadar uzaklaşılacağı. Sınır (tau): aşırı yanmayı sınırlar. Karışım (alpha): NAG sonucunun payı. Şimdilik düz Turbo'dan yaklaşık iki kat yavaş. Anima 2B için 3 / 1,75 / 0,2 çalışır.
+565	Sınır tau
+566	Karışım alpha
+567	Resim
+568	Video
+569	Resim
+570	Seçilmedi
+571	Telefondan seç…
+572	Uygulama galerisinden seç
+573	Yöntem
+574	fotoğraf (hızlı)
+575	anime (hızlı)
+576	difüzyon, en iyi kalite
+577	Ölçek
+578	Sonuç: %d×%d
+579	Resim açılamıyor
+580	%d×%d
+581	kendi resmim
+582	Açılamıyor: %s
+583	Önce bir resim seçin
+584	%d×%d → %d×%d
+585	Galeri boş
+586	önce
+587	sonra
+588	Video · saniyedeki kare sayısını artır (RIFE)
+589	NPU her iki kare arasına yeni kareler çizer: daha akıcı hareket. Ses korunur.
+590	Video seçilmedi
+591	Video seç…
+592	Uygulama galerisinden video seç
+593	Kare sayısı çarpanı
+594	Kare ekle
+595	Video açılamıyor: %s
+597	%d×%d, %d → %d fps, %d sn video · yaklaşık %d dk
+598	Önce bir video seçin
+599	Video çok büyük
+600	Zaten bir şey çalışıyor
+601	Dosya listesine ulaşılamıyor (ağ yok mu?)
+602	%d×%d için RIFE v4.6 ağı (%d MB, MIT) Hugging Face'ten bir kez indirilir.
+603	Kare %d / ~%d · %d sn
+604	Kare %d · %d sn
+605	Bitti: galeride yeni bir video
+606	Virgülle ayrılmış Danbooru etiketleri, İngilizce, küçük harf, boşluklu (long hair). Sıra: kişi sayısı, saç, gözler, kıyafet, poz, ortam, ışık. Kalite etiketlerini uygulama kendisi ekler.
+607	Düz İngilizce cümlelerden oluşan ayrıntılı bir paragraf (60–90 kelime): kim ve nasıl göründüğü, kıyafet, poz ve eylem, ortam, ışık ve renk, ruh hali, stil. Çizilecek yazıyı tırnak içine alın.
+608	Düzenleme: neyin değişeceğini ve neyin korunacağını söyleyen kısa bir İngilizce talimat. Ek resimlere "picture 1", "picture 2" deyin.
+609	Şimdiki zamanda bir paragraf, 4–8 İngilizce cümle: çekim, sahne ve ışık, eylem (her cümlede bir fiil), karakter, kamera hareketi, ses. Konuşmaları tırnak içine alın.
+610	Sırayla üç alan, İngilizce: integrated_multimodal_description (çekimler [Shot 1], [Shot 2] At 00:03.500…, kamera, konuşma <d>[English] …</d> biçiminde ve bir konuşmacıyla (S1)), overall_soundscape (yalnızca ortam sesleri), non_diegetic_music.
+611	Referans fotoğrafla: sırayla altı bölüm (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); fotoğraf <Picture 1>'dir. Fotoğrafsız: H3'ün üç alanı (bkz. örnek 1).
+612	Resim SeedVR2 için çok büyük: sonuç yaklaşık 4 megapiksel (2048×2048) ile sınırlıdır
+613	Kodlanıyor %s/%s
+614	Onarılıyor (DiT)…
+615	Çözülüyor %s/%s
+616	Videoda daha fazla kare (Büyüt → Video)
+618	Bir resimden etiketler (fotoğraf düğmesi)
+619	İstem alanının üstündeki resim düğmesi bir fotoğraf seçer ve WD EVA02 Tagger v3 modeliyle (SmilingWolf, Apache-2.0) Danbooru etiketlerini bulur: istemin yerine geçer ya da ona eklenir (Anima için). Model NPU üzerinde çalışır, yaklaşık 3 saniye sürer ve bir kez indirilir (674 MB). Eşikler: normal etiketler 0,35'ten, karakterler 0,85'ten. Yaş derecelendirmeleri dahil değildir.
+620	Video 1280x768'den (720p) büyük: desteklenmiyor
+621	%d×%d: 1280x768'den (720p) büyük, desteklenmiyor
+622	Menüde → Büyüt → Video'da RIFE v4.6 ağı (hzwer, MIT) klibinizin her iki karesi arasına yeni kareler çizer: x2 veya x4, böylece hareket daha akıcı olur (saniyede 12 → 24 veya 48 kare). NPU üzerinde çalışır, ses korunur ve sonuç galeriye gider. 1280x768'e (720p) kadar videolar çalışır; her boyut için küçük bir ağ (12–40 MB) indirilir. x4'te 3 saniyelik HD video için yaklaşık bir buçuk dakika, küçük boyutlarda birkaç kat daha hızlı. Sert kesmeler ara kare almaz. Resim boyutu değişmez: yalnızca akıcılık artar.

@@ -522,6 +522,7 @@ The model is distributed under the LTX-2 Community License Agreement (Lightricks
 FLUX.3 Klein notices (changes made)	Pemberitahuan FLUX.3 Klein (perubahan yang dibuat)
 LTX-2.5 notices (changes made)	Pemberitahuan LTX-2.5 (perubahan yang dibuat)
 LTX-2.5 Video	LTX-2.5 Video
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model files (about 27 GB) are put into files/ltx by hand; the model is not in the download catalog (LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, distilasi) membuat video pendek dari sebuah prompt: 17–97 frame (bawaan 17), frame rate MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memakan waktu sekitar satu setengah menit. File model (sekitar 27 GB) diletakkan manual di files/ltx; model tidak ada di katalog unduhan (LTX-2 Community License). Hasilnya berupa MP4 di samping frame pratinjau di riwayat (tombol ▶).
 MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
 MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) membuat video dari deskripsi dan, secara opsional, foto referensi: orang, hewan, atau benda di foto muncul di video, sedangkan latar dan gerakan berasal dari deskripsi. 22–90 bingkai, 4 langkah (LoRA turbo hasil distilasi, tanpa CFG), tanpa suara. Berkasnya (files/r2v) dipasang manual, encoder teks dipakai bersama MiniMax-H3-Image (files/h3/te). Lisensi MiniMax H3 Community: tidak untuk AS, UE, Inggris, dan Korea.
 Ref2VA sizes	Ukuran Ref2VA
@@ -529,6 +530,7 @@ Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × 
 LTX sizes	Ukuran LTX
 Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Kedua sisi kelipatan 32, minimal 256; jumlah token 3 × (lebar/32) × (tinggi/32) harus habis dibagi 32, misalnya 512×384, 384×512, 512×512, 768×512, 768×768. Tulis deskripsi secara rinci dan dalam bahasa Inggris: siapa, apa yang dilakukan, cahaya, kamera.
 FLUX.3 Image Klein	FLUX.3 Image Klein
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. FLUX Kommunity licence (non-commercial use only), so the model is installed by hand for now and is not in the catalog.	FLUX.3 Image Klein (Black Forest Labs, 5,6B) adalah model fotorealistis yang mengikuti prompt panjang berupa kalimat biasa dan bisa menggambar teks. 16 langkah, tanpa CFG: sekitar satu menit untuk 512×512, 3–4 menit untuk 1024×1024. Encoder teks, transformer, dan decoder berjalan di NPU. Lisensi FLUX Kommunity (hanya untuk penggunaan non-komersial), jadi model dipasang manual untuk sementara dan tidak ada di katalog.
 Klein sizes	Ukuran Klein
 Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Kedua sisi kelipatan 16, jumlah patch (lebar/16 × tinggi/16) habis dibagi 32 dan paling banyak 6144 (misalnya 1536×1024), minimal 256 per sisi. Tulis deskripsi secara rinci, sebagai satu paragraf yang utuh.
 LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, hasil distilasi) membuat video pendek dari deskripsi: 17–97 bingkai (bawaan 17), laju bingkai MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memerlukan sekitar satu setengah menit. Model ini ada di katalog unduhan (sekitar 31 GB; LTX-2 Community License). Hasilnya berupa MP4 di samping bingkai pratinjau di riwayat (tombol ▶).
@@ -536,3 +538,83 @@ FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that foll
 Too large: at most %d patches together with the pictures	Terlalu besar: maksimal %d patch beserta gambarnya
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change; you can add up to two more reference pictures and refer to them in the prompt ("picture 1", "picture 2").	Mage-Flow-Edit-Turbo (Microsoft, 4B, lisensi MIT) menggambar dan mengedit foto lewat prompt dalam 4 langkah, sekitar 12 detik per gambar. Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; unduhannya sekitar 8,7 GB. Untuk mengedit foto, pilih di blok "Edit foto" dan jelaskan apa yang diubah; Anda dapat menambahkan hingga dua gambar referensi lagi dan merujuknya di prompt ("gambar 1", "gambar 2").
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. The model works in windows, so there is no hard limit on the size: a picture, or an edit together with its pictures (each picture takes as many patches as the result), may have up to 24576 patches in all, for example 2048×2048 (about 3.5 minutes) or 1024×768 with three pictures. The bigger the size, the longer: the time grows about with the square of the patch count.	Kedua sisi kelipatan 16 dan jumlah patch (lebar/16 × tinggi/16) habis dibagi 32. Model bekerja dalam jendela, jadi tidak ada batas ukuran yang kaku: satu gambar, atau suntingan beserta gambar-gambarnya (setiap gambar memakai patch sebanyak hasilnya), boleh sampai 24576 patch secara total, misalnya 2048×2048 (sekitar 3,5 menit) atau 1024×768 dengan tiga gambar. Makin besar ukurannya, makin lama: waktunya naik kira-kira sebanding kuadrat jumlah patch.
+Save to gallery	Simpan ke galeri
+Remove from favourites	Hapus dari favorit
+Add to favourites	Tambah ke favorit
+Reuse (prompt and seed)	Pakai lagi (prompt dan seed)
+Upscale…	Perbesar…
+×2 · SeedVR2 (diffusion, best quality)	×2 · SeedVR2 (difusi, kualitas terbaik)
+Upscale (NPU)	Perbesar (NPU)
+The SeedVR2 model (about 3.6 GB) is not installed yet: the files must be in files/seedvr2 (pack/, vae/). Download from the catalog will come later.	Model SeedVR2 (sekitar 3,6 GB) belum terpasang: file harus ada di files/seedvr2 (pack/, vae/). Unduhan dari katalog akan hadir nanti.
+Preparing…	Menyiapkan…
+Again (new seed)	Lagi (seed baru)
+Tags from a picture	Tag dari gambar
+Upscale	Perbesar
+Format for this model	Format untuk model ini
+Template	Templat
+Example 	Contoh 
+The WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0, %d MB, converted for the NPU) is downloaded once. It finds the Danbooru tags of a picture: use them in the prompt for Anima. It takes about 3 seconds.	Model WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d MB, dikonversi untuk NPU) diunduh sekali saja. Model ini menemukan tag Danbooru dari sebuah gambar: pakai tag itu di prompt untuk Anima. Butuh sekitar 3 detik.
+Finding the tags…	Mencari tag…
+About 5 seconds	Sekitar 5 detik
+no tags found	tag tidak ditemukan
+Tags of the picture	Tag gambar
+Use it	Pakai
+Add	Tambah
+Negative prompt for Turbo (NAG, experiment)	Prompt negatif untuk Turbo (NAG, eksperimen)
+Works on Turbo without CFG: the text attention is run once more for the negative prompt (its field appears under the prompt), with no second pass of the model. Strength: how hard to push away from the negative. Limit (tau): caps over-burning. Blend (alpha): share of the NAG result. For now about twice as slow as plain Turbo. For Anima 2B 3 / 1.75 / 0.2 works.	Bekerja di Turbo tanpa CFG: atensi teks dijalankan sekali lagi untuk prompt negatif (kolomnya muncul di bawah prompt), tanpa lintasan kedua model. Kekuatan: seberapa jauh menjauh dari yang negatif. Batas (tau): membatasi kelebihan kontras. Campuran (alpha): bagian hasil NAG. Untuk saat ini sekitar dua kali lebih lambat dari Turbo biasa. Untuk Anima 2B, 3 / 1,75 / 0,2 berfungsi.
+Limit tau	Batas tau
+Blend alpha	Campuran alpha
+Image	Gambar
+Video	Video
+Picture	Gambar
+Not chosen	Belum dipilih
+Choose from the phone…	Pilih dari ponsel…
+Choose from the app gallery	Pilih dari galeri aplikasi
+Method	Metode
+photo (fast)	foto (cepat)
+anime (fast)	anime (cepat)
+diffusion, best quality	difusi, kualitas terbaik
+Scale	Skala
+Result: %d×%d	Hasil: %d×%d
+Cannot open the picture	Gambar tidak bisa dibuka
+%d×%d	%d×%d
+own picture	gambar sendiri
+Cannot open: %s	Tidak bisa membuka: %s
+Choose a picture first	Pilih gambar dulu
+%d×%d → %d×%d	%d×%d → %d×%d
+The gallery is empty	Galeri kosong
+before	sebelum
+after	sesudah
+Video · more frames per second (RIFE)	Video · lebih banyak frame per detik (RIFE)
+The NPU draws new frames between every pair: smoother motion. The sound is kept.	NPU menggambar frame baru di antara setiap pasangan: gerakan lebih halus. Suara tetap dipertahankan.
+No video chosen	Belum ada video yang dipilih
+Choose a video…	Pilih video…
+Choose a video from the app gallery	Pilih video dari galeri aplikasi
+Frame rate multiplier	Pengali frame rate
+Add frames	Tambah frame
+Cannot open the video: %s	Video tidak bisa dibuka: %s
+%d×%d, %d → %d fps, %d s of video · about %d min	%d×%d, %d → %d fps, %d dtk video · sekitar %d mnt
+Choose a video first	Pilih video dulu
+The video is too large	Video terlalu besar
+Something is already running	Sesuatu sedang berjalan
+Cannot reach the file list (no network?)	Tidak bisa menjangkau daftar file (tanpa jaringan?)
+The RIFE v4.6 network for %d×%d (%d MB, MIT) is downloaded once from Hugging Face.	Jaringan RIFE v4.6 untuk %d×%d (%d MB, MIT) diunduh sekali dari Hugging Face.
+Frame %d of ~%d · %d s	Frame %d dari ~%d · %d dtk
+Frame %d · %d s	Frame %d · %d dtk
+Done: a new video in the gallery	Selesai: video baru di galeri
+Danbooru tags separated by commas, English, lowercase, with spaces (long hair). Order: subject count, hair, eyes, clothing, pose, setting, lighting. The app adds the quality tags itself.	Tag Danbooru dipisahkan koma, bahasa Inggris, huruf kecil, dengan spasi (long hair). Urutan: jumlah subjek, rambut, mata, pakaian, pose, latar, pencahayaan. Tag kualitas ditambahkan sendiri oleh aplikasi.
+One detailed paragraph of plain English sentences (60-90 words): who and how they look, clothing, pose and action, setting, light and colour, mood, style. Put text to render in quotes.	Satu paragraf rinci berisi kalimat biasa bahasa Inggris (60–90 kata): siapa dan bagaimana rupanya, pakaian, pose dan aksi, latar, cahaya dan warna, suasana, gaya. Beri tanda kutip pada teks yang harus digambar.
+Editing: a short English instruction saying what to change and what to keep. Refer to extra pictures as "picture 1", "picture 2".	Penyuntingan: satu instruksi pendek dalam bahasa Inggris tentang apa yang diubah dan apa yang dipertahankan. Sebut gambar tambahan sebagai "picture 1", "picture 2".
+One paragraph in present tense, 4-8 English sentences: the shot, scene and light, the action (a verb in every sentence), the character, camera movement, audio. Put speech in quotes.	Satu paragraf dalam bentuk sekarang, 4–8 kalimat bahasa Inggris: bidikan, adegan dan cahaya, aksi (satu kata kerja di setiap kalimat), karakter, gerakan kamera, audio. Beri tanda kutip pada ucapan.
+Three fields in order, in English: integrated_multimodal_description (shots [Shot 1], [Shot 2] At 00:03.500…, camera, speech as <d>[English] …</d> with a speaker (S1)), overall_soundscape (ambient sounds only), non_diegetic_music.	Tiga kolom berurutan, dalam bahasa Inggris: integrated_multimodal_description (bidikan [Shot 1], [Shot 2] At 00:03.500…, kamera, ucapan sebagai <d>[English] …</d> dengan pembicara (S1)), overall_soundscape (hanya suara sekitar), non_diegetic_music.
+With a reference photo: six sections in order (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); the photo is <Picture 1>. Without a photo: the three fields of H3 (see example 1).	Dengan foto referensi: enam bagian berurutan (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); fotonya adalah <Picture 1>. Tanpa foto: tiga kolom H3 (lihat contoh 1).
+The picture is too large for SeedVR2: the result is limited to about 4 megapixels (2048×2048)	Gambar terlalu besar untuk SeedVR2: hasil dibatasi sekitar 4 megapiksel (2048×2048)
+Encoding %s/%s	Mengenkode %s/%s
+Restoring (DiT)…	Memulihkan (DiT)…
+Decoding %s/%s	Mendekode %s/%s
+More frames in a video (Upscale → Video)	Lebih banyak frame dalam video (Perbesar → Video)
+Tags from a picture (photo button)	Tag dari gambar (tombol foto)
+The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.	Tombol gambar di atas kolom prompt memilih foto dan menemukan tag Danbooru-nya dengan model WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0): tag menggantikan prompt atau ditambahkan ke prompt (untuk Anima). Model berjalan di NPU, sekitar 3 detik, dan diunduh sekali (674 MB). Ambang batas: tag biasa mulai 0,35, karakter mulai 0,85. Peringkat usia tidak disertakan.
+The video is larger than 1280x768 (720p): not supported	Video lebih besar dari 1280x768 (720p): tidak didukung
+%d×%d: larger than 1280x768 (720p), not supported	%d×%d: lebih besar dari 1280x768 (720p), tidak didukung
+In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	Di menu → Perbesar → Video, jaringan RIFE v4.6 (hzwer, MIT) menggambar frame baru di antara setiap pasangan frame klip Anda: x2 atau x4, sehingga gerakan lebih halus (12 → 24 atau 48 frame per detik). Berjalan di NPU, suara dipertahankan, dan hasilnya masuk ke galeri. Video hingga 1280x768 (720p) berfungsi; untuk setiap ukuran diunduh jaringan kecil (12–40 MB). Sekitar satu setengah menit untuk 3 detik video HD pada x4, beberapa kali lebih cepat untuk ukuran kecil. Pemotongan tajam tidak diinterpolasi. Ukuran gambar tidak berubah: hanya kehalusan yang membaik.

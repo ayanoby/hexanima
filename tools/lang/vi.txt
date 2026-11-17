@@ -536,3 +536,85 @@
 537	Quá lớn: tối đa %d patch cùng với các ảnh
 538	Mage-Flow-Edit-Turbo (Microsoft, 4B, giấy phép MIT) vẽ ảnh và chỉnh sửa ảnh chụp bằng prompt trong 4 bước, khoảng 12 giây mỗi ảnh. Bộ mã hóa văn bản, ViT, transformer và VAE đều chạy trên NPU; dung lượng tải khoảng 8,7 GB. Để chỉnh sửa ảnh chụp, hãy chọn ảnh trong khối "Chỉnh sửa ảnh" và mô tả điều cần thay đổi; bạn có thể thêm tối đa hai ảnh tham chiếu nữa và nhắc đến chúng trong mô tả ("ảnh 1", "ảnh 2").
 539	Cả hai cạnh là bội số của 16 và số patch (rộng/16 × cao/16) chia hết cho 32. Mô hình tính theo cửa sổ nên không có giới hạn kích thước cứng: một ảnh, hoặc một lần chỉnh sửa cùng các ảnh của nó (mỗi ảnh chiếm số patch bằng kết quả), có thể có tối đa 24576 patch tổng cộng, ví dụ 2048×2048 (khoảng 3,5 phút) hoặc 1024×768 với ba ảnh. Kích thước càng lớn càng lâu: thời gian tăng xấp xỉ theo bình phương số patch.
+524	LTX-2.5 (Lightricks, 22B, chưng cất) tạo một video ngắn từ một prompt: 17–97 khung hình (mặc định 17), tốc độ khung hình của MP4 tùy bạn chọn, không có âm thanh. Bộ mã hóa văn bản Gemma, 48 khối DiT (8 bước, không CFG) và VAE chạy trên NPU; một clip hoàn chỉnh mất khoảng một phút rưỡi. Các tệp mô hình (khoảng 27 GB) được đặt thủ công vào files/ltx; mô hình không có trong danh mục tải xuống (LTX-2 Community License). Kết quả là một MP4 cạnh khung hình xem trước trong lịch sử (nút ▶).
+532	FLUX.3 Image Klein (Black Forest Labs, 5,6B) là mô hình ảnh chân thực, làm theo các prompt dài viết bằng câu thông thường và vẽ được chữ. 16 bước, không CFG: khoảng một phút cho 512×512, 3–4 phút cho 1024×1024. Bộ mã hóa văn bản, transformer và bộ giải mã chạy trên NPU. Giấy phép FLUX Kommunity (chỉ dùng phi thương mại), vì vậy hiện mô hình được cài thủ công và không có trong danh mục.
+541	Lưu vào thư viện
+542	Bỏ khỏi mục yêu thích
+543	Thêm vào mục yêu thích
+544	Dùng lại (prompt và seed)
+545	Phóng to…
+546	×2 · SeedVR2 (khuếch tán, chất lượng tốt nhất)
+547	Phóng to (NPU)
+548	Mô hình SeedVR2 (khoảng 3,6 GB) chưa được cài: các tệp phải nằm trong files/seedvr2 (pack/, vae/). Tải từ danh mục sẽ có sau.
+549	Đang chuẩn bị…
+550	Làm lại (seed mới)
+551	Thẻ từ một ảnh
+552	Phóng to
+553	Định dạng cho mô hình này
+554	Mẫu
+555	Ví dụ 
+556	Mô hình WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d MB, đã chuyển đổi cho NPU) chỉ tải một lần. Nó tìm các thẻ Danbooru của một ảnh: hãy dùng chúng trong prompt cho Anima. Mất khoảng 3 giây.
+557	Đang tìm thẻ…
+558	Khoảng 5 giây
+559	không tìm thấy thẻ
+560	Thẻ của ảnh
+561	Dùng
+562	Thêm
+563	Prompt âm cho Turbo (NAG, thử nghiệm)
+564	Hoạt động trên Turbo không có CFG: sự chú ý của văn bản được chạy thêm một lần cho prompt âm (ô của nó hiện dưới prompt), không có lượt chạy thứ hai của mô hình. Cường độ: mức đẩy ra xa khỏi phần âm. Giới hạn (tau): hạn chế bị cháy sáng. Pha trộn (alpha): tỷ lệ kết quả NAG. Hiện chậm hơn Turbo thường khoảng hai lần. Với Anima 2B, 3 / 1,75 / 0,2 hoạt động tốt.
+565	Giới hạn tau
+566	Pha trộn alpha
+567	Ảnh
+568	Video
+569	Ảnh
+570	Chưa chọn
+571	Chọn từ điện thoại…
+572	Chọn từ thư viện của ứng dụng
+573	Phương pháp
+574	ảnh chụp (nhanh)
+575	anime (nhanh)
+576	khuếch tán, chất lượng tốt nhất
+577	Tỷ lệ
+578	Kết quả: %d×%d
+579	Không mở được ảnh
+580	%d×%d
+581	ảnh của bạn
+582	Không mở được: %s
+583	Hãy chọn ảnh trước
+584	%d×%d → %d×%d
+585	Thư viện trống
+586	trước
+587	sau
+588	Video · nhiều khung hình mỗi giây hơn (RIFE)
+589	NPU vẽ thêm các khung hình mới giữa mỗi cặp: chuyển động mượt hơn. Âm thanh được giữ nguyên.
+590	Chưa chọn video
+591	Chọn video…
+592	Chọn video từ thư viện của ứng dụng
+593	Hệ số khung hình
+594	Thêm khung hình
+595	Không mở được video: %s
+597	%d×%d, %d → %d fps, %d giây video · khoảng %d phút
+598	Hãy chọn video trước
+599	Video quá lớn
+600	Đang có tác vụ chạy
+601	Không truy cập được danh sách tệp (không có mạng?)
+602	Mạng RIFE v4.6 cho %d×%d (%d MB, MIT) được tải một lần từ Hugging Face.
+603	Khung hình %d / ~%d · %d giây
+604	Khung hình %d · %d giây
+605	Xong: một video mới trong thư viện
+606	Các thẻ Danbooru cách nhau bằng dấu phẩy, tiếng Anh, chữ thường, có dấu cách (long hair). Thứ tự: số nhân vật, tóc, mắt, trang phục, tư thế, bối cảnh, ánh sáng. Ứng dụng tự thêm các thẻ chất lượng.
+607	Một đoạn văn chi tiết gồm các câu tiếng Anh thông thường (60–90 từ): ai và trông thế nào, trang phục, tư thế và hành động, bối cảnh, ánh sáng và màu sắc, tâm trạng, phong cách. Đặt chữ cần vẽ trong dấu ngoặc kép.
+608	Chỉnh sửa: một chỉ dẫn ngắn bằng tiếng Anh nói rõ cần đổi gì và giữ gì. Gọi các ảnh bổ sung là "picture 1", "picture 2".
+609	Một đoạn văn ở thì hiện tại, 4–8 câu tiếng Anh: cảnh quay, bối cảnh và ánh sáng, hành động (mỗi câu có một động từ), nhân vật, chuyển động máy quay, âm thanh. Đặt lời thoại trong dấu ngoặc kép.
+610	Ba trường theo thứ tự, bằng tiếng Anh: integrated_multimodal_description (các cảnh [Shot 1], [Shot 2] At 00:03.500…, máy quay, lời thoại dạng <d>[English] …</d> kèm người nói (S1)), overall_soundscape (chỉ âm thanh môi trường), non_diegetic_music.
+611	Có ảnh tham chiếu: sáu phần theo thứ tự (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); ảnh là <Picture 1>. Không có ảnh: ba trường của H3 (xem ví dụ 1).
+612	Ảnh quá lớn cho SeedVR2: kết quả bị giới hạn ở khoảng 4 megapixel (2048×2048)
+613	Đang mã hóa %s/%s
+614	Đang khôi phục (DiT)…
+615	Đang giải mã %s/%s
+616	Thêm khung hình trong video (Phóng to → Video)
+618	Thẻ từ một ảnh (nút ảnh)
+619	Nút ảnh phía trên ô prompt chọn một ảnh và tìm các thẻ Danbooru của nó bằng mô hình WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0): chúng thay thế prompt hoặc được thêm vào (cho Anima). Mô hình chạy trên NPU, khoảng 3 giây, và chỉ tải một lần (674 MB). Ngưỡng: thẻ thường từ 0,35, nhân vật từ 0,85. Không bao gồm xếp hạng độ tuổi.
+620	Video lớn hơn 1280x768 (720p): không được hỗ trợ
+621	%d×%d: lớn hơn 1280x768 (720p), không được hỗ trợ
+622	Trong menu → Phóng to → Video, mạng RIFE v4.6 (hzwer, MIT) vẽ thêm các khung hình mới giữa mỗi cặp khung hình của clip: x2 hoặc x4, để chuyển động mượt hơn (12 → 24 hoặc 48 khung hình mỗi giây). Nó chạy trên NPU, âm thanh được giữ nguyên và kết quả vào thư viện. Video đến 1280x768 (720p) hoạt động được; với mỗi kích thước sẽ tải một mạng nhỏ (12–40 MB). Khoảng một phút rưỡi cho 3 giây video HD ở x4, nhanh hơn nhiều lần ở kích thước nhỏ. Các đoạn cắt đột ngột không được nội suy. Kích thước ảnh không đổi: chỉ độ mượt được cải thiện.

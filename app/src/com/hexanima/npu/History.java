@@ -33,7 +33,8 @@ public class History extends Base {
     LinearLayout barBtns;
     final Handler ui = new Handler(Looper.getMainLooper());
     final ExecutorService io = Executors.newSingleThreadExecutor();
-    final LruCache<String, Bitmap> cache = new LruCache<>(60);
+    final LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(48 << 20) { @Override protected int sizeOf(String k, Bitmap b) { return b.getByteCount(); } };   // by bytes: the whole grid stays decoded
+    String sig = "";   // what the grid was last built from: coming back from the viewer rebuilds only if it changed
     int cell;
 
     @Override protected void onCreate(Bundle b) {
@@ -68,7 +69,11 @@ public class History extends Base {
         ((LinearLayout) ((android.view.ViewGroup) col.getParent().getParent())).addView(bar);
     }
 
-    @Override protected void onResume() { super.onResume(); fill(); }
+    @Override protected void onResume() {
+        super.onResume();
+        if (!sigNow().equals(sig)) fill();
+    }
+    String sigNow() { StringBuilder b = new StringBuilder().append(mode).append(modelF).append(selecting); for (File f : Gallery.list(this, mode)) b.append(f.getName()).append(Gallery.json(f).lastModified()); return b.toString(); }
     @Override protected void onDestroy() { super.onDestroy(); io.shutdownNow(); }
     @Override public void onBackPressed() { if (selecting) setSelecting(false); else super.onBackPressed(); }
 
@@ -195,6 +200,7 @@ public class History extends Base {
         }
         sel.retainAll(Arrays.asList(cur));
         if (selecting) updateBar();
+        sig = sigNow();
     }
 
     String dayLabel(File f) {
@@ -256,7 +262,6 @@ public class History extends Base {
     @Override protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
         if (req == Viewer.REQ && res == RESULT_OK && data != null) { setResult(RESULT_OK, data); finish(); return; }
-        fill();
     }
 
     void paintCell(FrameLayout fl) {

@@ -536,3 +536,85 @@
 537	Terlalu besar: maksimal %d patch beserta gambarnya
 538	Mage-Flow-Edit-Turbo (Microsoft, 4B, lisensi MIT) menggambar dan mengedit foto lewat prompt dalam 4 langkah, sekitar 12 detik per gambar. Encoder teks, ViT, transformer, dan VAE semuanya berjalan di NPU; unduhannya sekitar 8,7 GB. Untuk mengedit foto, pilih di blok "Edit foto" dan jelaskan apa yang diubah; Anda dapat menambahkan hingga dua gambar referensi lagi dan merujuknya di prompt ("gambar 1", "gambar 2").
 539	Kedua sisi kelipatan 16 dan jumlah patch (lebar/16 × tinggi/16) habis dibagi 32. Model bekerja dalam jendela, jadi tidak ada batas ukuran yang kaku: satu gambar, atau suntingan beserta gambar-gambarnya (setiap gambar memakai patch sebanyak hasilnya), boleh sampai 24576 patch secara total, misalnya 2048×2048 (sekitar 3,5 menit) atau 1024×768 dengan tiga gambar. Makin besar ukurannya, makin lama: waktunya naik kira-kira sebanding kuadrat jumlah patch.
+524	LTX-2.5 (Lightricks, 22B, distilasi) membuat video pendek dari sebuah prompt: 17–97 frame (bawaan 17), frame rate MP4 sesuai pilihan Anda, tanpa suara. Encoder teks Gemma, 48 blok DiT (8 langkah, tanpa CFG), dan VAE berjalan di NPU; satu klip utuh memakan waktu sekitar satu setengah menit. File model (sekitar 27 GB) diletakkan manual di files/ltx; model tidak ada di katalog unduhan (LTX-2 Community License). Hasilnya berupa MP4 di samping frame pratinjau di riwayat (tombol ▶).
+532	FLUX.3 Image Klein (Black Forest Labs, 5,6B) adalah model fotorealistis yang mengikuti prompt panjang berupa kalimat biasa dan bisa menggambar teks. 16 langkah, tanpa CFG: sekitar satu menit untuk 512×512, 3–4 menit untuk 1024×1024. Encoder teks, transformer, dan decoder berjalan di NPU. Lisensi FLUX Kommunity (hanya untuk penggunaan non-komersial), jadi model dipasang manual untuk sementara dan tidak ada di katalog.
+541	Simpan ke galeri
+542	Hapus dari favorit
+543	Tambah ke favorit
+544	Pakai lagi (prompt dan seed)
+545	Perbesar…
+546	×2 · SeedVR2 (difusi, kualitas terbaik)
+547	Perbesar (NPU)
+548	Model SeedVR2 (sekitar 3,6 GB) belum terpasang: file harus ada di files/seedvr2 (pack/, vae/). Unduhan dari katalog akan hadir nanti.
+549	Menyiapkan…
+550	Lagi (seed baru)
+551	Tag dari gambar
+552	Perbesar
+553	Format untuk model ini
+554	Templat
+555	Contoh 
+556	Model WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d MB, dikonversi untuk NPU) diunduh sekali saja. Model ini menemukan tag Danbooru dari sebuah gambar: pakai tag itu di prompt untuk Anima. Butuh sekitar 3 detik.
+557	Mencari tag…
+558	Sekitar 5 detik
+559	tag tidak ditemukan
+560	Tag gambar
+561	Pakai
+562	Tambah
+563	Prompt negatif untuk Turbo (NAG, eksperimen)
+564	Bekerja di Turbo tanpa CFG: atensi teks dijalankan sekali lagi untuk prompt negatif (kolomnya muncul di bawah prompt), tanpa lintasan kedua model. Kekuatan: seberapa jauh menjauh dari yang negatif. Batas (tau): membatasi kelebihan kontras. Campuran (alpha): bagian hasil NAG. Untuk saat ini sekitar dua kali lebih lambat dari Turbo biasa. Untuk Anima 2B, 3 / 1,75 / 0,2 berfungsi.
+565	Batas tau
+566	Campuran alpha
+567	Gambar
+568	Video
+569	Gambar
+570	Belum dipilih
+571	Pilih dari ponsel…
+572	Pilih dari galeri aplikasi
+573	Metode
+574	foto (cepat)
+575	anime (cepat)
+576	difusi, kualitas terbaik
+577	Skala
+578	Hasil: %d×%d
+579	Gambar tidak bisa dibuka
+580	%d×%d
+581	gambar sendiri
+582	Tidak bisa membuka: %s
+583	Pilih gambar dulu
+584	%d×%d → %d×%d
+585	Galeri kosong
+586	sebelum
+587	sesudah
+588	Video · lebih banyak frame per detik (RIFE)
+589	NPU menggambar frame baru di antara setiap pasangan: gerakan lebih halus. Suara tetap dipertahankan.
+590	Belum ada video yang dipilih
+591	Pilih video…
+592	Pilih video dari galeri aplikasi
+593	Pengali frame rate
+594	Tambah frame
+595	Video tidak bisa dibuka: %s
+597	%d×%d, %d → %d fps, %d dtk video · sekitar %d mnt
+598	Pilih video dulu
+599	Video terlalu besar
+600	Sesuatu sedang berjalan
+601	Tidak bisa menjangkau daftar file (tanpa jaringan?)
+602	Jaringan RIFE v4.6 untuk %d×%d (%d MB, MIT) diunduh sekali dari Hugging Face.
+603	Frame %d dari ~%d · %d dtk
+604	Frame %d · %d dtk
+605	Selesai: video baru di galeri
+606	Tag Danbooru dipisahkan koma, bahasa Inggris, huruf kecil, dengan spasi (long hair). Urutan: jumlah subjek, rambut, mata, pakaian, pose, latar, pencahayaan. Tag kualitas ditambahkan sendiri oleh aplikasi.
+607	Satu paragraf rinci berisi kalimat biasa bahasa Inggris (60–90 kata): siapa dan bagaimana rupanya, pakaian, pose dan aksi, latar, cahaya dan warna, suasana, gaya. Beri tanda kutip pada teks yang harus digambar.
+608	Penyuntingan: satu instruksi pendek dalam bahasa Inggris tentang apa yang diubah dan apa yang dipertahankan. Sebut gambar tambahan sebagai "picture 1", "picture 2".
+609	Satu paragraf dalam bentuk sekarang, 4–8 kalimat bahasa Inggris: bidikan, adegan dan cahaya, aksi (satu kata kerja di setiap kalimat), karakter, gerakan kamera, audio. Beri tanda kutip pada ucapan.
+610	Tiga kolom berurutan, dalam bahasa Inggris: integrated_multimodal_description (bidikan [Shot 1], [Shot 2] At 00:03.500…, kamera, ucapan sebagai <d>[English] …</d> dengan pembicara (S1)), overall_soundscape (hanya suara sekitar), non_diegetic_music.
+611	Dengan foto referensi: enam bagian berurutan (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); fotonya adalah <Picture 1>. Tanpa foto: tiga kolom H3 (lihat contoh 1).
+612	Gambar terlalu besar untuk SeedVR2: hasil dibatasi sekitar 4 megapiksel (2048×2048)
+613	Mengenkode %s/%s
+614	Memulihkan (DiT)…
+615	Mendekode %s/%s
+616	Lebih banyak frame dalam video (Perbesar → Video)
+618	Tag dari gambar (tombol foto)
+619	Tombol gambar di atas kolom prompt memilih foto dan menemukan tag Danbooru-nya dengan model WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0): tag menggantikan prompt atau ditambahkan ke prompt (untuk Anima). Model berjalan di NPU, sekitar 3 detik, dan diunduh sekali (674 MB). Ambang batas: tag biasa mulai 0,35, karakter mulai 0,85. Peringkat usia tidak disertakan.
+620	Video lebih besar dari 1280x768 (720p): tidak didukung
+621	%d×%d: lebih besar dari 1280x768 (720p), tidak didukung
+622	Di menu → Perbesar → Video, jaringan RIFE v4.6 (hzwer, MIT) menggambar frame baru di antara setiap pasangan frame klip Anda: x2 atau x4, sehingga gerakan lebih halus (12 → 24 atau 48 frame per detik). Berjalan di NPU, suara dipertahankan, dan hasilnya masuk ke galeri. Video hingga 1280x768 (720p) berfungsi; untuk setiap ukuran diunduh jaringan kecil (12–40 MB). Sekitar satu setengah menit untuk 3 detik video HD pada x4, beberapa kali lebih cepat untuk ukuran kecil. Pemotongan tajam tidak diinterpolasi. Ukuran gambar tidak berubah: hanya kehalusan yang membaik.

@@ -522,6 +522,7 @@ The model is distributed under the LTX-2 Community License Agreement (Lightricks
 FLUX.3 Klein notices (changes made)	Mentions FLUX.3 Klein (modifications apportées)
 LTX-2.5 notices (changes made)	Mentions LTX-2.5 (modifications apportées)
 LTX-2.5 Video	LTX-2.5 Video
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model files (about 27 GB) are put into files/ltx by hand; the model is not in the download catalog (LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, distillé) crée une courte vidéo à partir d'un prompt : 17–97 images (17 par défaut), fréquence d'images du MP4 au choix, sans son. L'encodeur de texte Gemma, les 48 blocs DiT (8 étapes, sans CFG) et le VAE tournent sur le NPU ; un clip complet prend environ une minute et demie. Les fichiers du modèle (environ 27 Go) se placent à la main dans files/ltx ; le modèle n'est pas dans le catalogue de téléchargement (LTX-2 Community License). Le résultat est un MP4 à côté d'une image d'aperçu dans l'historique (bouton ▶).
 MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
 MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA (33B) crée une vidéo à partir d'une description et, en option, d'une photo de référence : la personne, l'animal ou l'objet de la photo apparaît dans la vidéo, tandis que le décor et le mouvement viennent de la description. 22–90 images, 4 étapes (LoRA turbo distillée, sans CFG), sans son. Les fichiers (files/r2v) sont placés à la main, l'encodeur de texte est partagé avec MiniMax-H3-Image (files/h3/te). Licence MiniMax H3 Community : pas pour les États-Unis, l'UE, le Royaume-Uni et la Corée.
 Ref2VA sizes	Tailles Ref2VA
@@ -529,6 +530,7 @@ Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × 
 LTX sizes	Tailles LTX
 Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	Les deux côtés sont des multiples de 32, au moins 256 ; le nombre de tokens 3 × (largeur/32) × (hauteur/32) doit être divisible par 32, par exemple 512×384, 384×512, 512×512, 768×512, 768×768. Rédigez la description en détail et en anglais : qui, ce qu'il fait, la lumière, la caméra.
 FLUX.3 Image Klein	FLUX.3 Image Klein
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. FLUX Kommunity licence (non-commercial use only), so the model is installed by hand for now and is not in the catalog.	FLUX.3 Image Klein (Black Forest Labs, 5,6B) est un modèle photoréaliste qui suit des prompts longs écrits en phrases ordinaires et dessine du texte. 16 étapes, sans CFG : environ une minute pour 512×512, 3–4 minutes pour 1024×1024. L'encodeur de texte, le transformer et le décodeur tournent sur le NPU. Licence FLUX Kommunity (usage non commercial uniquement), le modèle est donc installé à la main pour l'instant et n'est pas dans le catalogue.
 Klein sizes	Tailles Klein
 Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	Les deux côtés sont des multiples de 16, le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32 et au plus 6144 (par exemple 1536×1024), au moins 256 par côté. Rédigez la description en détail, en un paragraphe continu.
 LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5 (Lightricks, 22B, distillé) crée une courte vidéo à partir d'une description : 17–97 images (17 par défaut), la fréquence d'images du MP4 au choix, sans son. L'encodeur de texte Gemma, les 48 blocs DiT (8 étapes, sans CFG) et le VAE tournent sur le NPU ; un clip complet prend environ une minute et demie. Le modèle est dans le catalogue de téléchargement (environ 31 Go ; LTX-2 Community License). Le résultat est un MP4 à côté d'une image d'aperçu dans l'historique (le bouton ▶).
@@ -536,3 +538,83 @@ FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that foll
 Too large: at most %d patches together with the pictures	Trop grand : au plus %d patchs avec les images
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change; you can add up to two more reference pictures and refer to them in the prompt ("picture 1", "picture 2").	Mage-Flow-Edit-Turbo (Microsoft, 4B, licence MIT) dessine des images et retouche des photos à partir d’un prompt en 4 étapes, environ 12 secondes par image. L’encodeur de texte, le ViT, le transformer et le VAE tournent tous sur le NPU ; le téléchargement fait environ 8,7 Go. Pour retoucher une photo, choisissez-la dans le bloc « Retoucher une photo » et décrivez ce qu’il faut changer ; vous pouvez ajouter jusqu’à deux images de référence de plus et les citer dans la description (« image 1 », « image 2 »).
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. The model works in windows, so there is no hard limit on the size: a picture, or an edit together with its pictures (each picture takes as many patches as the result), may have up to 24576 patches in all, for example 2048×2048 (about 3.5 minutes) or 1024×768 with three pictures. The bigger the size, the longer: the time grows about with the square of the patch count.	Les deux côtés sont des multiples de 16 et le nombre de patchs (largeur/16 × hauteur/16) est divisible par 32. Le modèle travaille par fenêtres, il n’y a donc pas de limite stricte de taille : une image, ou une retouche avec ses images (chaque image occupe autant de patchs que le résultat), peut compter jusqu’à 24576 patchs au total, par exemple 2048×2048 (environ 3,5 minutes) ou 1024×768 avec trois images. Plus la taille est grande, plus c’est long : le temps croît à peu près comme le carré du nombre de patchs.
+Save to gallery	Enregistrer dans la galerie
+Remove from favourites	Retirer des favoris
+Add to favourites	Ajouter aux favoris
+Reuse (prompt and seed)	Réutiliser (prompt et seed)
+Upscale…	Agrandir…
+×2 · SeedVR2 (diffusion, best quality)	×2 · SeedVR2 (diffusion, meilleure qualité)
+Upscale (NPU)	Agrandir (NPU)
+The SeedVR2 model (about 3.6 GB) is not installed yet: the files must be in files/seedvr2 (pack/, vae/). Download from the catalog will come later.	Le modèle SeedVR2 (environ 3,6 Go) n'est pas encore installé : les fichiers doivent se trouver dans files/seedvr2 (pack/, vae/). Le téléchargement depuis le catalogue viendra plus tard.
+Preparing…	Préparation…
+Again (new seed)	Encore (nouveau seed)
+Tags from a picture	Tags depuis une image
+Upscale	Agrandir
+Format for this model	Format pour ce modèle
+Template	Modèle
+Example 	Exemple 
+The WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0, %d MB, converted for the NPU) is downloaded once. It finds the Danbooru tags of a picture: use them in the prompt for Anima. It takes about 3 seconds.	Le modèle WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d Mo, converti pour le NPU) est téléchargé une seule fois. Il trouve les tags Danbooru d'une image : utilisez-les dans le prompt pour Anima. Cela prend environ 3 secondes.
+Finding the tags…	Recherche des tags…
+About 5 seconds	Environ 5 secondes
+no tags found	aucun tag trouvé
+Tags of the picture	Tags de l'image
+Use it	Utiliser
+Add	Ajouter
+Negative prompt for Turbo (NAG, experiment)	Prompt négatif pour Turbo (NAG, expérience)
+Works on Turbo without CFG: the text attention is run once more for the negative prompt (its field appears under the prompt), with no second pass of the model. Strength: how hard to push away from the negative. Limit (tau): caps over-burning. Blend (alpha): share of the NAG result. For now about twice as slow as plain Turbo. For Anima 2B 3 / 1.75 / 0.2 works.	Fonctionne avec Turbo sans CFG : l'attention du texte est exécutée une fois de plus pour le prompt négatif (son champ apparaît sous le prompt), sans second passage du modèle. Force : à quel point on s'éloigne du négatif. Limite (tau) : évite la sur-saturation. Mélange (alpha) : part du résultat NAG. Pour l'instant environ deux fois plus lent que Turbo simple. Pour Anima 2B, 3 / 1,75 / 0,2 fonctionne.
+Limit tau	Limite tau
+Blend alpha	Mélange alpha
+Image	Image
+Video	Vidéo
+Picture	Image
+Not chosen	Non choisie
+Choose from the phone…	Choisir sur le téléphone…
+Choose from the app gallery	Choisir dans la galerie de l'app
+Method	Méthode
+photo (fast)	photo (rapide)
+anime (fast)	anime (rapide)
+diffusion, best quality	diffusion, meilleure qualité
+Scale	Échelle
+Result: %d×%d	Résultat : %d×%d
+Cannot open the picture	Impossible d'ouvrir l'image
+%d×%d	%d×%d
+own picture	image personnelle
+Cannot open: %s	Impossible d'ouvrir : %s
+Choose a picture first	Choisissez d'abord une image
+%d×%d → %d×%d	%d×%d → %d×%d
+The gallery is empty	La galerie est vide
+before	avant
+after	après
+Video · more frames per second (RIFE)	Vidéo · plus d'images par seconde (RIFE)
+The NPU draws new frames between every pair: smoother motion. The sound is kept.	Le NPU dessine de nouvelles images entre chaque paire : mouvement plus fluide. Le son est conservé.
+No video chosen	Aucune vidéo choisie
+Choose a video…	Choisir une vidéo…
+Choose a video from the app gallery	Choisir une vidéo dans la galerie de l'app
+Frame rate multiplier	Multiplicateur d'images
+Add frames	Ajouter des images
+Cannot open the video: %s	Impossible d'ouvrir la vidéo : %s
+%d×%d, %d → %d fps, %d s of video · about %d min	%d×%d, %d → %d ips, %d s de vidéo · environ %d min
+Choose a video first	Choisissez d'abord une vidéo
+The video is too large	La vidéo est trop grande
+Something is already running	Une tâche est déjà en cours
+Cannot reach the file list (no network?)	Liste des fichiers inaccessible (pas de réseau ?)
+The RIFE v4.6 network for %d×%d (%d MB, MIT) is downloaded once from Hugging Face.	Le réseau RIFE v4.6 pour %d×%d (%d Mo, MIT) est téléchargé une seule fois depuis Hugging Face.
+Frame %d of ~%d · %d s	Image %d sur ~%d · %d s
+Frame %d · %d s	Image %d · %d s
+Done: a new video in the gallery	Terminé : une nouvelle vidéo dans la galerie
+Danbooru tags separated by commas, English, lowercase, with spaces (long hair). Order: subject count, hair, eyes, clothing, pose, setting, lighting. The app adds the quality tags itself.	Tags Danbooru séparés par des virgules, en anglais, en minuscules, avec des espaces (long hair). Ordre : nombre de sujets, cheveux, yeux, vêtements, pose, décor, éclairage. L'app ajoute elle-même les tags de qualité.
+One detailed paragraph of plain English sentences (60-90 words): who and how they look, clothing, pose and action, setting, light and colour, mood, style. Put text to render in quotes.	Un paragraphe détaillé de phrases ordinaires en anglais (60–90 mots) : qui et à quoi ils ressemblent, vêtements, pose et action, décor, lumière et couleur, ambiance, style. Mettez entre guillemets le texte à dessiner.
+Editing: a short English instruction saying what to change and what to keep. Refer to extra pictures as "picture 1", "picture 2".	Édition : une courte consigne en anglais disant quoi changer et quoi garder. Appelez les images supplémentaires « picture 1 », « picture 2 ».
+One paragraph in present tense, 4-8 English sentences: the shot, scene and light, the action (a verb in every sentence), the character, camera movement, audio. Put speech in quotes.	Un paragraphe au présent, 4–8 phrases en anglais : le plan, la scène et la lumière, l'action (un verbe dans chaque phrase), le personnage, le mouvement de caméra, l'audio. Mettez les dialogues entre guillemets.
+Three fields in order, in English: integrated_multimodal_description (shots [Shot 1], [Shot 2] At 00:03.500…, camera, speech as <d>[English] …</d> with a speaker (S1)), overall_soundscape (ambient sounds only), non_diegetic_music.	Trois champs dans l'ordre, en anglais : integrated_multimodal_description (plans [Shot 1], [Shot 2] At 00:03.500…, caméra, dialogue sous la forme <d>[English] …</d> avec un locuteur (S1)), overall_soundscape (sons d'ambiance uniquement), non_diegetic_music.
+With a reference photo: six sections in order (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); the photo is <Picture 1>. Without a photo: the three fields of H3 (see example 1).	Avec une photo de référence : six sections dans l'ordre (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music) ; la photo est <Picture 1>. Sans photo : les trois champs de H3 (voir l'exemple 1).
+The picture is too large for SeedVR2: the result is limited to about 4 megapixels (2048×2048)	L'image est trop grande pour SeedVR2 : le résultat est limité à environ 4 mégapixels (2048×2048)
+Encoding %s/%s	Encodage %s/%s
+Restoring (DiT)…	Restauration (DiT)…
+Decoding %s/%s	Décodage %s/%s
+More frames in a video (Upscale → Video)	Plus d'images dans une vidéo (Agrandir → Vidéo)
+Tags from a picture (photo button)	Tags depuis une image (bouton photo)
+The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.	Le bouton image au-dessus du champ du prompt choisit une photo et trouve ses tags Danbooru avec le modèle WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0) : ils remplacent le prompt ou s'y ajoutent (pour Anima). Le modèle tourne sur le NPU, environ 3 secondes, et est téléchargé une seule fois (674 Mo). Seuils : tags normaux à partir de 0,35, personnages à partir de 0,85. Les classifications d'âge ne sont pas incluses.
+The video is larger than 1280x768 (720p): not supported	La vidéo dépasse 1280x768 (720p) : non prise en charge
+%d×%d: larger than 1280x768 (720p), not supported	%d×%d : dépasse 1280x768 (720p), non pris en charge
+In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	Dans le menu → Agrandir → Vidéo, le réseau RIFE v4.6 (hzwer, MIT) dessine de nouvelles images entre chaque paire d'images de votre clip : x2 ou x4, pour un mouvement plus fluide (de 12 à 24 ou 48 images par seconde). Il tourne sur le NPU, le son est conservé et le résultat va dans la galerie. Les vidéos jusqu'à 1280x768 (720p) fonctionnent ; un petit réseau (12–40 Mo) est téléchargé pour chaque taille. Environ une minute et demie pour 3 secondes de vidéo HD en x4, plusieurs fois plus vite pour les petites tailles. Les coupes franches ne sont pas interpolées. La taille de l'image ne change pas : seule la fluidité s'améliore.

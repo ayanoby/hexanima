@@ -536,3 +536,85 @@
 537	Zu groß: höchstens %d Patches zusammen mit den Bildern
 538	Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT-Lizenz) zeichnet Bilder und bearbeitet Fotos per Prompt in 4 Schritten, etwa 12 Sekunden pro Bild. Text-Encoder, ViT, Transformer und VAE laufen alle auf der NPU; der Download ist etwa 8,7 GB groß. Um ein Foto zu bearbeiten, wähle es im Block „Foto bearbeiten“ aus und beschreibe, was geändert werden soll; du kannst bis zu zwei weitere Referenzbilder hinzufügen und im Prompt auf sie verweisen („Bild 1“, „Bild 2“).
 539	Beide Seiten sind Vielfache von 16 und die Anzahl der Patches (Breite/16 × Höhe/16) ist durch 32 teilbar. Das Modell arbeitet in Fenstern, deshalb gibt es keine feste Größengrenze: Ein Bild oder eine Bearbeitung samt ihren Bildern (jedes Bild belegt so viele Patches wie das Ergebnis) darf insgesamt bis zu 24576 Patches haben, zum Beispiel 2048×2048 (etwa 3,5 Minuten) oder 1024×768 mit drei Bildern. Je größer, desto länger: Die Zeit wächst ungefähr mit dem Quadrat der Patch-Anzahl.
+524	LTX-2.5 (Lightricks, 22B, destilliert) erzeugt aus einem Prompt ein kurzes Video: 17–97 Frames (standardmäßig 17), frei wählbare Bildrate für das MP4, ohne Ton. Der Gemma-Textencoder, die 48 DiT-Blöcke (8 Schritte, ohne CFG) und der VAE laufen auf der NPU; ein ganzer Clip dauert etwa anderthalb Minuten. Die Modelldateien (etwa 27 GB) werden von Hand in files/ltx gelegt; das Modell ist nicht im Download-Katalog (LTX-2 Community License). Das Ergebnis ist ein MP4 neben einem Vorschaubild im Verlauf (Taste ▶).
+532	FLUX.3 Image Klein (Black Forest Labs, 5,6B) ist ein fotorealistisches Modell, das langen Prompts in normalen Sätzen folgt und Text zeichnet. 16 Schritte, ohne CFG: etwa eine Minute für 512×512, 3–4 Minuten für 1024×1024. Textencoder, Transformer und Decoder laufen auf der NPU. FLUX-Kommunity-Lizenz (nur nicht-kommerzielle Nutzung), daher wird das Modell vorerst von Hand installiert und ist nicht im Katalog.
+541	In der Galerie speichern
+542	Aus den Favoriten entfernen
+543	Zu den Favoriten
+544	Wiederverwenden (Prompt und Seed)
+545	Hochskalieren…
+546	×2 · SeedVR2 (Diffusion, beste Qualität)
+547	Hochskalieren (NPU)
+548	Das Modell SeedVR2 (etwa 3,6 GB) ist noch nicht installiert: Die Dateien müssen in files/seedvr2 liegen (pack/, vae/). Der Download aus dem Katalog kommt später.
+549	Wird vorbereitet…
+550	Nochmal (neuer Seed)
+551	Tags aus einem Bild
+552	Hochskalieren
+553	Format für dieses Modell
+554	Vorlage
+555	Beispiel 
+556	Das Modell WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d MB, für die NPU konvertiert) wird einmalig heruntergeladen. Es findet die Danbooru-Tags eines Bildes: Nutze sie im Prompt für Anima. Es dauert etwa 3 Sekunden.
+557	Tags werden gesucht…
+558	Etwa 5 Sekunden
+559	keine Tags gefunden
+560	Tags des Bildes
+561	Übernehmen
+562	Hinzufügen
+563	Negativer Prompt für Turbo (NAG, Experiment)
+564	Funktioniert bei Turbo ohne CFG: Die Text-Attention läuft noch einmal für den negativen Prompt (das Feld erscheint unter dem Prompt), ohne zweiten Durchlauf des Modells. Stärke: wie stark vom Negativen weggedrückt wird. Limit (tau): begrenzt das Überbrennen. Mischung (alpha): Anteil des NAG-Ergebnisses. Vorerst etwa doppelt so langsam wie normales Turbo. Für Anima 2B funktioniert 3 / 1,75 / 0,2.
+565	Limit tau
+566	Mischung alpha
+567	Bild
+568	Video
+569	Bild
+570	Nicht gewählt
+571	Vom Telefon wählen…
+572	Aus der App-Galerie wählen
+573	Methode
+574	Foto (schnell)
+575	Anime (schnell)
+576	Diffusion, beste Qualität
+577	Maßstab
+578	Ergebnis: %d×%d
+579	Das Bild lässt sich nicht öffnen
+580	%d×%d
+581	eigenes Bild
+582	Öffnen nicht möglich: %s
+583	Wähle zuerst ein Bild
+584	%d×%d → %d×%d
+585	Die Galerie ist leer
+586	vorher
+587	nachher
+588	Video · mehr Bilder pro Sekunde (RIFE)
+589	Die NPU zeichnet zwischen je zwei Bildern neue: weichere Bewegung. Der Ton bleibt erhalten.
+590	Kein Video gewählt
+591	Video wählen…
+592	Video aus der App-Galerie wählen
+593	Faktor der Bildrate
+594	Bilder hinzufügen
+595	Das Video lässt sich nicht öffnen: %s
+597	%d×%d, %d → %d fps, %d s Video · etwa %d Min
+598	Wähle zuerst ein Video
+599	Das Video ist zu groß
+600	Es läuft bereits etwas
+601	Dateiliste nicht erreichbar (kein Netz?)
+602	Das RIFE-v4.6-Netz für %d×%d (%d MB, MIT) wird einmalig von Hugging Face heruntergeladen.
+603	Bild %d von ~%d · %d s
+604	Bild %d · %d s
+605	Fertig: neues Video in der Galerie
+606	Danbooru-Tags, durch Kommas getrennt, englisch, klein geschrieben, mit Leerzeichen (long hair). Reihenfolge: Anzahl der Personen, Haare, Augen, Kleidung, Pose, Umgebung, Licht. Die Qualitäts-Tags fügt die App selbst hinzu.
+607	Ein ausführlicher Absatz aus normalen englischen Sätzen (60–90 Wörter): wer und wie die Person aussieht, Kleidung, Pose und Handlung, Umgebung, Licht und Farbe, Stimmung, Stil. Text, der gezeichnet werden soll, in Anführungszeichen setzen.
+608	Bearbeiten: eine kurze englische Anweisung, was geändert und was beibehalten wird. Weitere Bilder als „picture 1“, „picture 2“ bezeichnen.
+609	Ein Absatz im Präsens, 4–8 englische Sätze: Einstellung, Szene und Licht, die Handlung (in jedem Satz ein Verb), die Figur, Kamerabewegung, Ton. Gesprochenes in Anführungszeichen setzen.
+610	Drei Felder in dieser Reihenfolge, auf Englisch: integrated_multimodal_description (Einstellungen [Shot 1], [Shot 2] At 00:03.500…, Kamera, Sprache als <d>[English] …</d> mit Sprecher (S1)), overall_soundscape (nur Umgebungsgeräusche), non_diegetic_music.
+611	Mit Referenzfoto: sechs Abschnitte in dieser Reihenfolge (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); das Foto heißt <Picture 1>. Ohne Foto: die drei Felder von H3 (siehe Beispiel 1).
+612	Das Bild ist zu groß für SeedVR2: Das Ergebnis ist auf etwa 4 Megapixel (2048×2048) begrenzt
+613	Kodierung %s/%s
+614	Wiederherstellung (DiT)…
+615	Dekodierung %s/%s
+616	Mehr Bilder im Video (Hochskalieren → Video)
+618	Tags aus einem Bild (Foto-Taste)
+619	Die Bild-Taste über dem Prompt-Feld wählt ein Foto und findet seine Danbooru-Tags mit dem Modell WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0): Sie ersetzen den Prompt oder werden hinzugefügt (für Anima). Das Modell läuft auf der NPU, etwa 3 Sekunden, und wird einmalig heruntergeladen (674 MB). Schwellenwerte: normale Tags ab 0,35, Charaktere ab 0,85. Altersfreigaben sind nicht enthalten.
+620	Das Video ist größer als 1280x768 (720p): nicht unterstützt
+621	%d×%d: größer als 1280x768 (720p), nicht unterstützt
+622	Im Menü → Hochskalieren → Video zeichnet das Netz RIFE v4.6 (hzwer, MIT) zwischen je zwei Bildern deines Clips neue: x2 oder x4, damit die Bewegung weicher wird (12 → 24 oder 48 Bilder pro Sekunde). Es läuft auf der NPU, der Ton bleibt erhalten und das Ergebnis landet in der Galerie. Videos bis 1280x768 (720p) funktionieren; für jede Größe wird ein kleines Netz (12–40 MB) heruntergeladen. Etwa anderthalb Minuten für 3 Sekunden HD-Video bei x4, bei kleinen Größen mehrfach schneller. Harte Schnitte werden nicht interpoliert. Die Bildgröße ändert sich nicht: nur die Geschmeidigkeit wird besser.

@@ -522,6 +522,7 @@ The model is distributed under the LTX-2 Community License Agreement (Lightricks
 FLUX.3 Klein notices (changes made)	FLUX.3 Klein 고지(변경 사항)
 LTX-2.5 notices (changes made)	LTX-2.5 고지(변경 사항)
 LTX-2.5 Video	LTX-2.5 Video
+LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model files (about 27 GB) are put into files/ltx by hand; the model is not in the download catalog (LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5(Lightricks, 22B, 증류)는 프롬프트로 짧은 영상을 만듭니다: 17–97프레임(기본 17), MP4 프레임 속도는 원하는 대로, 소리 없음. Gemma 텍스트 인코더, 48개의 DiT 블록(8단계, CFG 없음), VAE가 NPU에서 실행되며, 클립 하나에 약 1분 30초가 걸립니다. 모델 파일(약 27GB)은 files/ltx에 직접 넣습니다. 모델은 다운로드 카탈로그에 없습니다(LTX-2 Community License). 결과는 기록의 미리보기 프레임 옆에 있는 MP4입니다(▶ 버튼).
 MiniMax H3 Ref2VA Video	MiniMax H3 Ref2VA Video
 MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. The files (files/r2v) are put in by hand, the text encoder is shared with MiniMax-H3-Image (files/h3/te). MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA(33B)는 프롬프트와, 선택적으로 참조 사진으로 동영상을 만듭니다. 사진 속 사람, 동물 또는 물체가 동영상에 나타나고, 배경과 움직임은 프롬프트에서 가져옵니다. 22–90프레임, 4단계(증류된 turbo LoRA, CFG 없음), 소리 없음. 파일(files/r2v)은 직접 넣어야 하며, 텍스트 인코더는 MiniMax-H3-Image와 공유합니다(files/h3/te). MiniMax H3 Community 라이선스: 미국, EU, 영국, 한국에서는 사용할 수 없습니다.
 Ref2VA sizes	Ref2VA 크기
@@ -529,6 +530,7 @@ Both sides are multiples of 32, at least 256; the tokens per frame (width/32 × 
 LTX sizes	LTX 크기
 Both sides are multiples of 32, at least 256; the token count 3 × (width/32) × (height/32) must be divisible by 32, for example 512×384, 384×512, 512×512, 768×512, 768×768. Write the prompt in detail, in English: who, what they do, the light, the camera.	두 변 모두 32의 배수이며 256 이상이어야 합니다. 토큰 수 3 × (너비/32) × (높이/32)는 32로 나누어떨어져야 합니다(예: 512×384, 384×512, 512×512, 768×512, 768×768). 프롬프트는 영어로 자세히 쓰세요: 누가, 무엇을 하는지, 빛, 카메라.
 FLUX.3 Image Klein	FLUX.3 Image Klein
+FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that follows long prompts written as plain sentences and draws text. 16 steps, no CFG: about a minute for 512×512, 3–4 minutes for 1024×1024. The text encoder, the transformer and the decoder run on the NPU. FLUX Kommunity licence (non-commercial use only), so the model is installed by hand for now and is not in the catalog.	FLUX.3 Image Klein(Black Forest Labs, 5.6B)은 일반 문장으로 쓴 긴 프롬프트를 따르고 글자도 그리는 사실적인 모델입니다. 16단계, CFG 없음: 512×512는 약 1분, 1024×1024는 3–4분. 텍스트 인코더, 트랜스포머, 디코더가 NPU에서 실행됩니다. FLUX Kommunity 라이선스(비상업적 사용만 가능)이므로 모델은 당분간 직접 설치하며 카탈로그에는 없습니다.
 Klein sizes	Klein 크기
 Both sides are multiples of 16, the patch count (width/16 × height/16) is divisible by 32 and at most 6144 (for example 1536×1024), at least 256 on each side. Write the prompt in detail, as one connected paragraph.	두 변 모두 16의 배수이며, 패치 수(너비/16 × 높이/16)는 32로 나누어떨어지고 최대 6144(예: 1536×1024), 한 변은 최소 256입니다. 프롬프트는 자세하게, 하나로 이어지는 문단으로 쓰세요.
 LTX-2.5 (Lightricks, 22B, distilled) makes a short video from a prompt: 17–97 frames (17 by default), a frame rate of your choice for the MP4, no sound. The Gemma text encoder, the 48 DiT blocks (8 steps, no CFG) and the VAE run on the NPU; a whole clip takes about a minute and a half. The model is in the download catalog (about 31 GB; LTX-2 Community License). The result is an MP4 next to a preview frame in the history (the ▶ button).	LTX-2.5(Lightricks, 22B, 증류)는 프롬프트로 짧은 동영상을 만듭니다: 17–97프레임(기본 17), MP4의 프레임 속도는 원하는 대로 선택, 소리 없음. Gemma 텍스트 인코더, 48개의 DiT 블록(8단계, CFG 없음), VAE가 NPU에서 실행되며, 클립 하나에 약 1분 30초가 걸립니다. 이 모델은 다운로드 카탈로그에 있습니다(약 31 GB, LTX-2 Community License). 결과는 기록의 미리보기 프레임 옆에 있는 MP4입니다(▶ 버튼).
@@ -536,3 +538,83 @@ FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that foll
 Too large: at most %d patches together with the pictures	너무 큽니다: 이미지와 합쳐 최대 %d패치입니다
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change; you can add up to two more reference pictures and refer to them in the prompt ("picture 1", "picture 2").	Mage-Flow-Edit-Turbo(Microsoft, 4B, MIT 라이선스)는 프롬프트로 이미지를 그리고 사진을 편집하며, 4스텝에 이미지당 약 12초가 걸립니다. 텍스트 인코더, ViT, 트랜스포머, VAE가 모두 NPU에서 실행되며 다운로드 크기는 약 8.7 GB입니다. 사진을 편집하려면 "사진 편집" 블록에서 사진을 고르고 바꿀 내용을 설명하세요. 참조 이미지를 최대 두 장 더 추가하고 프롬프트에서 "이미지 1", "이미지 2"처럼 가리킬 수 있습니다.
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. The model works in windows, so there is no hard limit on the size: a picture, or an edit together with its pictures (each picture takes as many patches as the result), may have up to 24576 patches in all, for example 2048×2048 (about 3.5 minutes) or 1024×768 with three pictures. The bigger the size, the longer: the time grows about with the square of the patch count.	두 변 모두 16의 배수이고 패치 수(너비/16 × 높이/16)는 32로 나누어떨어져야 합니다. 모델은 윈도우 단위로 계산하므로 크기에 엄격한 상한이 없습니다: 이미지 한 장, 또는 사진이 포함된 편집(각 사진은 결과와 같은 수의 패치를 차지합니다)은 합계 최대 24576패치까지 가능합니다. 예를 들어 2048×2048(약 3.5분) 또는 사진 세 장이 있는 1024×768입니다. 크기가 클수록 오래 걸리며, 시간은 대략 패치 수의 제곱에 비례해 늘어납니다.
+Save to gallery	갤러리에 저장
+Remove from favourites	즐겨찾기에서 제거
+Add to favourites	즐겨찾기에 추가
+Reuse (prompt and seed)	다시 사용(프롬프트와 시드)
+Upscale…	확대…
+×2 · SeedVR2 (diffusion, best quality)	×2 · SeedVR2(확산, 최고 화질)
+Upscale (NPU)	확대(NPU)
+The SeedVR2 model (about 3.6 GB) is not installed yet: the files must be in files/seedvr2 (pack/, vae/). Download from the catalog will come later.	SeedVR2 모델(약 3.6GB)이 아직 설치되지 않았습니다: 파일이 files/seedvr2(pack/, vae/)에 있어야 합니다. 카탈로그에서의 다운로드는 나중에 제공됩니다.
+Preparing…	준비 중…
+Again (new seed)	다시(새 시드)
+Tags from a picture	이미지에서 태그
+Upscale	확대
+Format for this model	이 모델의 형식
+Template	템플릿
+Example 	예시 
+The WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0, %d MB, converted for the NPU) is downloaded once. It finds the Danbooru tags of a picture: use them in the prompt for Anima. It takes about 3 seconds.	WD EVA02 Tagger v3 모델(SmilingWolf, Apache-2.0, %dMB, NPU용으로 변환)은 한 번만 내려받습니다. 이미지의 Danbooru 태그를 찾아 줍니다: Anima용 프롬프트에 사용하세요. 약 3초가 걸립니다.
+Finding the tags…	태그를 찾는 중…
+About 5 seconds	약 5초
+no tags found	태그를 찾지 못했습니다
+Tags of the picture	이미지의 태그
+Use it	사용
+Add	추가
+Negative prompt for Turbo (NAG, experiment)	Turbo용 네거티브 프롬프트(NAG, 실험)
+Works on Turbo without CFG: the text attention is run once more for the negative prompt (its field appears under the prompt), with no second pass of the model. Strength: how hard to push away from the negative. Limit (tau): caps over-burning. Blend (alpha): share of the NAG result. For now about twice as slow as plain Turbo. For Anima 2B 3 / 1.75 / 0.2 works.	CFG 없는 Turbo에서 작동합니다: 네거티브 프롬프트를 위해 텍스트 어텐션을 한 번 더 실행하며(입력란은 프롬프트 아래에 나타남) 모델의 두 번째 패스는 없습니다. 강도: 네거티브에서 얼마나 멀어지게 할지. 한계(tau): 과노출을 제한합니다. 혼합(alpha): NAG 결과의 비율. 지금은 일반 Turbo보다 약 두 배 느립니다. Anima 2B에서는 3 / 1.75 / 0.2가 잘 작동합니다.
+Limit tau	한계 tau
+Blend alpha	혼합 alpha
+Image	이미지
+Video	영상
+Picture	이미지
+Not chosen	선택 안 함
+Choose from the phone…	휴대폰에서 선택…
+Choose from the app gallery	앱 갤러리에서 선택
+Method	방식
+photo (fast)	사진(빠름)
+anime (fast)	애니메(빠름)
+diffusion, best quality	확산, 최고 화질
+Scale	배율
+Result: %d×%d	결과: %d×%d
+Cannot open the picture	이미지를 열 수 없습니다
+%d×%d	%d×%d
+own picture	내 이미지
+Cannot open: %s	열 수 없습니다: %s
+Choose a picture first	먼저 이미지를 선택하세요
+%d×%d → %d×%d	%d×%d → %d×%d
+The gallery is empty	갤러리가 비어 있습니다
+before	전
+after	후
+Video · more frames per second (RIFE)	영상 · 초당 프레임 늘리기(RIFE)
+The NPU draws new frames between every pair: smoother motion. The sound is kept.	NPU가 모든 프레임 쌍 사이에 새 프레임을 그립니다: 움직임이 더 부드러워집니다. 소리는 유지됩니다.
+No video chosen	선택한 영상 없음
+Choose a video…	영상 선택…
+Choose a video from the app gallery	앱 갤러리에서 영상 선택
+Frame rate multiplier	프레임 배수
+Add frames	프레임 추가
+Cannot open the video: %s	영상을 열 수 없습니다: %s
+%d×%d, %d → %d fps, %d s of video · about %d min	%d×%d, %d → %d fps, 영상 %d초 · 약 %d분
+Choose a video first	먼저 영상을 선택하세요
+The video is too large	영상이 너무 큽니다
+Something is already running	이미 실행 중인 작업이 있습니다
+Cannot reach the file list (no network?)	파일 목록에 접근할 수 없습니다(네트워크 없음?)
+The RIFE v4.6 network for %d×%d (%d MB, MIT) is downloaded once from Hugging Face.	%d×%d용 RIFE v4.6 네트워크(%dMB, MIT)는 Hugging Face에서 한 번만 내려받습니다.
+Frame %d of ~%d · %d s	프레임 %d / ~%d · %d초
+Frame %d · %d s	프레임 %d · %d초
+Done: a new video in the gallery	완료: 갤러리에 새 영상
+Danbooru tags separated by commas, English, lowercase, with spaces (long hair). Order: subject count, hair, eyes, clothing, pose, setting, lighting. The app adds the quality tags itself.	쉼표로 구분한 Danbooru 태그, 영어, 소문자, 띄어쓰기 포함(long hair). 순서: 인원 수, 머리, 눈, 의상, 포즈, 배경, 조명. 품질 태그는 앱이 직접 추가합니다.
+One detailed paragraph of plain English sentences (60-90 words): who and how they look, clothing, pose and action, setting, light and colour, mood, style. Put text to render in quotes.	일반 영어 문장으로 쓴 상세한 한 단락(60–90단어): 누가 어떤 모습인지, 의상, 포즈와 동작, 배경, 빛과 색, 분위기, 스타일. 그릴 글자는 따옴표로 묶으세요.
+Editing: a short English instruction saying what to change and what to keep. Refer to extra pictures as "picture 1", "picture 2".	편집: 무엇을 바꾸고 무엇을 유지할지 알려 주는 짧은 영어 지시문. 추가 이미지는 "picture 1", "picture 2"로 부르세요.
+One paragraph in present tense, 4-8 English sentences: the shot, scene and light, the action (a verb in every sentence), the character, camera movement, audio. Put speech in quotes.	현재형 한 단락, 영어 4–8문장: 샷, 장면과 빛, 동작(모든 문장에 동사), 캐릭터, 카메라 움직임, 오디오. 대사는 따옴표로 묶으세요.
+Three fields in order, in English: integrated_multimodal_description (shots [Shot 1], [Shot 2] At 00:03.500…, camera, speech as <d>[English] …</d> with a speaker (S1)), overall_soundscape (ambient sounds only), non_diegetic_music.	영어로 세 개의 필드를 순서대로: integrated_multimodal_description(샷 [Shot 1], [Shot 2] At 00:03.500…, 카메라, 대사는 화자 (S1)가 있는 <d>[English] …</d>), overall_soundscape(환경음만), non_diegetic_music.
+With a reference photo: six sections in order (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); the photo is <Picture 1>. Without a photo: the three fields of H3 (see example 1).	참조 사진이 있는 경우: 여섯 개의 섹션을 순서대로(subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); 사진은 <Picture 1>입니다. 사진이 없는 경우: H3의 세 필드(예시 1 참조).
+The picture is too large for SeedVR2: the result is limited to about 4 megapixels (2048×2048)	이미지가 SeedVR2에 비해 너무 큽니다: 결과는 약 400만 화소(2048×2048)로 제한됩니다
+Encoding %s/%s	인코딩 중 %s/%s
+Restoring (DiT)…	복원 중(DiT)…
+Decoding %s/%s	디코딩 중 %s/%s
+More frames in a video (Upscale → Video)	영상의 프레임 늘리기(확대 → 영상)
+Tags from a picture (photo button)	이미지에서 태그(사진 버튼)
+The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.	프롬프트 입력란 위의 이미지 버튼은 사진을 선택하고 WD EVA02 Tagger v3 모델(SmilingWolf, Apache-2.0)로 Danbooru 태그를 찾습니다: 프롬프트를 대체하거나 프롬프트에 추가됩니다(Anima용). 모델은 NPU에서 약 3초 동안 실행되며 한 번만 내려받습니다(674MB). 임계값: 일반 태그는 0.35 이상, 캐릭터는 0.85 이상. 연령 등급은 포함되지 않습니다.
+The video is larger than 1280x768 (720p): not supported	영상이 1280x768(720p)보다 큽니다: 지원되지 않음
+%d×%d: larger than 1280x768 (720p), not supported	%d×%d: 1280x768(720p)보다 큼, 지원되지 않음
+In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1280x768 (720p) work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	메뉴 → 확대 → 영상에서 RIFE v4.6 네트워크(hzwer, MIT)가 클립의 모든 프레임 쌍 사이에 새 프레임을 그립니다: x2 또는 x4로 움직임이 더 부드러워집니다(초당 12 → 24 또는 48프레임). NPU에서 실행되고 소리는 유지되며 결과는 갤러리에 저장됩니다. 1280x768(720p)까지의 영상이 작동하며, 크기마다 작은 네트워크(12–40MB)를 내려받습니다. x4에서 HD 영상 3초에 약 1분 30초, 작은 크기에서는 몇 배 더 빠릅니다. 장면이 확 바뀌는 컷은 보간되지 않습니다. 이미지 크기는 바뀌지 않고 부드러움만 좋아집니다.

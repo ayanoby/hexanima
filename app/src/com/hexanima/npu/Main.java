@@ -42,6 +42,9 @@ public class Main extends Base {
     static boolean isBase(String id) { return id.endsWith("base"); }
     boolean base() { return isBase(model) && !customTurboAnima(); }
     /** Lab: a turbo LoRA file on an Anima base pack (megarun folds it with the other LoRAs when the model loads: LORA="file*strength|file*strength") */
+    /** NAG: a negative prompt for a Turbo pack (CFG 1) without a second DiT pass; the cross-attention is run on both prompts and combined (scale, tau, alpha) */
+    boolean nag() { return isAnima() && !base() && prefs().getBoolean("nag_on", false); }
+    String nagParams() { java.util.Locale u = java.util.Locale.US; return String.format(u, "%.2f,%.2f,%.2f", prefs().getFloat("nag_s", 3f), prefs().getFloat("nag_t", 1.75f), prefs().getFloat("nag_a", 0.2f)); }
     boolean customTurboAnima() { return lab && isAnima() && isBase(model) && prefs().getBoolean("aturbo_on", false) && AnimaLora.turboSrc(getFilesDir()).exists(); }
     /** Lab: a turbo LoRA file on the plain Qwen pack (dit8): slot overlays + glue override made by libqwenfold; sampler = the sigma table of the LoRA (4 or 8) */
     boolean customTurboQwen() { return lab && isQwen() && Qwen.is8(model) && prefs().getBoolean("qturbo_on", false) && QwenLora.turboSrc(getFilesDir()).exists(); }
@@ -95,12 +98,12 @@ public class Main extends Base {
     LinearLayout customRow; FrameLayout imgBox;
     LinearLayout cfgRow, baseRow, stepsRow, variantRow, turboStrRow; SeekBar turboBar; TextView countVal, countBadge;
     Button loadBtn, genBtn; LinearLayout baseBody;
-    ImageButton dlBtn, shareBtn, favBtn, againBtn;
+    ImageButton moreBtn; final UpscaleUi up = new UpscaleUi();
     MultiAutoCompleteTextView prompt;
     EditText seed, wEdit, hEdit;
     TextView tokView, negTokView; volatile boolean tokOver; QwenTok tokQ, tokM;   // prompt token counter (Anima / MOSS / Qwen text-to-image); generation is refused over the limit
     final Runnable tokTick = this::updateTokens;
-    LinearLayout baseBox; EditText negEdit; TextView stepsVal, cfgVal, samplerVal, schedVal;   // Anima base models: negative prompt, steps and CFG under the prompt
+    LinearLayout baseBox, nagBox; EditText negEdit; TextView stepsVal, cfgVal, samplerVal, schedVal;   // Anima base models: negative prompt, steps and CFG under the prompt
     LinearLayout aloraBox, aloraList; TextView aloraInfo;   // Anima: the LoRA library (AnimaLoras)
     LinearLayout loraBox; TextView loraName, loraInfo, strText; SeekBar strBar; Button loraPick, loraDrop;
     LinearLayout editBox; TextView editNote; ImageView editThumb; TextView editInfo; Button editPick, editDrop, editAdd; LinearLayout extraBox; volatile Bitmap editBm; final java.util.List<Bitmap> extraBm = new java.util.concurrent.CopyOnWriteArrayList<>();   // Qwen-Image: the photo to edit
@@ -126,7 +129,7 @@ public class Main extends Base {
     /** "HexAnima Lab" (second launcher icon, activity-alias .Lab -> this activity): the layout of the new loader design: only the base of a model is listed, the turbo LoRA is a row under it, the manual LoRA stays; own preferences, the same models and pictures */
     boolean lab;
     SharedPreferences prefs() { return getSharedPreferences(lab ? "lab" : "anima", 0); }
-    void setFavIcon(boolean on) { favBtn.setImageResource(getResources().getIdentifier(on ? "ic_star" : "ic_star_off", "drawable", getPackageName())); favBtn.setImageTintList(on ? null : ColorStateList.valueOf(TXT)); }
+    void setFavIcon(boolean on) { }   // the favourite state is shown in the popup list of moreBtn
 
     @Override
     protected void onCreate(Bundle b) {
@@ -211,15 +214,27 @@ public class Main extends Base {
         resRow.setGravity(Gravity.CENTER_VERTICAL);
         saved = text("", 12, DIM, false);
         resRow.addView(saved, new LinearLayout.LayoutParams(0, -2, 1));
-        againBtn = icon("ic_refresh", 0);
-        againBtn.setOnClickListener(v -> generate(true));   // the same prompt with a new random seed
-        favBtn = icon("ic_star_off", 0);
-        favBtn.setOnClickListener(v -> { if (lastFile == null) return; boolean nv = !Gallery.fav(lastFile); Gallery.setFav(lastFile, nv); setFavIcon(nv); });
-        dlBtn = icon("ic_download", 0);
-        dlBtn.setOnClickListener(v -> { if (lastFile == null) return; try { Gallery.export(this, lastFile); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } });
-        shareBtn = icon("ic_share", 0);
-        shareBtn.setOnClickListener(v -> { if (lastFile != null) Gallery.share(this, lastFile); });
-        for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) { x.setVisibility(View.GONE); resRow.addView(x, new LinearLayout.LayoutParams(dp(44), dp(44))); }
+        moreBtn = icon("ic_more", 0); moreBtn.setVisibility(View.GONE);   // one small button: the actions of the fresh picture in a popup list next to it
+        moreBtn.setOnClickListener(v -> {
+            if (lastFile == null) return;
+            android.widget.PopupMenu pm = new android.widget.PopupMenu(this, moreBtn, Gravity.END); android.view.Menu mn = pm.getMenu();
+            mn.add(0, 0, 0, L.s("Ещё раз (новый seed)", "Again (new seed)")); mn.add(0, 1, 1, Gallery.fav(lastFile) ? L.s("Убрать из избранного", "Remove from favourites") : L.s("В избранное", "Add to favourites"));
+            mn.add(0, 2, 2, L.s("Сохранить в галерею", "Save to gallery")); mn.add(0, 3, 3, L.s("Поделиться", "Share"));
+            if (Gallery.videoOf(lastFile) == null) mn.add(0, 4, 4, L.s("Увеличить…", "Upscale…")); mn.add(0, 5, 5, L.s("Удалить", "Delete"));
+            pm.setOnMenuItemClickListener(it -> {
+                switch (it.getItemId()) {
+                    case 0: generate(true); break;   // the same prompt with a new random seed
+                    case 1: Gallery.setFav(lastFile, !Gallery.fav(lastFile)); break;
+                    case 2: try { Gallery.export(this, lastFile); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } break;
+                    case 3: Gallery.share(this, lastFile); break;
+                    case 4: up.dialog(this, lastFile, Gallery.meta(lastFile), res -> { lastFile = res; Bitmap nb = BitmapFactory.decodeFile(res.getPath()); if (nb != null) { fitBox(nb); img.setImageBitmap(nb); } }); break;   // the result replaces the picture on the screen
+                    default: Gallery.trash(this, lastFile); lastFile = null; img.setVisibility(View.GONE); placeholder.setVisibility(View.VISIBLE); moreBtn.setVisibility(View.GONE); saved.setText("");   // to the trash (restorable in the history)
+                }
+                return true;
+            });
+            pm.show();
+        });
+        resRow.addView(moreBtn, new LinearLayout.LayoutParams(dp(44), dp(44)));
         root.addView(resRow);
 
         // prompt
@@ -227,6 +242,7 @@ public class Main extends Base {
         pl.addView(label(L.s("Описание", "Prompt")), new LinearLayout.LayoutParams(-2, -2));
         tokView = text("", 12, DIM, false); tokView.setPadding(dp(10), dp(14), 0, dp(7)); tokView.setVisibility(View.GONE); pl.addView(tokView, new LinearLayout.LayoutParams(-2, -2));   // the token count sits right after the label
         pl.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
+        ImageView tgb = new ImageView(this); tgb.setImageDrawable(vec("ic_photo", TXT, 22)); tgb.setScaleType(ImageView.ScaleType.CENTER); tgb.setContentDescription(L.s("Теги из картинки", "Tags from a picture")); tgb.setOnClickListener(v -> tagFromPicture()); pl.addView(tgb, new LinearLayout.LayoutParams(dp(44), dp(40)));
         ImageView tpl = new ImageView(this); tpl.setImageDrawable(vec("ic_bookmark", TXT, 22)); tpl.setScaleType(ImageView.ScaleType.CENTER); tpl.setContentDescription(L.s("Шаблоны описания", "Prompt templates")); tpl.setOnClickListener(v -> templates(false)); pl.addView(tpl, new LinearLayout.LayoutParams(dp(44), dp(40)));
         root.addView(pl);
         prompt = new MultiAutoCompleteTextView(this);   // Danbooru tag suggestions while typing, comma separated
@@ -406,6 +422,7 @@ public class Main extends Base {
             public void onStopTrackingTouch(SeekBar b) { }
         });
         pcard.addView(divider()); pcard.addView(turboStrRow);
+        nagBox = buildNag(); pcard.addView(nagBox);
         refreshLora();
 
         // bottom: progress, status, Generate
@@ -514,6 +531,7 @@ public class Main extends Base {
 
     @Override protected void onActivityResult(int req, int res, Intent d) {
         if (req == AnimaConv.REQ && res == RESULT_OK && d != null && d.getData() != null) { new AnimaConv(this, store, prefs().getString("base", DEFAULT_BASE), () -> refreshModels()).start(d.getData()); return; }
+        if (req == 22 && res == RESULT_OK && d != null && d.getData() != null) { tagRun(d.getData()); return; }
         if (req == 9 && res == RESULT_OK && d != null && d.getData() != null) { importLora(d.getData()); return; }
         if (req == 10 && res == RESULT_OK && d != null && d.getData() != null) { importEdit(d.getData()); return; }
         if (req == 14 && res == RESULT_OK && d != null && d.getData() != null) { if (isAnima()) importTurboAnima(d.getData()); else if (isQwen()) importTurboQwen(d.getData()); else importTurbo(d.getData()); return; }
@@ -813,7 +831,7 @@ public class Main extends Base {
         final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(10), dp(14), dp(10), dp(14));
         final AlertDialog[] dlg = new AlertDialog[1];
         final String[] icons = {"ic_layers", "ic_add_photo", "ic_tune", "ic_info"};
-        final String[] names = {L.s("Модели", "Models"), L.s("Открыть настройки из PNG", "Load settings from a PNG"), L.s("Настройки", "Settings"), L.s("Инфо", "Info")};
+        final String[] names = {L.s("Модели", "Models"), L.s("Увеличение", "Upscale"), L.s("Открыть настройки из PNG", "Load settings from a PNG"), L.s("Настройки", "Settings"), L.s("Инфо", "Info")};
         for (int i = 0; i < names.length; i++) {
             final int k = i;
             LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(16), dp(16), dp(16), dp(16)); row.setBackground(bg(CARD, 12));
@@ -821,8 +839,9 @@ public class Main extends Base {
             row.setOnClickListener(v -> {
                 dlg[0].dismiss();
                 if (k == 0) openModels();
-                else if (k == 1) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/png").addCategory(Intent.CATEGORY_OPENABLE), 8);
-                else if (k == 2) startActivity(new Intent(this, Settings.class));
+                else if (k == 1) startActivity(new Intent(this, UpscaleActivity.class));
+                else if (k == 2) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/png").addCategory(Intent.CATEGORY_OPENABLE), 8);
+                else if (k == 3) startActivity(new Intent(this, Settings.class));
                 else startActivity(new Intent(this, Info.class));
             });
             LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2); rlp.bottomMargin = dp(8); col.addView(row, rlp);
@@ -847,6 +866,13 @@ public class Main extends Base {
                 prefs().edit().putString(neg ? "saved_neg" : "saved", new JSONArray(l).toString()).apply(); fill[0].run();
             });
             box.addView(save, new LinearLayout.LayoutParams(-1, dp(44)));
+            if (!neg) {   // the format of this model: a rule, a fill-in template and two good examples
+                final PromptGuide pg = PromptGuide.of(this);
+                box.addView(sect(L.s("Формат для этой модели", "Format for this model")));
+                TextView rl = text(pg.rule, 13, DIM, false); rl.setPadding(dp(4), 0, dp(4), dp(4)); box.addView(rl);
+                box.addView(guideRow(L.s("Шаблон", "Template"), pg.template, dlg));
+                for (int i = 0; i < pg.examples.length; i++) box.addView(guideRow(L.s("Пример ", "Example ") + (i + 1), pg.examples[i], dlg));
+            }
             List<String> sv = savedPrompts(neg);
             if (!sv.isEmpty()) { box.addView(sect(L.s("Сохранённые", "Saved"))); for (String t : sv) box.addView(promptRow(t, true, neg, dlg, fill)); }
             List<String> rc = neg ? new ArrayList<String>() : recentPrompts();
@@ -859,6 +885,65 @@ public class Main extends Base {
         fill[0].run();
         ScrollView s = new ScrollView(this); s.addView(box);
         dlg[0] = dialog(s);
+    }
+
+    // ---- tags from a picture (WD EVA02 tagger on the NPU, see Tagger) -------------------------
+    void tagFromPicture() {
+        if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
+        if (Tagger.has(getFilesDir())) { pickTagPicture(); return; }
+        builder().setTitle(L.s("Теги из картинки", "Tags from a picture"))
+            .setMessage(L.f("Модель WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d МБ, перекодирована для NPU) скачивается один раз. Она определяет по картинке теги Danbooru: подставьте их в описание для Anima. Работает около 3 секунд.", "The WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0, %d MB, converted for the NPU) is downloaded once. It finds the Danbooru tags of a picture: use them in the prompt for Anima. It takes about 3 seconds.", Tagger.SIZE / 1000000))
+            .setPositiveButton(L.s("Скачать", "Download"), (d, w) -> downloadTagger()).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+    }
+
+    void downloadTagger() {
+        final java.util.concurrent.atomic.AtomicBoolean cancel = new java.util.concurrent.atomic.AtomicBoolean();
+        final AlertDialog dlg = builder().setTitle(L.s("Загрузка…", "Downloading…")).setMessage("0 %").setCancelable(false).setNegativeButton(L.s("Отмена", "Cancel"), (d, w) -> cancel.set(true)).create(); dlg.show();
+        new Thread(() -> {
+            String err = null;
+            try { Tagger.download(this, n -> runOnUiThread(() -> dlg.setMessage((100 * n / Tagger.SIZE) + " %")), cancel); } catch (Throwable e) { err = cancel.get() ? "" : String.valueOf(e.getMessage() != null ? e.getMessage() : e); }
+            final String er = err;
+            runOnUiThread(() -> { dlg.dismiss(); if (er != null) { if (!er.isEmpty()) Toast.makeText(this, L.f("Не удалось скачать: %s", "Download failed: %s", er), Toast.LENGTH_LONG).show(); return; } pickTagPicture(); });
+        }).start();
+    }
+
+    void pickTagPicture() { startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/*").addCategory(Intent.CATEGORY_OPENABLE), 22); }
+
+    void tagRun(final Uri uri) {
+        final AlertDialog dlg = builder().setTitle(L.s("Определяю теги…", "Finding the tags…")).setMessage(L.s("Около 5 секунд", "About 5 seconds")).setCancelable(false).create(); dlg.show();
+        new Thread(() -> {
+            String res = null, err = null;
+            try {
+                android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options(); o.inJustDecodeBounds = true;
+                try (InputStream in = getContentResolver().openInputStream(uri)) { android.graphics.BitmapFactory.decodeStream(in, null, o); }
+                int sm = 1; while (Math.max(o.outWidth, o.outHeight) / (sm * 2) >= 1024) sm *= 2;
+                o = new android.graphics.BitmapFactory.Options(); o.inSampleSize = sm;
+                Bitmap bm; try (InputStream in = getContentResolver().openInputStream(uri)) { bm = android.graphics.BitmapFactory.decodeStream(in, null, o); }
+                if (bm == null) throw new IOException("cannot read the picture");
+                res = Tagger.run(this, bm); bm.recycle();
+            } catch (Throwable e) { err = String.valueOf(e.getMessage() != null ? e.getMessage() : e); }
+            final String r = res, er = err;
+            runOnUiThread(() -> {
+                dlg.dismiss();
+                if (r == null || r.isEmpty()) { Toast.makeText(this, L.f("Не получилось: %s", "Failed: %s", er == null ? L.s("тегов не найдено", "no tags found") : er), Toast.LENGTH_LONG).show(); return; }
+                final TextView out = text(r, 14, TXT, false); out.setTextIsSelectable(true); out.setPadding(dp(20), dp(8), dp(20), dp(8));
+                final ScrollView sv = new ScrollView(this); sv.addView(out);
+                builder().setTitle(L.s("Теги картинки", "Tags of the picture")).setView(sv)
+                    .setPositiveButton(L.s("Подставить", "Use it"), (d, w) -> { prompt.setText(r); prompt.setSelection(r.length()); })
+                    .setNeutralButton(L.s("Добавить", "Add"), (d, w) -> { String cur = prompt.getText().toString().trim(); String t = cur.isEmpty() ? r : cur + (cur.endsWith(",") ? " " : ", ") + r; prompt.setText(t); prompt.setSelection(t.length()); })
+                    .setNegativeButton(L.s("Отмена", "Cancel"), null).show();
+            });
+        }).start();
+    }
+
+    /** one entry of the format guide: a title and the text (3 lines); a tap puts it into the prompt */
+    View guideRow(String title, final String text, final AlertDialog[] dlg) {
+        LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.VERTICAL); r.setPadding(dp(12), dp(10), dp(12), dp(10)); r.setBackground(bg(CARD, 12));
+        r.addView(text(title, 12, ACC, true));
+        TextView tv = text(text, 13, TXT, false); tv.setMaxLines(3); tv.setEllipsize(android.text.TextUtils.TruncateAt.END); r.addView(tv);
+        r.setOnClickListener(v -> { prompt.setText(text); prompt.setSelection(text.length()); dlg[0].dismiss(); });
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2); lp.topMargin = dp(6); r.setLayoutParams(lp);
+        return r;
     }
 
     TextView sect(String s) { TextView t = text(s, 12, DIM, true); t.setPadding(dp(4), dp(14), 0, dp(6)); return t; }
@@ -942,6 +1027,41 @@ public class Main extends Base {
         return t;
     }
 
+    LinearLayout buildNag() {
+        LinearLayout b = new LinearLayout(this); b.setOrientation(LinearLayout.VERTICAL); b.setVisibility(View.GONE);
+        b.addView(divider());
+        LinearLayout top = new LinearLayout(this); top.setGravity(Gravity.CENTER_VERTICAL); top.setPadding(0, dp(8), 0, dp(4));
+        Switch sw = new Switch(this); sw.setChecked(prefs().getBoolean("nag_on", false));
+        sw.setThumbTintList(new ColorStateList(new int[][]{{android.R.attr.state_checked}, {}}, new int[]{ACC, DIM}));
+        sw.setTrackTintList(new ColorStateList(new int[][]{{android.R.attr.state_checked}, {}}, new int[]{(ACC & 0x00FFFFFF) | 0x66000000, (DIM & 0x00FFFFFF) | 0x44000000}));
+        top.addView(sw);
+        TextView t = text(L.s("Негативный промпт для Turbo (NAG, опыт)", "Negative prompt for Turbo (NAG, experiment)"), 15, TXT, false); t.setPadding(dp(10), 0, 0, 0); top.addView(t, new LinearLayout.LayoutParams(0, -2, 1));
+        b.addView(top);
+        final LinearLayout sl = new LinearLayout(this); sl.setOrientation(LinearLayout.VERTICAL); sl.setVisibility(sw.isChecked() ? View.VISIBLE : View.GONE);
+        TextView info = text(L.s("Работает на Turbo без CFG: внимание к тексту считается ещё раз для негативного промпта (поле появится под описанием), без второго прохода модели. Сила: насколько отталкиваться от негатива. Предел (τ): ограничивает пережог. Смешивание (α): доля результата NAG. Для Anima 2B подходит 3 / 1,75 / 0,2.",
+            "Works on Turbo without CFG: the text attention is run once more for the negative prompt (its field appears under the prompt), with no second pass of the model. Strength: how hard to push away from the negative. Limit (tau): caps over-burning. Blend (alpha): share of the NAG result. For now about twice as slow as plain Turbo. For Anima 2B 3 / 1.75 / 0.2 works."), 12, DIM, false);
+        info.setPadding(0, 0, 0, dp(6)); sl.addView(info);
+        sl.addView(nagSlider(L.s("Сила", "Strength"), "nag_s", 1f, 10f, 0.25f, 3f));
+        sl.addView(nagSlider(L.s("Предел τ", "Limit tau"), "nag_t", 1f, 4f, 0.25f, 1.75f));
+        sl.addView(nagSlider(L.s("Смешивание α", "Blend alpha"), "nag_a", 0f, 0.6f, 0.05f, 0.2f));
+        b.addView(sl);
+        sw.setOnCheckedChangeListener((v, on) -> { prefs().edit().putBoolean("nag_on", on).apply(); sl.setVisibility(on ? View.VISIBLE : View.GONE); if (baseBox != null) baseBox.setVisibility(base() || nag() ? View.VISIBLE : View.GONE); refreshBaseUi(); updateTokens(); });
+        return b;
+    }
+    LinearLayout nagSlider(String name, final String key, final float min, final float max, final float step, float def) {
+        LinearLayout r = new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); r.setPadding(0, dp(4), 0, dp(4));
+        TextView n = text(name, 14, TXT, false); n.setMinWidth(dp(96)); r.addView(n);
+        final SeekBar sb = new SeekBar(this); sb.setMax(Math.round((max - min) / step)); sb.setProgress(Math.round((prefs().getFloat(key, def) - min) / step));
+        sb.setProgressTintList(ColorStateList.valueOf(TXT)); sb.setThumbTintList(ColorStateList.valueOf(TXT)); sb.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
+        r.addView(sb, new LinearLayout.LayoutParams(0, -2, 1));
+        final TextView v = text(String.format(java.util.Locale.US, "%.2f", min + sb.getProgress() * step), 14, TXT, false); v.setMinWidth(dp(44)); v.setGravity(Gravity.END); r.addView(v);
+        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar bar, int p, boolean u) { float x = min + p * step; v.setText(String.format(java.util.Locale.US, "%.2f", x)); if (u) prefs().edit().putFloat(key, x).apply(); }
+            public void onStartTrackingTouch(SeekBar bar) { }
+            public void onStopTrackingTouch(SeekBar bar) { }
+        });
+        return r;
+    }
     boolean isMoss() { return Moss.is(model); }
     boolean isMage() { return Mage.is(model); }
     boolean isH3() { return H3.is(model); }
@@ -1349,7 +1469,8 @@ public class Main extends Base {
             if (turboStrRow != null) { boolean tv = customTurbo() || customTurboAnima() || customTurboQwen(); turboStrRow.setVisibility(tv ? View.VISIBLE : View.GONE); if (tv) turboBar.setProgress(Math.round(prefs().getFloat(turboStrKey(), 1f) * 20)); }
             if (loraBox != null) { loraBox.setVisibility(isMoss() && !moss8() && !customTurbo() ? View.VISIBLE : View.GONE); refreshLora(); }
             if (aloraBox != null) { aloraBox.setVisibility(isAnima() ? View.VISIBLE : View.GONE); refreshAnimaLoras(); }
-            if (baseBox != null) { baseBox.setVisibility(base() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
+            if (nagBox != null) nagBox.setVisibility(isAnima() && !base() ? View.VISIBLE : View.GONE);
+            if (baseBox != null) { baseBox.setVisibility(base() || nag() ? View.VISIBLE : View.GONE); refreshBaseUi(); }
             if (editBox != null) { editBox.setVisibility(isQwen() || isMage() || isLtx() || isR2v() ? View.VISIBLE : View.GONE); refreshEdit(); }
             applyFamily(); updateTokens();
             state.setText(working ? msg : !isAnima() ? modelCaption(model) : isLoaded ? L.s("Загружена", "Loaded") : L.s("Выгружена", "Unloaded"));
@@ -1402,7 +1523,7 @@ public class Main extends Base {
 
     /** anima.sh ships in assets and is rewritten at every start (it is a script, so it may live in the app's data dir) */
     void installScript() {
-        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh", "h3.sh", "klein.sh", "ltx.sh", "r2v.sh", "up.sh"})
+        for (String nm : new String[]{"anima.sh", "moss.sh", "qwen.sh", "mage.sh", "h3.sh", "klein.sh", "ltx.sh", "r2v.sh", "up.sh", "svr.sh"})
             try (InputStream in = getAssets().open(nm); FileOutputStream o = new FileOutputStream(new File(D, nm))) {
                 byte[] b = new byte[8192]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n);
             } catch (IOException e) { Toast.makeText(this, nm + ": " + e, Toast.LENGTH_LONG).show(); }
@@ -1537,7 +1658,7 @@ public class Main extends Base {
                 ui.post(() -> {
                     lastFile = f; videoUi(f); fitBox(bm); img.setImageBitmap(bm); img.setVisibility(View.VISIBLE); placeholder.setVisibility(View.GONE); img.setAlpha(0f); img.animate().alpha(1f).setDuration(250).start();
                     setFavIcon(false);
-                    for (ImageButton x : new ImageButton[]{againBtn, favBtn, dlBtn, shareBtn}) x.setVisibility(View.VISIBLE);
+                    moreBtn.setVisibility(View.VISIBLE);
                     final ScrollView svv = (ScrollView) imgBox.getParent().getParent(); svv.post(() -> svv.smoothScrollTo(0, 0));   // after the image has been laid out
                     saved.setText("seed " + seedS);
                 });
@@ -1602,7 +1723,7 @@ public class Main extends Base {
             }
         });
         poll.start();
-        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + steps() + " SAMPLER=" + smp() + (sch().isEmpty() ? "" : " SCHED=" + sch()) + (base() || !cfgStr().equals("1") ? " CFG=" + cfgStr() + " NEG=" + q(negStr()) : "") + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
+        su("cd " + D + " && rm -f last.png && " + mp() + "PREFIX=" + q(Settings.prefix(this)) + " STEPS=" + steps() + " SAMPLER=" + smp() + (sch().isEmpty() ? "" : " SCHED=" + sch()) + (nag() ? " CFG=2 NEG=" + q(negStr()) + " NAGP=" + nagParams() : base() || !cfgStr().equals("1") ? " CFG=" + cfgStr() + " NEG=" + q(negStr()) : "") + " W=" + w + " H=" + h + " LOGRE='learned_condition|completed in' sh ./anima.sh " + q(pr) + " " + seedS + " " + f + " < /dev/null >> gen.log 2>&1", false);
         done[0] = true;
         try { poll.join(); } catch (InterruptedException ignored) { }
         if (cancelled) return null;

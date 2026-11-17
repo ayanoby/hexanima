@@ -536,3 +536,85 @@
 537	Demasiado grande: como máximo %d parches junto con las imágenes
 538	Mage-Flow-Edit-Turbo (Microsoft, 4B, licencia MIT) dibuja imágenes y edita fotos con un prompt en 4 pasos, unos 12 segundos por imagen. El codificador de texto, el ViT, el transformer y el VAE funcionan todos en la NPU; la descarga es de unos 8,7 GB. Para editar una foto, elígela en el bloque «Editar una foto» y describe qué cambiar; puedes añadir hasta dos imágenes de referencia más y referirte a ellas en la descripción («imagen 1», «imagen 2»).
 539	Ambos lados son múltiplos de 16 y el número de parches (ancho/16 × alto/16) es divisible entre 32. El modelo trabaja por ventanas, así que no hay un límite estricto de tamaño: una imagen, o una edición con sus imágenes (cada imagen ocupa tantos parches como el resultado), puede tener hasta 24576 parches en total, por ejemplo 2048×2048 (unos 3,5 minutos) o 1024×768 con tres imágenes. Cuanto mayor es el tamaño, más tarda: el tiempo crece aproximadamente con el cuadrado del número de parches.
+524	LTX-2.5 (Lightricks, 22B, destilado) crea un vídeo corto a partir de un prompt: 17–97 fotogramas (17 por defecto), la tasa de fotogramas del MP4 a tu elección, sin sonido. El codificador de texto Gemma, los 48 bloques DiT (8 pasos, sin CFG) y el VAE se ejecutan en la NPU; un clip completo tarda aproximadamente un minuto y medio. Los archivos del modelo (unos 27 GB) se colocan a mano en files/ltx; el modelo no está en el catálogo de descargas (LTX-2 Community License). El resultado es un MP4 junto a un fotograma de vista previa en el historial (botón ▶).
+532	FLUX.3 Image Klein (Black Forest Labs, 5,6B) es un modelo fotorrealista que sigue prompts largos escritos en frases normales y dibuja texto. 16 pasos, sin CFG: aproximadamente un minuto para 512×512, 3–4 minutos para 1024×1024. El codificador de texto, el transformer y el decodificador se ejecutan en la NPU. Licencia FLUX Kommunity (solo uso no comercial), por eso el modelo se instala a mano por ahora y no está en el catálogo.
+541	Guardar en la galería
+542	Quitar de favoritos
+543	Añadir a favoritos
+544	Reutilizar (prompt y semilla)
+545	Ampliar…
+546	×2 · SeedVR2 (difusión, mejor calidad)
+547	Ampliar (NPU)
+548	El modelo SeedVR2 (unos 3,6 GB) aún no está instalado: los archivos deben estar en files/seedvr2 (pack/, vae/). La descarga desde el catálogo llegará más adelante.
+549	Preparando…
+550	Otra vez (nueva semilla)
+551	Etiquetas de una imagen
+552	Ampliar
+553	Formato para este modelo
+554	Plantilla
+555	Ejemplo 
+556	El modelo WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0, %d MB, convertido para la NPU) se descarga una sola vez. Encuentra las etiquetas de Danbooru de una imagen: úsalas en el prompt para Anima. Tarda unos 3 segundos.
+557	Buscando las etiquetas…
+558	Unos 5 segundos
+559	no se encontraron etiquetas
+560	Etiquetas de la imagen
+561	Usar
+562	Añadir
+563	Prompt negativo para Turbo (NAG, experimento)
+564	Funciona con Turbo sin CFG: la atención de texto se ejecuta una vez más para el prompt negativo (su campo aparece bajo el prompt), sin una segunda pasada del modelo. Intensidad: cuánto se aleja de lo negativo. Límite (tau): evita el exceso de contraste. Mezcla (alpha): proporción del resultado NAG. Por ahora es unas dos veces más lento que Turbo normal. Para Anima 2B funciona 3 / 1,75 / 0,2.
+565	Límite tau
+566	Mezcla alpha
+567	Imagen
+568	Vídeo
+569	Imagen
+570	No elegida
+571	Elegir en el teléfono…
+572	Elegir de la galería de la app
+573	Método
+574	foto (rápido)
+575	anime (rápido)
+576	difusión, mejor calidad
+577	Escala
+578	Resultado: %d×%d
+579	No se puede abrir la imagen
+580	%d×%d
+581	imagen propia
+582	No se puede abrir: %s
+583	Elige primero una imagen
+584	%d×%d → %d×%d
+585	La galería está vacía
+586	antes
+587	después
+588	Vídeo · más fotogramas por segundo (RIFE)
+589	La NPU dibuja fotogramas nuevos entre cada par: movimiento más fluido. El sonido se conserva.
+590	Ningún vídeo elegido
+591	Elegir un vídeo…
+592	Elegir un vídeo de la galería de la app
+593	Multiplicador de fotogramas
+594	Añadir fotogramas
+595	No se puede abrir el vídeo: %s
+597	%d×%d, %d → %d fps, %d s de vídeo · unos %d min
+598	Elige primero un vídeo
+599	El vídeo es demasiado grande
+600	Ya hay algo en ejecución
+601	No se puede acceder a la lista de archivos (¿sin red?)
+602	La red RIFE v4.6 para %d×%d (%d MB, MIT) se descarga una sola vez desde Hugging Face.
+603	Fotograma %d de ~%d · %d s
+604	Fotograma %d · %d s
+605	Listo: un vídeo nuevo en la galería
+606	Etiquetas de Danbooru separadas por comas, en inglés, en minúsculas, con espacios (long hair). Orden: número de sujetos, pelo, ojos, ropa, pose, entorno, iluminación. La app añade ella misma las etiquetas de calidad.
+607	Un párrafo detallado de frases normales en inglés (60–90 palabras): quién es y cómo se ve, ropa, pose y acción, entorno, luz y color, ambiente, estilo. Pon entre comillas el texto que se debe dibujar.
+608	Edición: una instrucción corta en inglés que diga qué cambiar y qué conservar. Llama a las imágenes adicionales «picture 1», «picture 2».
+609	Un párrafo en presente, 4–8 frases en inglés: el plano, la escena y la luz, la acción (un verbo en cada frase), el personaje, el movimiento de cámara, el audio. Pon el diálogo entre comillas.
+610	Tres campos en orden, en inglés: integrated_multimodal_description (planos [Shot 1], [Shot 2] At 00:03.500…, cámara, diálogo como <d>[English] …</d> con un hablante (S1)), overall_soundscape (solo sonidos ambientales), non_diegetic_music.
+611	Con foto de referencia: seis secciones en orden (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music); la foto es <Picture 1>. Sin foto: los tres campos de H3 (véase el ejemplo 1).
+612	La imagen es demasiado grande para SeedVR2: el resultado se limita a unos 4 megapíxeles (2048×2048)
+613	Codificando %s/%s
+614	Restaurando (DiT)…
+615	Decodificando %s/%s
+616	Más fotogramas en un vídeo (Ampliar → Vídeo)
+618	Etiquetas de una imagen (botón de foto)
+619	El botón de imagen sobre el campo del prompt elige una foto y encuentra sus etiquetas de Danbooru con el modelo WD EVA02 Tagger v3 (SmilingWolf, Apache-2.0): sustituyen al prompt o se añaden a él (para Anima). El modelo se ejecuta en la NPU, unos 3 segundos, y se descarga una sola vez (674 MB). Umbrales: etiquetas normales desde 0,35, personajes desde 0,85. No incluye clasificaciones de edad.
+620	El vídeo es mayor que 1280x768 (720p): no es compatible
+621	%d×%d: mayor que 1280x768 (720p), no es compatible
+622	En el menú → Ampliar → Vídeo la red RIFE v4.6 (hzwer, MIT) dibuja fotogramas nuevos entre cada par de fotogramas de tu clip: x2 o x4, para que el movimiento sea más fluido (de 12 a 24 o 48 fotogramas por segundo). Se ejecuta en la NPU, el sonido se conserva y el resultado va a la galería. Funcionan vídeos de hasta 1280x768 (720p); para cada tamaño se descarga una red pequeña (12–40 MB). Aproximadamente un minuto y medio para 3 segundos de vídeo HD a x4, varias veces más rápido en tamaños pequeños. Los cortes bruscos no se interpolan. El tamaño de la imagen no cambia: solo mejora la fluidez.

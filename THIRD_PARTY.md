@@ -18,6 +18,9 @@ This repository contains only HexAnima's own source code (MIT, see `LICENSE`). N
 | LTX-2.5 22B distilled (Lightricks) with its Gemma 4 12B based text encoder (Google) and the text-embeddings connectors | the optional LTX-2.5 pack (converted for the NPU, video only, hosted in `ayanoby/hexanima-ltx-packs` with `LICENSE` and `NOTICE.md`; in the download catalog) | LTX-2.x Community License Agreement; Gemma terms for the text encoder |
 | MiniMax-H3 Ref2VA (MiniMax; INT8-ConvRot transformer, video VAE and the 4-step turbo LoRA as published by Comfy-Org) | the video model made with `h3/` (the converted files are put on the phone by hand, they are not distributed by this project) | MiniMax-H3 Community License Agreement |
 | Real-ESRGAN (Xintao Wang et al.) x4 / x2 networks | the upscaler button in the picture viewer (the networks are downloaded on demand) | BSD-3-Clause (`licenses/real_esrgan_license.txt`) |
+| SeedVR2-3B (ByteDance Seed): the diffusion upscaler; its DiT and VAE are converted for the NPU (int8 DiT, QNN VAE tiles) and hosted in `ayanoby/hexanima-upscale` under `seedvr2/` | the SeedVR2 method in Upscale -> Image (the converted files are put on the phone by hand for now) | Apache 2.0 |
+| WD EVA02-Large Tagger v3 (SmilingWolf) | the picture-to-tags button (the context converted for the NPU is downloaded on demand from `ayanoby/hexanima-tagger`) | Apache 2.0 |
+| RIFE v4.6 (hzwer, Practical-RIFE) | frame interpolation in Upscale -> Video (the networks converted for the NPU are downloaded on demand from `ayanoby/hexanima-rife`) | MIT (`licenses/rife_license.txt`) |
 | stable-diffusion.cpp | sampler and CPU parts (`patches/` are applied to it) | MIT |
 | TAEHV (`taew2_1`) | preview decoder | see github.com/madebyollin/taehv |
 | Danbooru tag list (DominikDoom/a1111-sd-webui-tagcomplete) | prompt suggestions | see that repository |

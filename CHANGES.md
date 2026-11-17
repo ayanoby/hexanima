@@ -1,5 +1,21 @@
 # Changes
 
+## 1.8.0
+
+A new **Upscale screen** (main menu ⋮ → Upscale) with pictures and video, a **picture-to-tags** button for Anima, **more frames per second** in a video (RIFE), and the SeedVR2 diffusion upscaler on the NPU.
+
+- **Upscale screen:** an Image / Video switch on top. Image: your own picture (from the phone) or one from the app gallery (a grid of the whole gallery), the method (Real-ESRGAN photo or anime, ×2 / ×4, or SeedVR2 ×2 / ×3 / ×4) and the scale. The picture takes the whole width in its own aspect ratio; when the work is done the result appears **in its place with a before / after slider** (drag the handle, pinch to zoom into small details, one finger pans while zoomed); a tap opens the normal viewer with the whole gallery.
+- **SeedVR2** (ByteDance Seed, Apache 2.0): a diffusion upscaler with the best quality, the DiT (int8) and the VAE tiles run on the NPU. The converted files are on Hugging Face (`ayanoby/hexanima-upscale`, `seedvr2/`) but are put on the phone by hand for now; the download from the Models screen comes later. Results up to about 4 megapixels.
+- **More frames in a video (RIFE v4.6, hzwer, MIT):** Upscale → Video: pick a clip from the phone or the gallery, ×2 or ×4 frames per second; the network draws the missing frames on the NPU, the sound is kept, the result is an MP4 in the gallery. Clips up to 1280×768 (720p); a small network (12–40 MB, 15 sizes) is downloaded once per size from `ayanoby/hexanima-rife`. Hard cuts are not interpolated.
+- **Picture to tags:** a photo button above the prompt field finds the Danbooru tags of a picture with the WD EVA02 Tagger v3 (SmilingWolf, Apache 2.0) on the NPU (about 3 seconds, a 674 MB context downloaded once from `ayanoby/hexanima-tagger`); the tags replace the prompt or are added to it.
+- **Prompt format per model:** Templates now shows "Format for this model": the rule, a template and several examples of a good prompt for the selected model (tags for Anima, sentences for Qwen / Klein / Mage, the shot format for LTX, the H3 and Ref2VA formats).
+- **Negative prompt for Turbo (NAG, experiment):** on Anima Turbo without CFG the text attention runs once more for the negative prompt (strength, limit tau, blend alpha); the kernel is in `hexagon/mega/blk.c` (scalar for now, about twice as slow as plain Turbo).
+- **History:** the thumbnails no longer turn black after you come back from the viewer (the list is not rebuilt when nothing changed, and the thumbnail cache is limited by bytes).
+- **Viewer:** the extra actions moved into one ⋮ menu.
+- **Sources:** `seedvr2/` (reference, export, the `svsr` driver, notes), `flux3/hexagon/mega/svrun.cpp` (the DiT runner), `phone/svr.sh`; the RIFE and tagger conversion tools live in the research tree.
+- **Licences:** the RIFE MIT text is bundled (Info → Licenses); SeedVR2 and the WD tagger (Apache 2.0) are listed in Info and `THIRD_PARTY.md`.
+- Translations: the 82 new strings in the 11 other languages.
+
 ## 1.7.1
 
 Two pictures of the same kind: **Mage-Flow edits with several photos** and **Anima pictures of any size** (up to 4096×4096) on the phone NPU.

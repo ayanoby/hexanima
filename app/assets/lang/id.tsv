@@ -664,3 +664,10 @@ Saved: %s	Tersimpan: %s
 Save right after generating	Simpan langsung setelah selesai
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Setiap gambar dan video yang selesai disalin otomatis ke tempat yang dipilih di atas, tanpa menekan «Unduh». Keduanya tetap ada di galeri aplikasi.
 Applies to the next run: %d	Berlaku untuk pembuatan berikutnya: %d
+Time calibration	Kalibrasi waktu
+No suitable sizes for this model	Tidak ada ukuran yang cocok untuk model ini
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	Model “%s”: %d pembuatan singkat (%s), sekitar %d dtk. Gambar muncul di riwayat. Setelah itu waktu di tombol «Buat» lebih akurat untuk ponsel ini.
+Start	Mulai
+Calibration done: the time on the button is more exact now	Kalibrasi selesai: waktu di tombol kini lebih akurat
+Calibration stopped	Kalibrasi dihentikan
+  (text %.1f · DiT %.1f · decode %.1f s)	  (teks %.1f · DiT %.1f · dekode %.1f dtk)

@@ -664,3 +664,10 @@
 663	Simpan langsung setelah selesai
 664	Setiap gambar dan video yang selesai disalin otomatis ke tempat yang dipilih di atas, tanpa menekan «Unduh». Keduanya tetap ada di galeri aplikasi.
 665	Berlaku untuk pembuatan berikutnya: %d
+666	Kalibrasi waktu
+667	Tidak ada ukuran yang cocok untuk model ini
+668	Model “%s”: %d pembuatan singkat (%s), sekitar %d dtk. Gambar muncul di riwayat. Setelah itu waktu di tombol «Buat» lebih akurat untuk ponsel ini.
+669	Mulai
+670	Kalibrasi selesai: waktu di tombol kini lebih akurat
+671	Kalibrasi dihentikan
+672	  (teks %.1f · DiT %.1f · dekode %.1f dtk)

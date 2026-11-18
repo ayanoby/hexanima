@@ -664,3 +664,10 @@ Saved: %s	Đã lưu: %s
 Save right after generating	Lưu ngay sau khi tạo
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Mỗi ảnh và video hoàn thành tự được sao chép vào nơi đã chọn ở trên, không cần bấm «Tải xuống». Chúng vẫn nằm trong thư viện của ứng dụng.
 Applies to the next run: %d	Áp dụng cho lần tạo tiếp theo: %d
+Time calibration	Hiệu chỉnh thời gian
+No suitable sizes for this model	Không có kích thước phù hợp cho mô hình này
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	Mô hình “%s”: %d lần tạo ngắn (%s), khoảng %d giây. Ảnh xuất hiện trong lịch sử. Sau đó thời gian trên nút «Tạo» sẽ chính xác hơn cho điện thoại này.
+Start	Bắt đầu
+Calibration done: the time on the button is more exact now	Đã hiệu chỉnh: thời gian trên nút giờ chính xác hơn
+Calibration stopped	Đã dừng hiệu chỉnh
+  (text %.1f · DiT %.1f · decode %.1f s)	  (văn bản %.1f · DiT %.1f · giải mã %.1f giây)

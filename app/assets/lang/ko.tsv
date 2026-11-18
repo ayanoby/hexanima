@@ -664,3 +664,10 @@ Saved: %s	저장됨: %s
 Save right after generating	생성 직후 바로 저장
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	완성된 이미지와 동영상이 '다운로드'를 누르지 않아도 위에서 고른 위치로 자동 복사됩니다. 앱 갤러리에는 어느 경우에나 남습니다.
 Applies to the next run: %d	다음 생성부터 적용됩니다: %d
+Time calibration	시간 보정
+No suitable sizes for this model	이 모델에 맞는 크기가 없습니다
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	모델 “%s”: 짧은 생성 %d회 (%s), 약 %d초. 이미지는 기록에 남습니다. 이후 «생성» 버튼의 시간이 이 휴대폰에 더 정확해집니다.
+Start	시작
+Calibration done: the time on the button is more exact now	보정 완료: 버튼의 시간이 더 정확해졌습니다
+Calibration stopped	보정이 중단되었습니다
+  (text %.1f · DiT %.1f · decode %.1f s)	  (텍스트 %.1f · DiT %.1f · 디코드 %.1f초)

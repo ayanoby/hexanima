@@ -664,3 +664,10 @@ Saved: %s	सहेजा गया: %s
 Save right after generating	बनते ही तुरंत सहेजें
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	हर तैयार चित्र और वीडियो ऊपर चुनी जगह पर अपने आप कॉपी हो जाता है, «डाउनलोड» दबाए बिना। ऐप गैलरी में वे हर हाल में रहते हैं।
 Applies to the next run: %d	अगली जनरेशन पर लागू होगा: %d
+Time calibration	समय कैलिब्रेशन
+No suitable sizes for this model	इस मॉडल के लिए उपयुक्त आकार नहीं हैं
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	मॉडल “%s”: %d छोटी जनरेशन (%s), लगभग %d सेकंड। चित्र इतिहास में दिखेंगे। इसके बाद «जनरेट» बटन पर समय इस फ़ोन के लिए ज़्यादा सटीक होगा।
+Start	शुरू करें
+Calibration done: the time on the button is more exact now	कैलिब्रेशन पूरा: बटन पर समय अब ज़्यादा सटीक है
+Calibration stopped	कैलिब्रेशन रोका गया
+  (text %.1f · DiT %.1f · decode %.1f s)	  (टेक्स्ट %.1f · DiT %.1f · डिकोड %.1f सेकंड)

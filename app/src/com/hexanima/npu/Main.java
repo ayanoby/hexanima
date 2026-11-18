@@ -831,7 +831,7 @@ public class Main extends Base {
         final LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(dp(10), dp(14), dp(10), dp(14));
         final AlertDialog[] dlg = new AlertDialog[1];
         final String[] icons = {"ic_layers", "ic_add_photo", "ic_tune", "ic_info"};
-        final String[] names = {L.s("Модели", "Models"), L.s("Увеличение", "Upscale"), L.s("Открыть настройки из PNG", "Load settings from a PNG"), L.s("Настройки", "Settings"), L.s("Инфо", "Info")};
+        final String[] names = {L.s("Модели", "Models"), L.s("Увеличение", "Upscale"), L.s("Открыть настройки из PNG", "Load settings from a PNG"), L.s("Настройки", "Settings"), L.s("Инфо", "Info"), L.s("Калибровка времени", "Time calibration")};
         for (int i = 0; i < names.length; i++) {
             final int k = i;
             LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setPadding(dp(16), dp(16), dp(16), dp(16)); row.setBackground(bg(CARD, 12));
@@ -842,7 +842,8 @@ public class Main extends Base {
                 else if (k == 1) startActivity(new Intent(this, UpscaleActivity.class));
                 else if (k == 2) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("image/png").addCategory(Intent.CATEGORY_OPENABLE), 8);
                 else if (k == 3) startActivity(new Intent(this, Settings.class));
-                else startActivity(new Intent(this, Info.class));
+                else if (k == 4) startActivity(new Intent(this, Info.class));
+                else calibrateDialog();
             });
             LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2); rlp.bottomMargin = dp(8); col.addView(row, rlp);
         }
@@ -1397,6 +1398,76 @@ public class Main extends Base {
         final int tiles = Math.max(1, (int) Math.ceil((resW - 64) / 448.0)) * Math.max(1, (int) Math.ceil((resH - 64) / 448.0));
         return Math.round(10 + st * step + 4.9 * tiles + 16 * imgs);
     }
+    // ---- time calibration: a few short runs at different sizes, so the estimate on the button knows this phone ----
+    final java.util.ArrayDeque<int[]> calibQ = new java.util.ArrayDeque<>();
+    boolean calibrating; String calibPrompt = ""; int calibCount = 1, calibW, calibH;
+
+    /** the smallest, a middle and the largest size of the model whose formula estimate is at most 150 s (the first one twice when the model has not run since the app started: that run is not counted) */
+    List<int[]> calibSizes() {
+        List<int[]> ok = new ArrayList<>(); final int w0 = resW, h0 = resH;
+        for (int[] z : sizeList()) { resW = z[0]; resH = z[1]; long e = estOne(); if (e <= 150) ok.add(z); }
+        resW = w0; resH = h0;
+        ok.sort((a, b) -> Integer.compare(a[0] * a[1], b[0] * b[1]));
+        List<int[]> out = new ArrayList<>(); if (ok.isEmpty()) return out;
+        List<int[]> pick = new ArrayList<>();
+        for (int[] z : new int[][]{ok.get(0), ok.get(ok.size() / 2), ok.get(ok.size() - 1)}) { boolean dup = false; for (int[] o : pick) if (o[0] == z[0] && o[1] == z[1]) dup = true; if (!dup) pick.add(z); }
+        if (!Timings.isWarm(model)) out.add(pick.get(0));   // a warm-up: the first run of a model after the app started is not counted
+        out.addAll(pick);
+        return out;
+    }
+    void calibrateDialog() {
+        if (busy) { Toast.makeText(this, L.s("Дождитесь окончания генерации", "Wait for the generation to finish"), Toast.LENGTH_SHORT).show(); return; }
+        if (model.isEmpty()) { openModels(); return; }
+        final List<int[]> sz = calibSizes();
+        if (sz.isEmpty()) { Toast.makeText(this, L.s("Для этой модели нет подходящих размеров", "No suitable sizes for this model"), Toast.LENGTH_SHORT).show(); return; }
+        StringBuilder sb = new StringBuilder(); long tot = 0; final int w0 = resW, h0 = resH;
+        for (int[] z : sz) { sb.append(sb.length() > 0 ? ", " : "").append(z[0]).append("×").append(z[1]); resW = z[0]; resH = z[1]; tot += estOne(); }
+        resW = w0; resH = h0;
+        builder().setTitle(L.s("Калибровка времени", "Time calibration")).setMessage(L.f("Модель «%s»: %d коротких генераций (%s), около %d с. Картинки появятся в истории. После этого время на кнопке «Генерировать» будет точнее для этого телефона.", "Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.", modelName(), sz.size(), sb, tot))
+            .setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton(L.s("Запустить", "Start"), (d, w) -> startCalibration(sz)).show();
+    }
+    void startCalibration(List<int[]> sz) {
+        if (busy) return;
+        calibQ.clear(); calibQ.addAll(sz); calibPrompt = prompt.getText().toString(); calibCount = count; calibW = resW; calibH = resH;
+        count = 1; prompt.setText("a cat"); calibrating = true; calibNext();
+    }
+    void calibNext() {
+        if (!calibrating) return;
+        if (calibQ.isEmpty()) { finishCalibration(true); return; }
+        int[] z = calibQ.poll(); customOpen = false; setRes(z[0], z[1]);
+        generate(false);
+        if (!busy) finishCalibration(false);   // generate() refused to start (a size error, a missing model, ...)
+    }
+    void finishCalibration(boolean ok) {
+        if (!calibrating) return;
+        calibrating = false; calibQ.clear(); count = calibCount; prompt.setText(calibPrompt); setRes(calibW, calibH);
+        Toast.makeText(this, ok ? L.s("Калибровка готова: время на кнопке теперь точнее", "Calibration done: the time on the button is more exact now") : L.s("Калибровка прервана", "Calibration stopped"), Toast.LENGTH_LONG).show();
+        refreshBaseUi(); updateChips();
+    }
+
+    // ---- stage times (text / DiT / decode) of the last run, from the logs the helpers write ----
+    static double firstNum(String line, String after) { try { int i = line.indexOf(after); if (i < 0) return -1; java.util.regex.Matcher m = java.util.regex.Pattern.compile("([0-9]+\\.?[0-9]*)").matcher(line.substring(i + after.length())); return m.find() ? Double.parseDouble(m.group(1)) : -1; } catch (Exception e) { return -1; } }
+    JSONObject stages(double text, double dit, double dec) { try { return text < 0 || dit < 0 ? null : new JSONObject().put("t", Math.round(text * 10) / 10.0).put("d", Math.round(dit * 10) / 10.0).put("v", Math.round(Math.max(0, dec) * 10) / 10.0); } catch (Exception e) { return null; } }
+    /** Klein: files/klein/klein.log is rewritten every run: "te: 2.74s ...", "dit total 70.56s"; what is left of the total is the decoder and the file reading */
+    JSONObject stagesKlein(double total) {
+        double te = -1, dit = -1;
+        for (String l : su("grep -a -E '^te:|^dit total' " + Klein.dir(getFilesDir()) + "/klein.log", false).split("\n")) { if (l.startsWith("te:")) te = firstNum(l, "te:"); else if (l.startsWith("dit total")) dit = firstNum(l, "dit total"); }
+        return stages(te, dit, total - te - dit);
+    }
+    /** Anima: the last request in files/anima/animad.log: text encoder lines, the decoder line and "done in" (the DiT is the rest) */
+    JSONObject stagesAnima() {
+        String[] ls = su("tail -n 80 " + D + "/animad.log", false).split("\\n"); int end = -1, start = 0;
+        for (int i = ls.length - 1; i >= 0; i--) if (ls[i].contains("request") && ls[i].contains("done in")) { if (end < 0) end = i; else { start = i + 1; break; } }
+        if (end < 0) return null;
+        double te = 0, vae = 0, total = firstNum(ls[end], "done in");
+        java.util.regex.Pattern pt = java.util.regex.Pattern.compile("text encoder S=\\d+ ([0-9.]+)s"), pv = java.util.regex.Pattern.compile("animad: vae(?: tiled \\S+ tiles)? ([0-9.]+)s");
+        for (int i = start; i < end; i++) {
+            java.util.regex.Matcher a = pt.matcher(ls[i]); if (a.find()) te += Double.parseDouble(a.group(1));
+            java.util.regex.Matcher b = pv.matcher(ls[i]); if (b.find()) vae += Double.parseDouble(b.group(1));
+        }
+        return total < 0 ? null : stages(te, total - te - vae, vae);
+    }
+
     /** the formula's estimate (seconds) for ONE picture or video with the current settings */
     long estOne() {
         if (isR2v()) return R2v.estimate(resW, resH, ltxLf(), editBm != null, steps());
@@ -1710,7 +1781,8 @@ public class Main extends Base {
                 else if (!okAny) status.setText(L.s("Ошибка генерации (лог: files/anima/animad.log)", "Generation failed (log: files/anima/animad.log)"));
                 else status.setText(L.f("Готово за %.1f с", "Done in %.1f s", sec));
                 setModelUi(loaded, false, "");
-                if (okAny && !visible) notifyDone(app, nb, pr, total);
+                if (calibrating) { if (okAny && !wasCancelled && !oom) ui.postDelayed(this::calibNext, 600); else finishCalibration(false); }
+                if (okAny && !visible && !calibrating) notifyDone(app, nb, pr, total);
             });
         });
     }
@@ -1761,6 +1833,7 @@ public class Main extends Base {
         if (png.length == 0 || BitmapFactory.decodeByteArray(png, 0, png.length) == null) return null;
         try {
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            JSONObject stA = stagesAnima(); if (stA != null) meta.put("st", stA);
             if (!AnimaLoras.names(prefs(), getFilesDir()).isEmpty()) meta.put("lora", AnimaLoras.names(prefs(), getFilesDir()));
             return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show()); return null; }
@@ -1888,6 +1961,7 @@ public class Main extends Base {
         try {
             byte[] png = Moss.png(raw, w, h); raw.delete();
             JSONObject meta = new JSONObject().put("prompt", pr).put("seed", seedS).put("w", w).put("h", h).put("model", modelName()).put("id", model).put("sec", (System.currentTimeMillis() - t0) / 1000.0);
+            JSONObject stK = stagesKlein((System.currentTimeMillis() - t0) / 1000.0); if (stK != null) meta.put("st", stK);
             return Gallery.save(this, Settings.metaInPng(this) ? PngMeta.embed(png, meta) : png, meta);
         } catch (Exception e) { ui.post(() -> Toast.makeText(this, L.f("Ошибка генерации: %s (лог files/klein/klein.log)", "Generation failed: %s (log files/klein/klein.log)", e.getMessage()), Toast.LENGTH_LONG).show()); return null; }
     }

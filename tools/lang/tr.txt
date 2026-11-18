@@ -664,3 +664,10 @@
 663	Üretimden hemen sonra kaydet
 664	Biten her resim ve video, «İndir»e dokunmadan yukarıda seçilen yere kendiliğinden kopyalanır. Uygulama galerisinde her durumda kalırlar.
 665	Sonraki üretimde geçerli olur: %d
+666	Süre kalibrasyonu
+667	Bu model için uygun boyut yok
+668	Model “%s”: %d kısa üretim (%s), yaklaşık %d sn. Resimler geçmişte görünür. Sonrasında «Üret» düğmesindeki süre bu telefon için daha doğru olur.
+669	Başlat
+670	Kalibrasyon tamam: düğmedeki süre artık daha doğru
+671	Kalibrasyon durduruldu
+672	  (metin %.1f · DiT %.1f · kod çöz. %.1f sn)

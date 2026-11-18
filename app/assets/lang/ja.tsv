@@ -664,3 +664,10 @@ Saved: %s	保存しました: %s
 Save right after generating	生成後すぐに保存
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	完成した画像と動画は、「ダウンロード」を押さなくても上で選んだ保存先に自動でコピーされます。アプリのギャラリーにはどちらの場合も残ります。
 Applies to the next run: %d	次の生成から反映されます: %d
+Time calibration	時間のキャリブレーション
+No suitable sizes for this model	このモデルに適したサイズがありません
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	モデル「%s」: 短い生成を%d回（%s）、約%d秒。画像は履歴に残ります。その後、「生成」ボタンの時間がこのスマートフォンに合わせてより正確になります。
+Start	開始
+Calibration done: the time on the button is more exact now	キャリブレーション完了: ボタンの時間がより正確になりました
+Calibration stopped	キャリブレーションを中止しました
+  (text %.1f · DiT %.1f · decode %.1f s)	  (テキスト %.1f · DiT %.1f · デコード %.1f 秒)

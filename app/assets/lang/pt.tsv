@@ -664,3 +664,10 @@ Saved: %s	Salvo: %s
 Save right after generating	Salvar logo após gerar
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Cada imagem e vídeo concluído é copiado sozinho para o local escolhido acima, sem tocar em «Baixar». Eles permanecem na galeria do app de qualquer forma.
 Applies to the next run: %d	Será aplicado à próxima geração: %d
+Time calibration	Calibração de tempo
+No suitable sizes for this model	Não há tamanhos adequados para este modelo
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	Modelo «%s»: %d execuções curtas (%s), cerca de %d s. As imagens aparecem no histórico. Depois, o tempo do botão «Gerar» fica mais exato para este telefone.
+Start	Iniciar
+Calibration done: the time on the button is more exact now	Calibração concluída: o tempo do botão agora é mais exato
+Calibration stopped	Calibração interrompida
+  (text %.1f · DiT %.1f · decode %.1f s)	  (texto %.1f · DiT %.1f · decod. %.1f s)

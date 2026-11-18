@@ -98,6 +98,12 @@ final class Gallery {
         return u;
     }
 
+    /** " (text 3 · DiT 62 · decode 8 s)" from the stage times kept in the metadata ("st"), or "" */
+    static String stageText(JSONObject m) {
+        JSONObject st = m.optJSONObject("st"); if (st == null) return "";
+        return L.f("  (текст %.1f · DiT %.1f · декод. %.1f с)", "  (text %.1f · DiT %.1f · decode %.1f s)", st.optDouble("t"), st.optDouble("d"), st.optDouble("v"));
+    }
+
     /** where the Download button puts a picture now, for the "saved" message */
     static String where(Context c) { return Settings.pictureDir(c) == null ? "Pictures/Anima" : Settings.pictureDirLabel(c); }
     static String savedMsg(Context c) { return L.f("Сохранено: %s", "Saved: %s", where(c)); }

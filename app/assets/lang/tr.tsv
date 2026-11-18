@@ -664,3 +664,10 @@ Saved: %s	Kaydedildi: %s
 Save right after generating	Üretimden hemen sonra kaydet
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Biten her resim ve video, «İndir»e dokunmadan yukarıda seçilen yere kendiliğinden kopyalanır. Uygulama galerisinde her durumda kalırlar.
 Applies to the next run: %d	Sonraki üretimde geçerli olur: %d
+Time calibration	Süre kalibrasyonu
+No suitable sizes for this model	Bu model için uygun boyut yok
+Model “%s”: %d short runs (%s), about %d s. The pictures appear in the history. Afterwards the time on the Generate button is more exact for this phone.	Model “%s”: %d kısa üretim (%s), yaklaşık %d sn. Resimler geçmişte görünür. Sonrasında «Üret» düğmesindeki süre bu telefon için daha doğru olur.
+Start	Başlat
+Calibration done: the time on the button is more exact now	Kalibrasyon tamam: düğmedeki süre artık daha doğru
+Calibration stopped	Kalibrasyon durduruldu
+  (text %.1f · DiT %.1f · decode %.1f s)	  (metin %.1f · DiT %.1f · kod çöz. %.1f sn)

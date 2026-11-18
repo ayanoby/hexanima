@@ -664,3 +664,10 @@
 663	Guardar justo después de generar
 664	Cada imagen y vídeo terminado se copia solo al lugar elegido arriba, sin pulsar «Descargar». En la galería de la app permanecen en cualquier caso.
 665	Se aplicará a la próxima generación: %d
+666	Calibración de tiempo
+667	No hay tamaños adecuados para este modelo
+668	Modelo «%s»: %d ejecuciones cortas (%s), unos %d s. Las imágenes aparecen en el historial. Después, el tiempo del botón «Generar» será más exacto para este teléfono.
+669	Iniciar
+670	Calibración lista: el tiempo del botón ahora es más exacto
+671	Calibración detenida
+672	  (texto %.1f · DiT %.1f · decod. %.1f s)

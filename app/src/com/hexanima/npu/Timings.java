@@ -36,6 +36,8 @@ final class Timings {
         } catch (Exception ignored) { }
     }
 
+    static synchronized boolean isWarm(String key) { return warm.contains(key); }
+
     private static double median(List<Double> v) { Collections.sort(v); int n = v.size(); return n % 2 == 1 ? v.get(n / 2) : (v.get(n / 2 - 1) + v.get(n / 2)) / 2; }
 
     /** seconds for these settings; formula = the formula's estimate for them */

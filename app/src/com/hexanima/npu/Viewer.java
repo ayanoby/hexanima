@@ -168,7 +168,7 @@ public class Viewer extends Base {
         final File f = files.get(idx); final JSONObject m = Gallery.meta(f);
         counter.setText((idx + 1) + " / " + files.size());
         String when = ""; try { when = new SimpleDateFormat("d MMM yyyy, HH:mm").format(new Date(Long.parseLong(f.getName().replace(".png", "")))); } catch (Exception ignored) { }
-        info.setText(m.optString("model", "") + "  ·  " + m.optInt("w") + "×" + m.optInt("h") + "  ·  seed " + m.optString("seed") + "\n" + when + (m.has("sec") ? L.f("  ·  %.1f с", "  ·  %.1f s", m.optDouble("sec")) : ""));
+        info.setText(m.optString("model", "") + "  ·  " + m.optInt("w") + "×" + m.optInt("h") + "  ·  seed " + m.optString("seed") + "\n" + when + (m.has("sec") ? L.f("  ·  %.1f с", "  ·  %.1f s", m.optDouble("sec")) : "") + Gallery.stageText(m));
         prompt.setText(m.optString("prompt"));
         actions.removeAllViews(); favB = null; moreB.setVisibility(View.GONE); bottom.setPadding(dp(14), dp(10), dp(14), dp(10));
         if (vBig != null) vBig.setVisibility(Gallery.videoOf(f) != null && videoBox == null ? View.VISIBLE : View.GONE);

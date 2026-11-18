@@ -638,3 +638,19 @@ Keep going	Lanjutkan
 Tags from a picture (WD Tagger)	Tag dari gambar (WD Tagger)
 Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	Menemukan tag Danbooru untuk prompt dari sebuah gambar di NPU, sekitar 3 detik. Tombolnya ada di samping kolom prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 Delete “%s”? The files have to be downloaded again.	Hapus “%s”? File harus diunduh ulang.
+Import a model from a folder (made by Export)	Impor model dari folder (dibuat oleh Ekspor)
+Cancelled	Dibatalkan
+Export: %s	Ekspor: %s
+The model was saved to the chosen folder	Model disimpan ke folder yang dipilih
+Importing a model	Mengimpor model
+Imported: %s	Diimpor: %s
+Export	Ekspor
+The model has no files	Model tidak punya file
+Could not create the folder	Tidak bisa membuat folder
+Could not create the file 	Tidak bisa membuat file 
+Could not write the model description	Tidak bisa menulis deskripsi model
+Could not create the folder 	Tidak bisa membuat folder 
+This folder has no hexanima-model.json: pick the folder an export made	Folder ini tidak memiliki hexanima-model.json: pilih folder yang dibuat oleh ekspor
+Unknown export format	Format ekspor tidak dikenal
+The folder has no file 	Folder tidak memiliki file 
+The file is damaged: 	File rusak: 

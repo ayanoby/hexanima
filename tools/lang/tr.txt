@@ -638,3 +638,19 @@
 637	Resimden etiketler (WD Tagger)
 638	NPU üzerinde bir resimden istem için Danbooru etiketlerini bulur, yaklaşık 3 saniye. Düğme istem alanının yanındadır. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	“%s” silinsin mi? Dosyaların yeniden indirilmesi gerekir.
+640	Klasörden model içe aktar (Dışa aktarmanın oluşturduğu)
+641	İptal edildi
+642	Dışa aktar: %s
+643	Model seçilen klasöre kaydedildi
+644	Model içe aktarılıyor
+645	İçe aktarıldı: %s
+646	Dışa aktar
+647	Modelin dosyası yok
+648	Klasör oluşturulamadı
+649	Dosya oluşturulamadı: 
+650	Model açıklaması yazılamadı
+651	Klasör oluşturulamadı: 
+652	Bu klasörde hexanima-model.json yok: dışa aktarmanın oluşturduğu klasörü seçin
+653	Bilinmeyen dışa aktarma biçimi
+654	Klasörde dosya yok: 
+655	Dosya bozuk: 

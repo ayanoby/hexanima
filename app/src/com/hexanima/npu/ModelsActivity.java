@@ -1,5 +1,6 @@
 package com.hexanima.npu;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -72,7 +73,11 @@ public class ModelsActivity extends Base {
         Button own = button(L.s("＋ Свой чекпоинт Anima (.safetensors, BF16/FP16/FP32)", "＋ Own Anima checkpoint (.safetensors, BF16/FP16/FP32)"), CARD, TXT); own.setTextSize(13);
         own.setOnClickListener(v -> AnimaConv.pick(this));
         own.setMinHeight(dp(42)); own.setMinimumHeight(dp(42)); own.setPadding(dp(14), dp(8), dp(14), dp(8));
-        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-1, -2); ol.topMargin = dp(6); ol.bottomMargin = dp(6); col.addView(own, ol);   // the button grows to two lines when the text does not fit
+        LinearLayout.LayoutParams ol = new LinearLayout.LayoutParams(-1, -2); ol.topMargin = dp(6); ol.bottomMargin = dp(6); col.addView(own, ol);
+        Button imp = button(L.s("Импорт модели из папки (после экспорта)", "Import a model from a folder (made by Export)"), CARD, TXT); imp.setTextSize(13);
+        imp.setOnClickListener(v -> { if (!downloading) startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_IMPORT); });
+        imp.setMinHeight(dp(42)); imp.setMinimumHeight(dp(42)); imp.setPadding(dp(14), dp(8), dp(14), dp(8));
+        LinearLayout.LayoutParams il = new LinearLayout.LayoutParams(-1, -2); il.bottomMargin = dp(6); col.addView(imp, il);   // the button grows to two lines when the text does not fit
         src.setOnClickListener(v -> { boolean show = url.getVisibility() != View.VISIBLE; url.setVisibility(show ? View.VISIBLE : View.GONE); if (!show) load(); });
         list = new LinearLayout(this); list.setOrientation(LinearLayout.VERTICAL);
         col.addView(list);
@@ -83,7 +88,43 @@ public class ModelsActivity extends Base {
         load();
     }
 
+    static final int REQ_EXPORT = 41, REQ_IMPORT = 42;
+    Models.Item pendingExport;
+
+    /** export / import run in a foreground service-backed thread with a dialog (progress, Cancel); the model list is refreshed at the end */
+    void runIo(final String title, final boolean export, final java.util.concurrent.Callable<String> job) {
+        if (downloading) return;
+        downloading = true; dlId = "io"; cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        final AlertDialog dlg = builder().setTitle(title).setMessage(L.s("Подготовка…", "Preparing…")).setCancelable(false).setNegativeButton(L.s("Отменить", "Cancel"), null).create();
+        dlg.show(); dlg.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v -> { cancel.set(true); dlg.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false); });
+        ioProgress = dlg;
+        new Thread(() -> {
+            String err = null, res = null;
+            try { res = job.call(); }
+            catch (java.io.InterruptedIOException e) { err = L.s("Отменено", "Cancelled"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", String.valueOf(e.getMessage())); }
+            final String er = err, ok = res; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { ioProgress = null; dlg.dismiss(); Toast.makeText(app, er != null ? er : ok, Toast.LENGTH_LONG).show(); render(); });
+        }).start();
+    }
+    AlertDialog ioProgress;
+    long ioLast;
+    Models.Progress ioPg() { return (d, tot, what) -> { long now = System.currentTimeMillis(); if (now - ioLast < 400) return; ioLast = now; final AlertDialog dg = ioProgress; if (dg != null) ui.post(() -> dg.setMessage(L.f("%s / %s ГБ  ·  %s", "%s / %s GB  ·  %s", gb(d), gb(tot), what))); }; }
+
     @Override protected void onActivityResult(int req, int res, Intent d) {
+        if (req == REQ_EXPORT && res == RESULT_OK && d != null && d.getData() != null && pendingExport != null) {
+            final Models.Item it = pendingExport; final android.net.Uri tree = d.getData(); pendingExport = null;
+            runIo(L.f("Экспорт: %s", "Export: %s", it.name), true, () -> { ModelIO.export(this, store, it.id, it.name, tree, ioPg(), cancel); return L.s("Модель сохранена в выбранную папку", "The model was saved to the chosen folder"); });
+            return;
+        }
+        if (req == REQ_IMPORT && res == RESULT_OK && d != null && d.getData() != null) {
+            final android.net.Uri tree = d.getData();
+            runIo(L.s("Импорт модели", "Importing a model"), false, () -> L.f("Импортировано: %s", "Imported: %s", ModelIO.importFrom(this, store, tree, ioPg(), cancel)));
+            return;
+        }
         if (req == AnimaConv.REQ && res == RESULT_OK && d != null && d.getData() != null) new AnimaConv(this, store, prefBase(), () -> render()).start(d.getData());
         else super.onActivityResult(req, res, d);
     }
@@ -199,6 +240,7 @@ public class ModelsActivity extends Base {
                 LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
                 vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(it.size)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
                 if (have && !busy) {
+                    if (ModelIO.supported(it.id)) { TextView ex = text(L.s("Экспорт", "Export"), 14, ACC, false); ex.setPadding(dp(12), dp(4), dp(12), dp(4)); ex.setOnClickListener(v -> { if (downloading) return; pendingExport = it; startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_EXPORT); }); vr.addView(ex); }
                     TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4));
                     del.setOnClickListener(v -> { if (downloading) return; confirmDelete(it.name, () -> { store.delete(it.id); deleted = it.id; render(); }); }); vr.addView(del);
                 } else if (!busy) {

@@ -638,3 +638,19 @@
 637	Tags aus einem Bild (WD Tagger)
 638	Findet auf der NPU Danbooru-Tags für einen Prompt aus einem Bild, etwa 3 Sekunden. Die Schaltfläche liegt neben dem Prompt-Feld. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	„%s“ löschen? Die Dateien müssen erneut heruntergeladen werden.
+640	Modell aus einem Ordner importieren (vom Export erstellt)
+641	Abgebrochen
+642	Export: %s
+643	Das Modell wurde im gewählten Ordner gespeichert
+644	Modell wird importiert
+645	Importiert: %s
+646	Exportieren
+647	Das Modell hat keine Dateien
+648	Der Ordner konnte nicht erstellt werden
+649	Die Datei konnte nicht erstellt werden: 
+650	Die Modellbeschreibung konnte nicht geschrieben werden
+651	Der Ordner konnte nicht erstellt werden: 
+652	In diesem Ordner fehlt hexanima-model.json: wähle den Ordner, den ein Export erstellt hat
+653	Unbekanntes Exportformat
+654	Im Ordner fehlt die Datei 
+655	Die Datei ist beschädigt: 

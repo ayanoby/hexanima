@@ -638,3 +638,19 @@
 637	Thẻ từ một ảnh (WD Tagger)
 638	Tìm thẻ Danbooru cho prompt từ một ảnh trên NPU, khoảng 3 giây. Nút nằm cạnh ô prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	Xóa “%s”? Các tệp sẽ phải tải lại.
+640	Nhập mô hình từ thư mục (do Xuất tạo ra)
+641	Đã hủy
+642	Xuất: %s
+643	Đã lưu mô hình vào thư mục đã chọn
+644	Đang nhập mô hình
+645	Đã nhập: %s
+646	Xuất
+647	Mô hình không có tệp
+648	Không thể tạo thư mục
+649	Không thể tạo tệp 
+650	Không thể ghi mô tả mô hình
+651	Không thể tạo thư mục 
+652	Thư mục này không có hexanima-model.json: hãy chọn thư mục do Xuất tạo ra
+653	Định dạng xuất không rõ
+654	Thư mục không có tệp 
+655	Tệp bị hỏng: 

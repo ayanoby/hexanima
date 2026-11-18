@@ -638,3 +638,19 @@
 637	Tag dari gambar (WD Tagger)
 638	Menemukan tag Danbooru untuk prompt dari sebuah gambar di NPU, sekitar 3 detik. Tombolnya ada di samping kolom prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	Hapus “%s”? File harus diunduh ulang.
+640	Impor model dari folder (dibuat oleh Ekspor)
+641	Dibatalkan
+642	Ekspor: %s
+643	Model disimpan ke folder yang dipilih
+644	Mengimpor model
+645	Diimpor: %s
+646	Ekspor
+647	Model tidak punya file
+648	Tidak bisa membuat folder
+649	Tidak bisa membuat file 
+650	Tidak bisa menulis deskripsi model
+651	Tidak bisa membuat folder 
+652	Folder ini tidak memiliki hexanima-model.json: pilih folder yang dibuat oleh ekspor
+653	Format ekspor tidak dikenal
+654	Folder tidak memiliki file 
+655	File rusak: 

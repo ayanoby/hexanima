@@ -638,3 +638,19 @@ Keep going	Weitermachen
 Tags from a picture (WD Tagger)	Tags aus einem Bild (WD Tagger)
 Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	Findet auf der NPU Danbooru-Tags für einen Prompt aus einem Bild, etwa 3 Sekunden. Die Schaltfläche liegt neben dem Prompt-Feld. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 Delete “%s”? The files have to be downloaded again.	„%s“ löschen? Die Dateien müssen erneut heruntergeladen werden.
+Import a model from a folder (made by Export)	Modell aus einem Ordner importieren (vom Export erstellt)
+Cancelled	Abgebrochen
+Export: %s	Export: %s
+The model was saved to the chosen folder	Das Modell wurde im gewählten Ordner gespeichert
+Importing a model	Modell wird importiert
+Imported: %s	Importiert: %s
+Export	Exportieren
+The model has no files	Das Modell hat keine Dateien
+Could not create the folder	Der Ordner konnte nicht erstellt werden
+Could not create the file 	Die Datei konnte nicht erstellt werden: 
+Could not write the model description	Die Modellbeschreibung konnte nicht geschrieben werden
+Could not create the folder 	Der Ordner konnte nicht erstellt werden: 
+This folder has no hexanima-model.json: pick the folder an export made	In diesem Ordner fehlt hexanima-model.json: wähle den Ordner, den ein Export erstellt hat
+Unknown export format	Unbekanntes Exportformat
+The folder has no file 	Im Ordner fehlt die Datei 
+The file is damaged: 	Die Datei ist beschädigt: 

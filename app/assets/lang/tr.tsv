@@ -638,3 +638,19 @@ Keep going	Devam et
 Tags from a picture (WD Tagger)	Resimden etiketler (WD Tagger)
 Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	NPU üzerinde bir resimden istem için Danbooru etiketlerini bulur, yaklaşık 3 saniye. Düğme istem alanının yanındadır. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 Delete “%s”? The files have to be downloaded again.	“%s” silinsin mi? Dosyaların yeniden indirilmesi gerekir.
+Import a model from a folder (made by Export)	Klasörden model içe aktar (Dışa aktarmanın oluşturduğu)
+Cancelled	İptal edildi
+Export: %s	Dışa aktar: %s
+The model was saved to the chosen folder	Model seçilen klasöre kaydedildi
+Importing a model	Model içe aktarılıyor
+Imported: %s	İçe aktarıldı: %s
+Export	Dışa aktar
+The model has no files	Modelin dosyası yok
+Could not create the folder	Klasör oluşturulamadı
+Could not create the file 	Dosya oluşturulamadı: 
+Could not write the model description	Model açıklaması yazılamadı
+Could not create the folder 	Klasör oluşturulamadı: 
+This folder has no hexanima-model.json: pick the folder an export made	Bu klasörde hexanima-model.json yok: dışa aktarmanın oluşturduğu klasörü seçin
+Unknown export format	Bilinmeyen dışa aktarma biçimi
+The folder has no file 	Klasörde dosya yok: 
+The file is damaged: 	Dosya bozuk: 

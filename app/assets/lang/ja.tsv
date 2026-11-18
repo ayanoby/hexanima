@@ -638,3 +638,19 @@ Keep going	続ける
 Tags from a picture (WD Tagger)	画像からタグ（WD Tagger）
 Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	NPUで画像からプロンプト用のDanbooruタグを見つけます。約3秒。ボタンはプロンプト欄の隣にあります。Apache 2.0  ·  SmilingWolf、WD EVA02-Large Tagger v3
 Delete “%s”? The files have to be downloaded again.	「%s」を削除しますか？ファイルは再ダウンロードが必要です。
+Import a model from a folder (made by Export)	フォルダーからモデルをインポート（エクスポートで作成）
+Cancelled	キャンセルしました
+Export: %s	エクスポート: %s
+The model was saved to the chosen folder	モデルを選択したフォルダーに保存しました
+Importing a model	モデルをインポート中
+Imported: %s	インポート完了: %s
+Export	エクスポート
+The model has no files	モデルにファイルがありません
+Could not create the folder	フォルダーを作成できませんでした
+Could not create the file 	ファイルを作成できませんでした: 
+Could not write the model description	モデルの説明を書き込めませんでした
+Could not create the folder 	フォルダーを作成できませんでした: 
+This folder has no hexanima-model.json: pick the folder an export made	このフォルダーにhexanima-model.jsonがありません。エクスポートで作成されたフォルダーを選んでください
+Unknown export format	不明なエクスポート形式
+The folder has no file 	フォルダーにファイルがありません: 
+The file is damaged: 	ファイルが破損しています: 

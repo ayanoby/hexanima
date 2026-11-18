@@ -638,3 +638,19 @@ Keep going	Tiếp tục
 Tags from a picture (WD Tagger)	Thẻ từ một ảnh (WD Tagger)
 Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	Tìm thẻ Danbooru cho prompt từ một ảnh trên NPU, khoảng 3 giây. Nút nằm cạnh ô prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 Delete “%s”? The files have to be downloaded again.	Xóa “%s”? Các tệp sẽ phải tải lại.
+Import a model from a folder (made by Export)	Nhập mô hình từ thư mục (do Xuất tạo ra)
+Cancelled	Đã hủy
+Export: %s	Xuất: %s
+The model was saved to the chosen folder	Đã lưu mô hình vào thư mục đã chọn
+Importing a model	Đang nhập mô hình
+Imported: %s	Đã nhập: %s
+Export	Xuất
+The model has no files	Mô hình không có tệp
+Could not create the folder	Không thể tạo thư mục
+Could not create the file 	Không thể tạo tệp 
+Could not write the model description	Không thể ghi mô tả mô hình
+Could not create the folder 	Không thể tạo thư mục 
+This folder has no hexanima-model.json: pick the folder an export made	Thư mục này không có hexanima-model.json: hãy chọn thư mục do Xuất tạo ra
+Unknown export format	Định dạng xuất không rõ
+The folder has no file 	Thư mục không có tệp 
+The file is damaged: 	Tệp bị hỏng: 

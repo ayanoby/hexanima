@@ -638,3 +638,19 @@
 637	Etiquetas desde una imagen (WD Tagger)
 638	Encuentra en la NPU etiquetas Danbooru para un prompt a partir de una imagen, unos 3 segundos. El botón está junto al campo del prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	¿Eliminar «%s»? Habrá que volver a descargar los archivos.
+640	Importar un modelo desde una carpeta (creada por Exportar)
+641	Cancelado
+642	Exportar: %s
+643	El modelo se guardó en la carpeta elegida
+644	Importando un modelo
+645	Importado: %s
+646	Exportar
+647	El modelo no tiene archivos
+648	No se pudo crear la carpeta
+649	No se pudo crear el archivo 
+650	No se pudo escribir la descripción del modelo
+651	No se pudo crear la carpeta 
+652	Esta carpeta no tiene hexanima-model.json: elige la carpeta que creó una exportación
+653	Formato de exportación desconocido
+654	La carpeta no tiene el archivo 
+655	El archivo está dañado: 

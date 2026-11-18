@@ -638,3 +638,19 @@
 637	Tags à partir d'une image (WD Tagger)
 638	Trouve sur le NPU des tags Danbooru pour un prompt à partir d'une image, environ 3 secondes. Le bouton est à côté du champ du prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
 639	Supprimer « %s » ? Les fichiers devront être retéléchargés.
+640	Importer un modèle depuis un dossier (créé par Exporter)
+641	Annulé
+642	Exporter : %s
+643	Le modèle a été enregistré dans le dossier choisi
+644	Importation d'un modèle
+645	Importé : %s
+646	Exporter
+647	Le modèle n'a pas de fichiers
+648	Impossible de créer le dossier
+649	Impossible de créer le fichier 
+650	Impossible d'écrire la description du modèle
+651	Impossible de créer le dossier 
+652	Ce dossier ne contient pas hexanima-model.json : choisissez le dossier créé par une exportation
+653	Format d'exportation inconnu
+654	Le dossier n'a pas le fichier 
+655	Le fichier est endommagé : 

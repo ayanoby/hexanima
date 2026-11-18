@@ -1397,18 +1397,23 @@ public class Main extends Base {
         final int tiles = Math.max(1, (int) Math.ceil((resW - 64) / 448.0)) * Math.max(1, (int) Math.ceil((resH - 64) / 448.0));
         return Math.round(10 + st * step + 4.9 * tiles + 16 * imgs);
     }
-    String genLabel() {
-        if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
-        if (isR2v()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", R2v.estimate(resW, resH, ltxLf(), editBm != null, steps()));
-        if (isLtx()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", Ltx.estimate(resW, resH, ltxLf(), steps()));
-        if (isKlein()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, Klein.estimate(resW, resH, steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", Klein.estimate(resW, resH, steps()));
-        if (isH3()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, H3.estimate(resW, resH, h3Steps()) * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", H3.estimate(resW, resH, h3Steps()));
-        if (isMage()) { int me = Mage.estimate(resW, resH, editBm != null ? 1 + extraBm.size() : 0, steps()); return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, me * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", me); }
-        if (isQwen()) return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, qwenEst() * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", qwenEst());
+    /** the formula's estimate (seconds) for ONE picture or video with the current settings */
+    long estOne() {
+        if (isR2v()) return R2v.estimate(resW, resH, ltxLf(), editBm != null, steps());
+        if (isLtx()) return Ltx.estimate(resW, resH, ltxLf(), steps());
+        if (isKlein()) return Klein.estimate(resW, resH, steps());
+        if (isH3()) return H3.estimate(resW, resH, h3Steps());
+        if (isMage()) return Mage.estimate(resW, resH, editBm != null ? 1 + extraBm.size() : 0, steps());
+        if (isQwen()) return qwenEst();
         // the attention grows with the square of the token count: 4.6e-9 s per block, full step and token^2 (measured: 2.35 s per block at 16384 tokens, 7.1 s at 32768, 24.3 s at 65536); the first two turbo steps run on a quarter of the tokens
         final double tk = (resW / 16) * (resH / 16), quad = isAnima() ? (model.contains("29") ? 40 : 28) * Math.max(1.0, steps() - (base() ? 0 : 2) + (base() ? 0 : 2) / 16.0) * 4.6e-9 * Math.max(0, tk * tk - 1536.0 * 1536.0) : 0;
-        long est = Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * tk / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1) + quad)) * count;
-        return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, est) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", est);
+        return Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * tk / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1) + quad));
+    }
+    String genLabel() {
+        if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
+        final long one = Math.max(1, Math.round(estOne() * Timings.ratio(this, model)));   // the formula, scaled by what this phone really took
+        if (isR2v() || isLtx()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", one);
+        return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, one * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", one);
     }
 
     /** Share of the DiT time spent after `st` steps: the first two of the 4 steps use a half-size latent and cost ~0.3 (512x768) / ~0.22 (960x1536) of a full step. */
@@ -1667,10 +1672,12 @@ public class Main extends Base {
                 curIdx = i;
                 final String seedS = String.valueOf(randomSeed ? new Random().nextInt(1 << 30) : baseSeed + i);
                 File fr = null;
+                final long tPic = System.currentTimeMillis(); final long predicted = estOne(); final String tKey = model;   // what the formula says now, kept for the comparison below
                 try { fr = runOne(pr, seedS, w, h, t0); } catch (OutOfMemoryError e) { oomAbort = true; }
                 final File f = fr;
                 if (f == null) break;
                 made++;
+                Timings.record(this, tKey, (System.currentTimeMillis() - tPic) / 1000.0, predicted);
                 final Bitmap bm = BitmapFactory.decodeFile(f.getPath());
                 lastBm = bm;
                 ui.post(() -> {

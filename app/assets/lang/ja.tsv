@@ -654,3 +654,7 @@ This folder has no hexanima-model.json: pick the folder an export made	このフ
 Unknown export format	不明なエクスポート形式
 The folder has no file 	フォルダーにファイルがありません: 
 The file is damaged: 	ファイルが破損しています: 
+Smoother video (RIFE ×2 / ×4)	なめらかな動画 (RIFE ×2 / ×4)
+Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	NPUでクリップのフレームの間に新しいフレームを描き、動きをなめらかにします。メニュー → 拡大 → 動画。動画のサイズごとに小さなネットワーク（12〜40 MB）があり、ここでまとめてダウンロードできます。MIT  ·  hzwer、Practical-RIFE v4.6
+Networks: %d of %d	ネットワーク: %d / %d
+Download all	すべてダウンロード

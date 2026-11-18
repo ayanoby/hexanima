@@ -654,3 +654,7 @@ This folder has no hexanima-model.json: pick the folder an export made	Bu klasö
 Unknown export format	Bilinmeyen dışa aktarma biçimi
 The folder has no file 	Klasörde dosya yok: 
 The file is damaged: 	Dosya bozuk: 
+Smoother video (RIFE ×2 / ×4)	Daha akıcı video (RIFE ×2 / ×4)
+Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	Klibinizin kareleri arasına NPU üzerinde yeni kareler çizer: hareket akıcılaşır. Menü → Büyüt → Video. Her video boyutunun kendi küçük ağı vardır (12–40 MB); buradan hepsi birden indirilebilir. MIT  ·  hzwer, Practical-RIFE v4.6
+Networks: %d of %d	Ağlar: %d / %d
+Download all	Hepsini indir

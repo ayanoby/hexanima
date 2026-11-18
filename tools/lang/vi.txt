@@ -654,3 +654,7 @@
 653	Định dạng xuất không rõ
 654	Thư mục không có tệp 
 655	Tệp bị hỏng: 
+656	Video mượt hơn (RIFE ×2 / ×4)
+657	Vẽ thêm khung hình mới giữa các khung hình của clip trên NPU: chuyển động mượt hơn. Menu → Phóng to → Video. Mỗi kích thước video có mạng nhỏ riêng (12–40 MB); ở đây có thể tải tất cả cùng lúc. MIT  ·  hzwer, Practical-RIFE v4.6
+658	Mạng: %d / %d
+659	Tải tất cả

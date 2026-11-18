@@ -654,3 +654,7 @@ This folder has no hexanima-model.json: pick the folder an export made	Folder in
 Unknown export format	Format ekspor tidak dikenal
 The folder has no file 	Folder tidak memiliki file 
 The file is damaged: 	File rusak: 
+Smoother video (RIFE ×2 / ×4)	Video lebih mulus (RIFE ×2 / ×4)
+Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	Menggambar bingkai baru di antara bingkai klipmu di NPU: gerakan jadi lebih mulus. Menu → Perbesar → Video. Setiap ukuran video punya jaringan kecilnya sendiri (12–40 MB); di sini semuanya bisa diunduh sekaligus. MIT  ·  hzwer, Practical-RIFE v4.6
+Networks: %d of %d	Jaringan: %d dari %d
+Download all	Unduh semua

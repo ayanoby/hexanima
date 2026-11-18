@@ -654,3 +654,7 @@
 653	Unbekanntes Exportformat
 654	Im Ordner fehlt die Datei 
 655	Die Datei ist beschädigt: 
+656	Flüssigeres Video (RIFE ×2 / ×4)
+657	Zeichnet auf der NPU neue Bilder zwischen den Bildern deines Clips: die Bewegung wird flüssiger. Menü → Hochskalieren → Video. Jede Videogröße hat ein eigenes kleines Netz (12–40 MB); hier lassen sich alle auf einmal laden. MIT  ·  hzwer, Practical-RIFE v4.6
+658	Netze: %d von %d
+659	Alle laden

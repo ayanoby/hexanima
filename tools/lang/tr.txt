@@ -654,3 +654,7 @@
 653	Bilinmeyen dışa aktarma biçimi
 654	Klasörde dosya yok: 
 655	Dosya bozuk: 
+656	Daha akıcı video (RIFE ×2 / ×4)
+657	Klibinizin kareleri arasına NPU üzerinde yeni kareler çizer: hareket akıcılaşır. Menü → Büyüt → Video. Her video boyutunun kendi küçük ağı vardır (12–40 MB); buradan hepsi birden indirilebilir. MIT  ·  hzwer, Practical-RIFE v4.6
+658	Ağlar: %d / %d
+659	Hepsini indir

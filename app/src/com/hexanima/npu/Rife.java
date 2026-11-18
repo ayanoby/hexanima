@@ -34,6 +34,23 @@ final class Rife {
     static JSONObject entry(int[] c) throws Exception { org.json.JSONArray a = manifest().getJSONArray("files"); for (int i = 0; i < a.length(); i++) if (a.getJSONObject(i).getString("path").equals(name(c))) return a.getJSONObject(i); throw new IOException("not in the manifest: " + name(c)); }
     static void download(Context c, int[] ctx, Models.Count cb, AtomicBoolean cancel) throws Exception { JSONObject e = entry(ctx); Models.fetch(BASE + name(ctx), file(c.getFilesDir(), ctx), e.getLong("size"), e.getString("sha256"), cb, cancel); }
 
+    /** Models screen: every context at once (340 MB), the missing ones only; the Upscale screen still fetches a single one on demand */
+    static final long ALL_BYTES = 340_404_558L;
+    static int count(File home) { int n = 0; for (int[] c : CTX) if (has(home, c)) n++; return n; }
+    static void deleteAll(File home) { for (int[] c : CTX) file(home, c).delete(); }
+    static void downloadAll(Context c, Models.Count cb, AtomicBoolean cancel) throws Exception {
+        org.json.JSONArray a = manifest().getJSONArray("files"); long total = 0;
+        for (int[] x : CTX) if (!has(c.getFilesDir(), x)) for (int i = 0; i < a.length(); i++) if (a.getJSONObject(i).getString("path").equals(name(x))) total += a.getJSONObject(i).getLong("size");
+        long done = 0;
+        for (int[] x : CTX) {
+            if (has(c.getFilesDir(), x)) continue;
+            JSONObject e = null; for (int i = 0; i < a.length(); i++) if (a.getJSONObject(i).getString("path").equals(name(x))) e = a.getJSONObject(i);
+            if (e == null) continue;
+            final long before = done; Models.fetch(BASE + name(x), file(c.getFilesDir(), x), e.getLong("size"), e.getString("sha256"), n -> cb.on(before + n), cancel);
+            done += e.getLong("size");
+        }
+    }
+
     interface Progress { void on(int done, int total, String msg); }
 
     /** the running NPU context */

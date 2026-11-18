@@ -214,6 +214,7 @@ public class ModelsActivity extends Base {
         }
         if (q.isEmpty() || "upscaler real-esrgan апскейлер".contains(q)) { addUpscale(); any = true; }
         if (q.isEmpty() || "tagger wd теги tags картинка в теги".contains(q)) { addTagger(); any = true; }
+        if (q.isEmpty() || "rife interpolation video frames риф кадры видео плавность".contains(q)) { addRife(); any = true; }
         if (items.isEmpty()) list.addView(text(L.s("Каталог пуст", "The catalog is empty"), 13, DIM, false));
         else if (!any) list.addView(text(L.s("Ничего не найдено", "Nothing found"), 14, DIM, false));
         else if (!store.commonInstalled() && hasAnima()) { TextView n = text(L.f("К первой модели Anima добавятся общие файлы (%s ГБ): текстовый энкодер и VAE. Они качаются один раз.", "The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.", gb(store.commonSize)), 12, DIM, false); n.setPadding(dp(2), dp(12), 0, 0); list.addView(n); }
@@ -394,6 +395,48 @@ public class ModelsActivity extends Base {
             TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); tc.addView(x);
         }
         LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(-1, -2); tl.bottomMargin = dp(8); list.addView(tc, tl);
+    }
+
+    /** RIFE v4.6 (frame interpolation for videos): one QNN context per frame size; the Upscale screen fetches the one a video needs, here all of them can be fetched at once */
+    void addRife() {
+        LinearLayout rc = new LinearLayout(this); rc.setOrientation(LinearLayout.VERTICAL); rc.setBackground(bg(CARD, 14)); rc.setPadding(dp(16), dp(12), dp(16), dp(12));
+        rc.addView(text(L.s("Плавное видео (RIFE ×2 / ×4)", "Smoother video (RIFE ×2 / ×4)"), 16, TXT, true));
+        TextView rm = text(L.s("Дорисовывает кадры между кадрами вашего ролика на NPU: движение становится плавнее. Меню → Увеличение → Видео. Для каждого размера видео нужна своя небольшая сеть (12–40 МБ), здесь можно скачать все сразу. MIT  ·  hzwer, Practical-RIFE v4.6", "Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6"), 13, DIM, false); rm.setPadding(0, dp(3), 0, dp(2)); rc.addView(rm);
+        final int have = Rife.count(getFilesDir()), all = Rife.CTX.length; final boolean rbusy = downloading && "rife".equals(dlId);
+        LinearLayout rr = new LinearLayout(this); rr.setGravity(android.view.Gravity.CENTER_VERTICAL); rr.setPadding(0, dp(10), 0, 0);
+        rr.addView(text(L.f("Сети: %d из %d", "Networks: %d of %d", have, all) + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", Rife.ALL_BYTES / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        if (have > 0 && !rbusy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), dp(have < all ? 12 : 0), dp(4)); del.setOnClickListener(v -> { if (downloading) return; confirmDelete("RIFE", () -> { Rife.deleteAll(getFilesDir()); render(); }); }); rr.addView(del); }
+        if (have < all && !rbusy) {
+            Button bt = button(L.s("Скачать все", "Download all"), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+            bt.setOnClickListener(v -> startRife()); rr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
+        }
+        rc.addView(rr);
+        if (rbusy) {
+            ProgressBar pb = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); pb.setMax(1000);
+            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(ACC)); pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(LINE));
+            LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-1, dp(3)); pl.topMargin = dp(10); rc.addView(pb, pl); bars.put("rife", pb);
+            TextView tv = text(dlMsg, 12, DIM, false); tv.setPadding(0, dp(6), 0, 0); rc.addView(tv); msgs.put("rife", tv);
+            TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); rc.addView(x);
+        }
+        LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(-1, -2); rl.bottomMargin = dp(8); list.addView(rc, rl);
+    }
+
+    void startRife() {
+        if (downloading) return;
+        long need = Rife.ALL_BYTES; if (getFilesDir().getUsableSpace() < need + 100_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(need)), Toast.LENGTH_LONG).show(); return; }
+        downloading = true; dlId = "rife"; dlDone = 0; dlTotal = need; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        render();
+        new Thread(() -> {
+            String err = null;
+            try { Rife.downloadAll(app, n -> { dlDone = n; dlMsg = L.f("%s / %s ГБ", "%s / %s GB", String.format("%.2f", n / 1e9), String.format("%.2f", Rife.ALL_BYTES / 1e9)); }, cancel); }
+            catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: можно продолжить", "Cancelled: you can resume"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
+            final String msg = err; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); render(); });
+        }).start();
     }
 
     void startTagger() {

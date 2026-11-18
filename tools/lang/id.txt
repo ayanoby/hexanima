@@ -654,3 +654,7 @@
 653	Format ekspor tidak dikenal
 654	Folder tidak memiliki file 
 655	File rusak: 
+656	Video lebih mulus (RIFE ×2 / ×4)
+657	Menggambar bingkai baru di antara bingkai klipmu di NPU: gerakan jadi lebih mulus. Menu → Perbesar → Video. Setiap ukuran video punya jaringan kecilnya sendiri (12–40 MB); di sini semuanya bisa diunduh sekaligus. MIT  ·  hzwer, Practical-RIFE v4.6
+658	Jaringan: %d dari %d
+659	Unduh semua

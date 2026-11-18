@@ -654,3 +654,7 @@ This folder has no hexanima-model.json: pick the folder an export made	Ce dossie
 Unknown export format	Format d'exportation inconnu
 The folder has no file 	Le dossier n'a pas le fichier 
 The file is damaged: 	Le fichier est endommagé : 
+Smoother video (RIFE ×2 / ×4)	Vidéo plus fluide (RIFE ×2 / ×4)
+Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	Dessine sur le NPU de nouvelles images entre celles de votre clip : le mouvement devient plus fluide. Menu → Agrandir → Vidéo. Chaque taille de vidéo a son propre petit réseau (12–40 Mo) ; ici on peut tout télécharger d'un coup. MIT  ·  hzwer, Practical-RIFE v4.6
+Networks: %d of %d	Réseaux : %d sur %d
+Download all	Tout télécharger

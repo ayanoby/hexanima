@@ -663,3 +663,4 @@
 662	Kaydedildi: %s
 663	Üretimden hemen sonra kaydet
 664	Biten her resim ve video, «İndir»e dokunmadan yukarıda seçilen yere kendiliğinden kopyalanır. Uygulama galerisinde her durumda kalırlar.
+665	Sonraki üretimde geçerli olur: %d

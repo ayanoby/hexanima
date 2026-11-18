@@ -663,3 +663,4 @@ Where to save pictures	Où enregistrer les images
 Saved: %s	Enregistré : %s
 Save right after generating	Enregistrer juste après la génération
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Chaque image et vidéo terminée est copiée d'elle-même à l'endroit choisi ci-dessus, sans appuyer sur « Télécharger ». Elles restent de toute façon dans la galerie de l'application.
+Applies to the next run: %d	S'appliquera à la prochaine génération : %d

@@ -663,5 +663,6 @@
 "Where to save pictures",
 "Saved: %s",
 "Save right after generating",
-"Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way."
+"Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.",
+"Applies to the next run: %d"
 ]

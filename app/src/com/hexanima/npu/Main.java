@@ -2122,10 +2122,10 @@ public class Main extends Base {
         b.addView(mi, new LinearLayout.LayoutParams(dp(40), dp(40))); b.addView(val); b.addView(pl, new LinearLayout.LayoutParams(dp(40), dp(40)));
         return b;
     }
-    /** pictures per run: any number; while a batch runs the value is the length of the queue (never below the picture being made) and the loop follows it */
+    /** pictures per run (1..999): a change while a batch runs applies to the next run, the running one keeps its length */
     void setCount(int v) {
-        v = Math.max(busy ? curIdx + 1 : 1, Math.min(999, v)); count = v; prefs().edit().putInt("count", count).apply();
-        if (busy) { curN = count; Toast.makeText(this, L.f("В очереди: %d", "In the queue: %d", count), Toast.LENGTH_SHORT).show(); }
+        v = Math.max(1, Math.min(999, v)); count = v; prefs().edit().putInt("count", count).apply();
+        if (busy) Toast.makeText(this, L.f("Применится к следующей генерации: %d", "Applies to the next run: %d", count), Toast.LENGTH_SHORT).show();
         refreshBaseUi(); updateChips();
     }
     void pickCount() {

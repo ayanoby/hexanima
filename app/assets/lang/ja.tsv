@@ -663,3 +663,4 @@ Where to save pictures	画像の保存先
 Saved: %s	保存しました: %s
 Save right after generating	生成後すぐに保存
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	完成した画像と動画は、「ダウンロード」を押さなくても上で選んだ保存先に自動でコピーされます。アプリのギャラリーにはどちらの場合も残ります。
+Applies to the next run: %d	次の生成から反映されます: %d

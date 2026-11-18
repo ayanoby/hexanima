@@ -663,3 +663,4 @@
 662	Guardado: %s
 663	Guardar justo después de generar
 664	Cada imagen y vídeo terminado se copia solo al lugar elegido arriba, sin pulsar «Descargar». En la galería de la app permanecen en cualquier caso.
+665	Se aplicará a la próxima generación: %d

@@ -663,3 +663,4 @@ Where to save pictures	Wohin Bilder gespeichert werden
 Saved: %s	Gespeichert: %s
 Save right after generating	Sofort nach dem Erzeugen speichern
 Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Jedes fertige Bild und Video wird von selbst an den oben gewählten Ort kopiert, ohne auf „Herunterladen“ zu tippen. In der App-Galerie bleiben sie in jedem Fall.
+Applies to the next run: %d	Gilt für die nächste Generierung: %d

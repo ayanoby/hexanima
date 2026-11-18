@@ -663,3 +663,4 @@
 662	Đã lưu: %s
 663	Lưu ngay sau khi tạo
 664	Mỗi ảnh và video hoàn thành tự được sao chép vào nơi đã chọn ở trên, không cần bấm «Tải xuống». Chúng vẫn nằm trong thư viện của ứng dụng.
+665	Áp dụng cho lần tạo tiếp theo: %d

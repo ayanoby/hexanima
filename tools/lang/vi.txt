@@ -658,3 +658,6 @@
 657	Vẽ thêm khung hình mới giữa các khung hình của clip trên NPU: chuyển động mượt hơn. Menu → Phóng to → Video. Mỗi kích thước video có mạng nhỏ riêng (12–40 MB); ở đây có thể tải tất cả cùng lúc. MIT  ·  hzwer, Practical-RIFE v4.6
 658	Mạng: %d / %d
 659	Tải tất cả
+660	Thư viện ảnh của điện thoại (Pictures/Anima)
+661	Nơi lưu ảnh
+662	Đã lưu: %s

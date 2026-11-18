@@ -33,14 +33,18 @@ public class Settings extends Base {
     /** write the prompt, seed, model... into the PNG itself (the app's gallery keeps its own copy either way) */
     static boolean metaInPng(Context c) { return prefs(c).getBoolean("png_meta", true); }
     /** the folder picked for archives (a SAF tree URI), or null = Downloads; a folder whose permission is gone counts as not set */
-    static android.net.Uri archiveDir(Context c) {
-        String v = prefs(c).getString("zip_dir", ""); if (v.isEmpty()) return null;
+    static android.net.Uri archiveDir(Context c) { return dirPref(c, "zip_dir"); }
+    /** the folder picked for saved pictures and videos (the Download button), or null = the phone gallery (Pictures/Anima, Movies/Anima) */
+    static android.net.Uri pictureDir(Context c) { return dirPref(c, "pic_dir"); }
+    static String pictureDirLabel(Context c) { return pictureDir(c) == null ? L.s("Галерея телефона (Pictures/Anima)", "Phone gallery (Pictures/Anima)") : folderLabel(pictureDir(c)); }
+    static android.net.Uri dirPref(Context c, String key) {
+        String v = prefs(c).getString(key, ""); if (v.isEmpty()) return null;
         android.net.Uri u = android.net.Uri.parse(v);
         for (android.content.UriPermission up : c.getContentResolver().getPersistedUriPermissions()) if (up.getUri().equals(u) && up.isWritePermission()) return u;
         return null;
     }
-    static String archiveDirLabel(Context c) {
-        android.net.Uri u = archiveDir(c); if (u == null) return L.s("Загрузки", "Downloads");
+    static String archiveDirLabel(Context c) { android.net.Uri u = archiveDir(c); return u == null ? L.s("Загрузки", "Downloads") : folderLabel(u); }
+    static String folderLabel(android.net.Uri u) {
         try { String id = android.provider.DocumentsContract.getTreeDocumentId(u); int i = id.indexOf(':'); String r = i >= 0 ? id.substring(i + 1) : id; return r.isEmpty() ? L.s("Внутренняя память", "Internal storage") : r; } catch (Exception e) { return u.getLastPathSegment(); }
     }
     static boolean keepOn(Context c) { return prefs(c).getBoolean("keepon", true); }
@@ -63,6 +67,11 @@ public class Settings extends Base {
                 startActivity(new android.content.Intent(this, WallEdit.class));   // straight to placing it; this screen is rebuilt on return (the theme key changed)
                 return;
             } catch (Exception e) { Toast.makeText(this, L.f("Не удалось открыть картинку: %s", "Could not open the picture: %s", String.valueOf(e.getMessage())), Toast.LENGTH_LONG).show(); }
+            recreate();
+        }
+        if (req == 33 && res == RESULT_OK && d != null && d.getData() != null) {
+            try { getContentResolver().takePersistableUriPermission(d.getData(), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION); prefs(this).edit().putString("pic_dir", d.getData().toString()).apply(); }
+            catch (Exception e) { Toast.makeText(this, String.valueOf(e.getMessage()), Toast.LENGTH_LONG).show(); }
             recreate();
         }
         if (req == 31 && res == RESULT_OK && d != null && d.getData() != null) {
@@ -116,6 +125,12 @@ public class Settings extends Base {
         LinearLayout c3 = card(col);
         c3.addView(toggle(L.s("Не гасить экран при генерации", "Keep the screen on while generating"), "", keepOn(this), on -> p.edit().putBoolean("keepon", on).apply()));
         c3.addView(toggle(L.s("Хранить метаданные в картинке", "Keep metadata in the picture"), L.s("Промпт, seed и модель записываются в PNG: по ним можно восстановить настройки. Если выключить, файл будет чистым (удобно перед публикацией); в галерее приложения подробности остаются.", "The prompt, seed and model are written into the PNG so the settings can be restored from it. Off: the file stays clean (handy before sharing); the details are still kept in the app's gallery."), metaInPng(this), on -> p.edit().putBoolean("png_meta", on).apply()));
+        c3.addView(choice(L.s("Куда сохранять картинки", "Where to save pictures"), pictureDirLabel(this), v -> builder().setTitle(L.s("Куда сохранять картинки", "Where to save pictures"))
+            .setSingleChoiceItems(new String[]{L.s("Галерея телефона (Pictures/Anima)", "Phone gallery (Pictures/Anima)"), L.s("Выбрать папку…", "Choose a folder…")}, pictureDir(this) == null ? 0 : -1, (d, i) -> {
+                d.dismiss();
+                if (i == 0) { p.edit().remove("pic_dir").apply(); recreate(); }
+                else startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PREFIX_URI_PERMISSION), 33);
+            }).show()));
         c3.addView(choice(L.s("Куда сохранять архивы", "Where to save archives"), archiveDirLabel(this), v -> builder().setTitle(L.s("Куда сохранять архивы", "Where to save archives"))
             .setSingleChoiceItems(new String[]{L.s("Загрузки", "Downloads"), L.s("Выбрать папку…", "Choose a folder…")}, archiveDir(this) == null ? 0 : -1, (d, i) -> {
                 d.dismiss();

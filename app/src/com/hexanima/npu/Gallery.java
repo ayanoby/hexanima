@@ -77,6 +77,8 @@ final class Gallery {
 
     /** copy into the phone gallery (Pictures/Anima) */
     static Uri export(Context c, File png) throws IOException {
+        android.net.Uri tree = Settings.pictureDir(c);
+        if (tree != null) { Uri u = exportToTree(c, png, tree); if (u != null) return u; }   // the folder is gone (permission revoked): the phone gallery gets it instead
         ContentValues cv = new ContentValues();
         JSONObject m = meta(png); File vid = videoOf(png);
         if (vid != null) {   // the video goes to Movies/Anima
@@ -93,6 +95,22 @@ final class Gallery {
             byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n);
         }
         return u;
+    }
+
+    /** where the Download button puts a picture now, for the "saved" message */
+    static String where(Context c) { return Settings.pictureDir(c) == null ? "Pictures/Anima" : Settings.pictureDirLabel(c); }
+    static String savedMsg(Context c) { return L.f("Сохранено: %s", "Saved: %s", where(c)); }
+
+    private static Uri exportToTree(Context c, File png, android.net.Uri tree) {
+        try {
+            JSONObject m = meta(png); File vid = videoOf(png); File src = vid != null ? vid : png;
+            String name = "anima_" + m.optInt("w") + "x" + m.optInt("h") + "_" + m.optString("seed", "0") + "_" + src.getName();
+            Uri top = android.provider.DocumentsContract.buildDocumentUriUsingTree(tree, android.provider.DocumentsContract.getTreeDocumentId(tree));
+            Uri u = android.provider.DocumentsContract.createDocument(c.getContentResolver(), top, vid != null ? "video/mp4" : "image/png", name);
+            if (u == null) return null;
+            try (OutputStream o = c.getContentResolver().openOutputStream(u); InputStream in = new FileInputStream(src)) { byte[] b = new byte[1 << 16]; for (int n; (n = in.read(b)) > 0; ) o.write(b, 0, n); }
+            return u;
+        } catch (Exception e) { return null; }
     }
 
     interface Pack { boolean on(int done, int total); }   // false = stop

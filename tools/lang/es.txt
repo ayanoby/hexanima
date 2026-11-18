@@ -658,3 +658,6 @@
 657	Dibuja en la NPU fotogramas nuevos entre los de tu clip: el movimiento es más fluido. Menú → Ampliar → Vídeo. Cada tamaño de vídeo tiene su propia red pequeña (12–40 MB); aquí se pueden descargar todas a la vez. MIT  ·  hzwer, Practical-RIFE v4.6
 658	Redes: %d de %d
 659	Descargar todo
+660	Galería del teléfono (Pictures/Anima)
+661	Dónde guardar las imágenes
+662	Guardado: %s

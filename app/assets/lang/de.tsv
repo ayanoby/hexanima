@@ -658,3 +658,6 @@ Smoother video (RIFE ×2 / ×4)	Flüssigeres Video (RIFE ×2 / ×4)
 Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	Zeichnet auf der NPU neue Bilder zwischen den Bildern deines Clips: die Bewegung wird flüssiger. Menü → Hochskalieren → Video. Jede Videogröße hat ein eigenes kleines Netz (12–40 MB); hier lassen sich alle auf einmal laden. MIT  ·  hzwer, Practical-RIFE v4.6
 Networks: %d of %d	Netze: %d von %d
 Download all	Alle laden
+Phone gallery (Pictures/Anima)	Handy-Galerie (Pictures/Anima)
+Where to save pictures	Wohin Bilder gespeichert werden
+Saved: %s	Gespeichert: %s

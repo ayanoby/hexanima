@@ -163,7 +163,7 @@ public class Viewer extends Base {
         moreB.setOnClickListener(v -> {
             android.widget.PopupMenu pm = new android.widget.PopupMenu(this, moreB, Gravity.END);
             final List<Runnable> run = new ArrayList<>(); android.view.Menu mn = pm.getMenu();
-            mn.add(0, run.size(), run.size(), L.s("Сохранить в галерею", "Save to gallery")); run.add(() -> { try { Gallery.export(this, f); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } });
+            mn.add(0, run.size(), run.size(), L.s("Сохранить в галерею", "Save to gallery")); run.add(() -> { try { Gallery.export(this, f); Toast.makeText(this, Gallery.savedMsg(this), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } });
             mn.add(0, run.size(), run.size(), L.s("Поделиться", "Share")); run.add(() -> Gallery.share(this, f));
             mn.add(0, run.size(), run.size(), Gallery.fav(f) ? L.s("Убрать из избранного", "Remove from favourites") : L.s("В избранное", "Add to favourites")); run.add(() -> { Gallery.setFav(f, !Gallery.fav(f)); changed = true; });
             if (reuse) { mn.add(0, run.size(), run.size(), L.s("Повторить (промпт и seed)", "Reuse (prompt and seed)")); run.add(() -> { setResult(RESULT_OK, new Intent().putExtra("prompt", m.optString("prompt")).putExtra("seed", m.optString("seed")).putExtra("w", m.optInt("w", 512)).putExtra("h", m.optInt("h", 768))); finish(); }); }

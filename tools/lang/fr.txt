@@ -658,3 +658,6 @@
 657	Dessine sur le NPU de nouvelles images entre celles de votre clip : le mouvement devient plus fluide. Menu → Agrandir → Vidéo. Chaque taille de vidéo a son propre petit réseau (12–40 Mo) ; ici on peut tout télécharger d'un coup. MIT  ·  hzwer, Practical-RIFE v4.6
 658	Réseaux : %d sur %d
 659	Tout télécharger
+660	Galerie du téléphone (Pictures/Anima)
+661	Où enregistrer les images
+662	Enregistré : %s

@@ -658,3 +658,6 @@ Smoother video (RIFE ×2 / ×4)	更流畅的视频 (RIFE ×2 / ×4)
 Draws new frames between the frames of your clip on the NPU: motion gets smoother. Menu → Upscale → Video. Every video size has its own small network (12–40 MB); here all of them can be downloaded at once. MIT  ·  hzwer, Practical-RIFE v4.6	在 NPU 上于视频的帧之间绘制新帧，使动作更流畅。菜单 → 放大 → 视频。每种视频尺寸都有各自的小型网络（12–40 MB），这里可以一次全部下载。MIT  ·  hzwer，Practical-RIFE v4.6
 Networks: %d of %d	网络：%d / %d
 Download all	全部下载
+Phone gallery (Pictures/Anima)	手机相册（Pictures/Anima）
+Where to save pictures	图片保存位置
+Saved: %s	已保存：%s

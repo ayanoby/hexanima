@@ -658,3 +658,6 @@
 657	Klibinizin kareleri arasına NPU üzerinde yeni kareler çizer: hareket akıcılaşır. Menü → Büyüt → Video. Her video boyutunun kendi küçük ağı vardır (12–40 MB); buradan hepsi birden indirilebilir. MIT  ·  hzwer, Practical-RIFE v4.6
 658	Ağlar: %d / %d
 659	Hepsini indir
+660	Telefon galerisi (Pictures/Anima)
+661	Resimler nereye kaydedilsin
+662	Kaydedildi: %s

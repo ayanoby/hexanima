@@ -300,7 +300,7 @@ public class History extends Base {
             row(box, btn(L.s("Восстановить", "Restore"), ACC, ON_ACC, () -> { Gallery.restore(this, f); d[0].dismiss(); fill(); }),
                 btn(L.s("Удалить навсегда", "Delete forever"), CARD, BAD, () -> confirm(L.s("Удалить навсегда?", "Delete forever?"), () -> { Gallery.delete(f); d[0].dismiss(); fill(); })));
         } else {
-            row(box, btn(L.s("Скачать", "Download"), ACC, ON_ACC, () -> { try { Gallery.export(this, f); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } }),
+            row(box, btn(L.s("Скачать", "Download"), ACC, ON_ACC, () -> { try { Gallery.export(this, f); Toast.makeText(this, Gallery.savedMsg(this), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } }),
                 btn(L.s("Поделиться", "Share"), CARD, TXT, () -> Gallery.share(this, f)));
             final Button favB = btn(Gallery.fav(f) ? "★ " + L.s("В избранном", "Favourite") : "☆ " + L.s("В избранное", "Favourite"), CARD, TXT, null);
             favB.setOnClickListener(v -> { boolean nv = !Gallery.fav(f); Gallery.setFav(f, nv); favB.setText(nv ? "★ " + L.s("В избранном", "Favourite") : "☆ " + L.s("В избранное", "Favourite")); fill(); });

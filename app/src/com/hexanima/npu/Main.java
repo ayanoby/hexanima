@@ -225,7 +225,7 @@ public class Main extends Base {
                 switch (it.getItemId()) {
                     case 0: generate(true); break;   // the same prompt with a new random seed
                     case 1: Gallery.setFav(lastFile, !Gallery.fav(lastFile)); break;
-                    case 2: try { Gallery.export(this, lastFile); Toast.makeText(this, L.s("Сохранено в галерею: Pictures/Anima", "Saved to gallery: Pictures/Anima"), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } break;
+                    case 2: try { Gallery.export(this, lastFile); Toast.makeText(this, Gallery.savedMsg(this), Toast.LENGTH_SHORT).show(); } catch (Exception e) { Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show(); } break;
                     case 3: Gallery.share(this, lastFile); break;
                     case 4: up.dialog(this, lastFile, Gallery.meta(lastFile), res -> { lastFile = res; Bitmap nb = BitmapFactory.decodeFile(res.getPath()); if (nb != null) { fitBox(nb); img.setImageBitmap(nb); } }); break;   // the result replaces the picture on the screen
                     default: Gallery.trash(this, lastFile); lastFile = null; img.setVisibility(View.GONE); placeholder.setVisibility(View.VISIBLE); moreBtn.setVisibility(View.GONE); saved.setText("");   // to the trash (restorable in the history)

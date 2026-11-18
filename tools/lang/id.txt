@@ -658,3 +658,6 @@
 657	Menggambar bingkai baru di antara bingkai klipmu di NPU: gerakan jadi lebih mulus. Menu → Perbesar → Video. Setiap ukuran video punya jaringan kecilnya sendiri (12–40 MB); di sini semuanya bisa diunduh sekaligus. MIT  ·  hzwer, Practical-RIFE v4.6
 658	Jaringan: %d dari %d
 659	Unduh semua
+660	Galeri ponsel (Pictures/Anima)
+661	Tempat menyimpan gambar
+662	Tersimpan: %s

@@ -625,3 +625,8 @@
 627	Model ini didistribusikan di bawah MiniMax-H3 Community License Agreement (teks lisensi diunduh bersama file). Tidak boleh dipakai di Amerika Serikat, Uni Eropa, Inggris, atau Korea Selatan, dan hasilnya tidak boleh dipakai untuk meningkatkan model AI lain. Ukuran: %s GB. Unduh?
 628	MiniMax-H3 Ref2VA (33B) membuat video dari prompt dan, secara opsional, foto referensi: orang, hewan, atau objek di foto muncul di video, sedangkan latar dan gerakan berasal dari prompt. 22–90 frame, 4 langkah (LoRA turbo hasil distilasi, tanpa CFG), tanpa suara. Diunduh di layar «Model» setelah MiniMax-H3-Image: keduanya berbagi encoder teks. Lisensi MiniMax H3 Community: bukan untuk AS, UE, Inggris, dan Korea.
 629	Perbesaran berbasis difusi: kualitas terbaik, lebih lambat. Pilih di layar Perbesar. Apache 2.0  ·  ByteDance Seed
+540	Video lebih besar dari 1920x1088: tidak didukung
+596	%d×%d: lebih besar dari 1920x1088, tidak didukung
+617	Di menu → Perbesar → Video, jaringan RIFE v4.6 (hzwer, MIT) menggambar bingkai baru di antara setiap pasang bingkai klipmu: x2 atau x4, gerakan jadi lebih mulus (12 → 24 atau 48 bingkai per detik). Berjalan di NPU, suara dipertahankan dan hasilnya masuk ke galeri. Video hingga 1920x1088 bisa diproses; jaringan kecil (12–40 MB) diunduh untuk tiap ukuran. Sekitar satu setengah menit untuk 3 detik video HD pada x4, jauh lebih cepat untuk ukuran kecil. Pemotongan tajam tidak diinterpolasi. Ukuran gambar tidak berubah: hanya kemulusan yang meningkat.
+630	Model gagal dimuat
+631	Chip %s. Mungkin tidak didukung.\n\n%s

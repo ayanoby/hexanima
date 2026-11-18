@@ -22,6 +22,8 @@ fi
 # not exported: system tools (setsid, grep...) must not see /vendor/lib64 (its old libc++ breaks them on newer Android); only our binaries get it, with /system/lib64 listed first so the system libc++ wins over the older vendor copy
 RUNX='export LD_LIBRARY_PATH="$LIBS" ADSP_LIBRARY_PATH="$ADSPP"; exec "$@"'   # "env VAR=.. cmd" is not used: an app path contains "=" and env would take it for an assignment
 ADSPP=${BIN:-$A}
+# v79 (Snapdragon 8 Elite): the DSP skel with the v73+ HMX drain has the same file name as the v69 one: it is copied to $A/dsp and that dir comes first in ADSP_LIBRARY_PATH
+if [ "$HEXARCH" = v79 ] && [ -n "$BIN" ] && [ -f $BIN/libmegahyb.so ]; then mkdir -p $A/dsp; cmp -s $BIN/libmegahyb.so $A/dsp/libmega_skel.so || cp -f $BIN/libmegahyb.so $A/dsp/libmega_skel.so; ADSPP="$A/dsp;$BIN"; fi
 if [ "$1" = stop ]; then touch $ROOT/quit; if pidof $NS >/dev/null; then printf quit > $SQ/job.tmp; mv $SQ/job.tmp $SQ/job; fi; pidof $NS >/dev/null && kill $(pidof $NS); n=0; while pidof $NA >/dev/null && [ $n -lt 20 ]; do sleep 0.25; n=$((n+1)); done
   # animad stuck in an aborted request never polls "quit": kill it and its children so the next load does not wait forever
   if pidof $NA >/dev/null; then kill -9 $(pidof $NA); fi; for p in $NH; do pidof $p >/dev/null && kill -9 $(pidof $p); done; rm -f $ROOT/quit; exit 0; fi
@@ -32,6 +34,7 @@ KEY="${MODEL:-2}${MEGA_STREAM:+s}${LORA:+|$LORA|${LORA_S:-1}}"   # the low-memor
 if pidof $NA >/dev/null && [ "$(cat $A/model 2>/dev/null)" != "$KEY" ]; then   # loaded server holds another model (or runs in the other memory mode): restart it
   sh $0 stop; while pidof $NA >/dev/null; do sleep 0.3; done
 fi
+rm -f $A/load_error
 if ! pidof $NA >/dev/null; then
   echo $KEY > $A/model
   rm -rf $ROOT; mkdir -p $ROOT
@@ -41,7 +44,14 @@ if ! pidof $NA >/dev/null; then
   if [ -n "$LORA" ]; then export MEGA_LORA="$LORA" MEGA_LORA_S="${LORA_S:-1}" MEGA_LORA_CACHE=$A/lcache   # no ANIMA_TE: the text encoder runs on the NPU from a compiled graph and $S/*_txt.safetensors is only a stub here, so lora_te_* weights are ignored
   else unset MEGA_LORA MEGA_LORA_S MEGA_LORA_CACHE ANIMA_TE ANIMA_TE_CACHE; fi
   cd $A && LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $ANIMAD $SM --serve $ROOT < /dev/null > $A/animad.log 2>&1 &
-  while ! grep -q serving $A/animad.log 2>/dev/null && [ ! -f $A/cancel ]; do sleep 0.3; done
+  # animad that died (unsupported chip, DSP error) or never says "serving" must not hang the app: the error goes to $A/load_error, which the app shows
+  n=0; while ! grep -q serving $A/animad.log 2>/dev/null && [ ! -f $A/cancel ]; do
+    sleep 0.3; n=$((n+1))
+    if [ $n -gt 20 ] && { ! pidof $NA >/dev/null || { [ -z "$LORA" ] && [ $n -gt 1000 ]; }; }; then
+      { echo "animad: $(pidof $NA >/dev/null && echo 'no answer after 5 minutes' || echo 'stopped while loading')  (chip $HEXARCH)"; tail -n 25 $A/animad.log; } > $A/load_error 2>&1
+      sh $0 stop; exit 3
+    fi
+  done
 fi
 # persistent sd-cli (text tokenizer/sampler/PNG writer stay loaded: saves ~0.7 s per image); ANIMA_NOSERVE=1 starts one per image as before
 if [ -z "$ANIMA_NOSERVE" ] && ! pidof $NS >/dev/null; then
@@ -49,7 +59,10 @@ if [ -z "$ANIMA_NOSERVE" ] && ! pidof $NS >/dev/null; then
   LLM=miaomiao3DHarem_animaLH3D10_txt.safetensors; [ -s $A/te_llm ] && LLM=$(cat $A/te_llm)
   cd $S && SD_SERVE=$SQ LIBS=$LIBS ADSPP=$ADSPP setsid nohup sh -c "$RUNX" sh $SDCLI --diffusion-model $DM --llm "$LLM" \
     -p x --sampling-method euler --cfg-scale 1 --steps 4 -W 512 -H 768 ${VAEARG:---taesd taew2_1.safetensors} --mmap -t ${T:-4} -o /sdcard/Download/anima_srv.png < /dev/null > $A/sdcli.log 2>&1 &
-  while [ ! -f $SQ/ready ] && [ ! -f $A/cancel ]; do sleep 0.1; done
+  n=0; while [ ! -f $SQ/ready ] && [ ! -f $A/cancel ]; do
+    sleep 0.1; n=$((n+1))
+    if [ $n -gt 100 ] && ! pidof $NS >/dev/null; then { echo "sd-cli: stopped while loading"; tail -n 25 $A/sdcli.log; } > $A/load_error 2>&1; sh $0 stop; exit 3; fi
+  done
 fi
 if [ -f $A/cancel ]; then rm -f $A/cancel; exit 1; fi
 [ "$1" = load ] && exit 0

@@ -625,3 +625,8 @@
 627	Model, MiniMax-H3 Community License Agreement kapsamında dağıtılır (lisans metni dosyalarla birlikte indirilir). ABD, Avrupa Birliği, Birleşik Krallık ve Güney Kore'de kullanılamaz ve çıktıları diğer yapay zekâ modellerini geliştirmek için kullanılamaz. Boyut: %s GB. İndirilsin mi?
 628	MiniMax-H3 Ref2VA (33B), bir istemden ve isteğe bağlı olarak bir referans fotoğraftan video üretir: fotoğraftaki kişi, hayvan veya nesne videoda görünür, ortam ve hareket ise istemden gelir. 22–90 kare, 4 adım (damıtılmış turbo LoRA, CFG yok), sessiz. MiniMax-H3-Image'dan sonra Modeller ekranından indirilir: metin kodlayıcıyı paylaşırlar. MiniMax H3 Community lisansı: ABD, AB, Birleşik Krallık ve Kore için değil.
 629	Bir difüzyon büyütücü: en iyi kalite, daha yavaş. Büyüt ekranında seçin. Apache 2.0  ·  ByteDance Seed
+540	Video 1920x1088'den büyük: desteklenmiyor
+596	%d×%d: 1920x1088'den büyük, desteklenmiyor
+617	Menü → Büyüt → Video bölümünde RIFE v4.6 ağı (hzwer, MIT) klibinizdeki her kare çiftinin arasına yeni kareler çizer: x2 veya x4, hareket daha akıcı olur (saniyede 12 → 24 veya 48 kare). NPU üzerinde çalışır, ses korunur ve sonuç galeriye gider. 1920x1088'e kadar videolar çalışır; her boyut için küçük bir ağ (12–40 MB) indirilir. x4'te 3 saniyelik HD video için yaklaşık bir buçuk dakika, küçük boyutlarda çok daha hızlı. Sert kesmeler ara kare almaz. Görüntü boyutu değişmez: yalnızca akıcılık artar.
+630	Model yüklenmedi
+631	Çip %s. Desteklenmiyor olabilir.\n\n%s

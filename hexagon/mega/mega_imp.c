@@ -9,6 +9,7 @@
 #include "qurt_hmx.h"
 #include "AEEStdErr.h"
 #include "remote.h"
+void hmx_bias_setup(uint8_t *);
 #include "mega.h"
 #include "qhblas_hmx.h"
 
@@ -30,7 +31,7 @@ int mega_probe(remote_handle64 h, int K, int reps, int stage, int64_t *cyc, floa
   uint32_t ctx = HAP_compute_res_acquire(&attr, 100000);
   *vtcmrc = ctx ? 0 : -1;
   if (!ctx) return 0;
-  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr);
+  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr); hmx_bias_setup(vt + (8u << 20) - 4096);
   if (!vt) { HAP_compute_res_release(ctx); *vtcmrc = -2; return 0; }
   __fp16 *A = (__fp16 *)memalign(128, M * K * 2), *B = (__fp16 *)memalign(128, K * N * 2), *C = (__fp16 *)memalign(128, M * N * 2);
   float *R = (float *)malloc(M * N * 4);

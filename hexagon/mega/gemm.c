@@ -14,6 +14,7 @@
 typedef uint16_t u16;
 void hmx_acc(uint8_t*,uint32_t,uint8_t*,uint32_t);
 void hmx_store(uint8_t*,uint32_t);
+void hmx_bias_setup(uint8_t *);
 #define KCH 32  /* k blocks per HMX call: ctrl length field caps at 64KB */
 static inline size_t tin(int r, int c) { return ((r & 31) >> 1) * 64 + (c & 31) * 2 + (r & 1); }
 static float gen(unsigned a, unsigned b, unsigned s) { unsigned h = a * 2654435761u + b * 40503u + s; h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15; return ((int)(h & 255) - 128) / 256.f; }
@@ -28,7 +29,7 @@ int mega_bench(remote_handle64 h, int M, int K, int N, int64_t *us, float *err, 
   HAP_compute_res_attr_set_hmx_param(&attr, 1);
   uint32_t ctx = HAP_compute_res_acquire(&attr, 100000);
   if (!ctx) { *rcout = -1; return 0; }
-  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr);
+  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr); hmx_bias_setup(vt + (8u << 20) - 4096);
   __fp16 *A = (__fp16 *)vt, *W = (__fp16 *)(vt + actB), *O = (__fp16 *)(vt + actB + wB);
   for (int m = 0; m < M; m++) for (int k = 0; k < K; k++) A[((size_t)(m >> 5) * kb + (k >> 5)) * 1024 + tin(m, k)] = (__fp16)gen(m, k, 7);
   for (int k = 0; k < K; k++) for (int n = 0; n < N; n++) W[((size_t)(n >> 5) * kb + (k >> 5)) * 1024 + tin(k, n)] = (__fp16)gen(k, n, 11);

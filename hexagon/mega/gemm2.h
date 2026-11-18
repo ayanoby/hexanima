@@ -5,6 +5,7 @@
 /* O[M x N] = A[M x K] * W[K x N]; all fp16 crouton. A,O: [row slab][col block]; W: [n block][k block]. A, W, O in DDR. vtcm: >= 6 MB scratch. */
 void hmx_acc(uint8_t *, uint32_t, uint8_t *, uint32_t);
 void hmx_store(uint8_t *, uint32_t);
+void hmx_bias_setup(uint8_t *b);   /* v73+: the drain reads a bias/scale block in VTCM; call once after acquiring the VTCM (4 KB at its top); a no-op on v69 */
 typedef struct {   /* optional epilogue run by the pool workers on the finished output tiles (VTCM) */
   int mode;                      /* 0 none (copy to O), 1 residual: x32 += gate*tile (O unused), 2 GELU in place then copy, 3 copy + rope */
   float *x32; const float *gate; /* mode 1: x32 tiles [slab][64], gate[2048] */

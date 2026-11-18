@@ -76,8 +76,7 @@ public class ModelsActivity extends Base {
         src.setOnClickListener(v -> { boolean show = url.getVisibility() != View.VISIBLE; url.setVisibility(show ? View.VISIBLE : View.GONE); if (!show) load(); });
         list = new LinearLayout(this); list.setOrientation(LinearLayout.VERTICAL);
         col.addView(list);
-        String soc = android.os.Build.VERSION.SDK_INT >= 31 ? android.os.Build.SOC_MODEL : "?";
-        boolean ok = soc.equals("SM8475") || soc.equals("SM8450");
+        String soc = Compat.soc(); boolean ok = Compat.chipOk();
         info.setText((ok ? L.f("Чип %s · подходит (%s)", "Chip %s · supported (%s)", soc, Compat.archLabel()) : L.f("Чип %s · проверено только на Snapdragon 8 Gen 1 / 8+ Gen 1", "Chip %s · tested only on Snapdragon 8 Gen 1 / 8+ Gen 1", soc))
             + "\n" + L.f("Свободно %.1f ГБ", "Free %.1f GB", getFilesDir().getUsableSpace() / 1e9));
         if (downloading) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

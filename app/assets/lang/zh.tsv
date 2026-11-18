@@ -538,6 +538,7 @@ FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that foll
 Too large: at most %d patches together with the pictures	太大：加上图片后最多 %d 个 patch
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change; you can add up to two more reference pictures and refer to them in the prompt ("picture 1", "picture 2").	Mage-Flow-Edit-Turbo（Microsoft，4B，MIT 许可证）可根据提示词绘制图片并编辑照片，4 步完成，每张约 12 秒。文本编码器、ViT、Transformer 和 VAE 都在 NPU 上运行；下载约 8.7 GB。要编辑照片，请在“编辑照片”区域选择照片并描述要修改的内容。还可以再添加最多两张参考图片，并在提示词中引用它们（“图片 1”“图片 2”）。
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. The model works in windows, so there is no hard limit on the size: a picture, or an edit together with its pictures (each picture takes as many patches as the result), may have up to 24576 patches in all, for example 2048×2048 (about 3.5 minutes) or 1024×768 with three pictures. The bigger the size, the longer: the time grows about with the square of the patch count.	两边都是 16 的倍数，patch 数量（宽/16 × 高/16）必须能被 32 整除。模型按窗口计算，所以尺寸没有硬性上限：一张图片，或带有图片的编辑（每张图片占用与结果相同数量的 patch），总共最多可达 24576 个 patch，例如 2048×2048（约 3.5 分钟）或带三张图片的 1024×768。尺寸越大越慢，时间大致随 patch 数量的平方增长。
+The video is larger than 1920x1088: not supported	视频大于 1920x1088：不支持
 Save to gallery	保存到图库
 Remove from favourites	从收藏中移除
 Add to favourites	加入收藏
@@ -593,6 +594,7 @@ Choose a video from the app gallery	从应用图库选择视频
 Frame rate multiplier	帧率倍数
 Add frames	添加帧
 Cannot open the video: %s	无法打开视频：%s
+%d×%d: larger than 1920x1088, not supported	%d×%d：大于 1920x1088，不支持
 %d×%d, %d → %d fps, %d s of video · about %d min	%d×%d，%d → %d fps，视频 %d 秒 · 约 %d 分钟
 Choose a video first	请先选择一个视频
 The video is too large	视频太大
@@ -613,6 +615,7 @@ Encoding %s/%s	正在编码 %s/%s
 Restoring (DiT)…	正在修复（DiT）…
 Decoding %s/%s	正在解码 %s/%s
 More frames in a video (Upscale → Video)	增加视频帧数（放大 → 视频）
+In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1920x1088 work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	在菜单 → 放大 → 视频中，RIFE v4.6 网络（hzwer，MIT）会在你剪辑的每两帧之间绘制新帧：x2 或 x4，动作更流畅（每秒 12 → 24 或 48 帧）。它在 NPU 上运行，保留声音，结果存入图库。支持最大 1920x1088 的视频；每种尺寸会下载一个小网络（12–40 MB）。x4 时 3 秒高清视频约一分半钟，小尺寸快得多。硬切镜头不会插帧。画面尺寸不变，只是更流畅。
 Tags from a picture (photo button)	从图片获取标签（照片按钮）
 The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.	提示词输入框上方的图片按钮可选择一张照片，并用 WD EVA02 Tagger v3 模型（SmilingWolf，Apache-2.0）找出它的 Danbooru 标签：它们会替换提示词或追加到提示词中（用于 Anima）。模型在 NPU 上运行，约 3 秒，只需下载一次（674 MB）。阈值：普通标签 0.35 起，角色 0.85 起。不包含年龄分级。
 The video is larger than 1280x768 (720p): not supported	视频大于 1280x768（720p）：不支持
@@ -625,3 +628,5 @@ Install MiniMax-H3-Image first: the video model uses its text encoder.	请先安
 The model is distributed under the MiniMax-H3 Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	该模型按 MiniMax-H3 Community License Agreement 分发（许可文本会随文件一起下载）。不得在美国、欧盟、英国或韩国使用，其输出不得用于改进其他 AI 模型。大小：%s GB。是否下载？
 MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. It is downloaded from the Models screen after MiniMax-H3-Image: they share the text encoder. MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA（33B）可根据提示词以及可选的参考照片生成视频：照片中的人物、动物或物体会出现在视频里，而场景和动作来自提示词。22–90 帧，4 步（蒸馏的 turbo LoRA，无 CFG），无声音。在“模型”界面中于 MiniMax-H3-Image 之后下载：两者共用文本编码器。MiniMax H3 Community 许可：不适用于美国、欧盟、英国和韩国。
 A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed	扩散式放大器：画质最佳，速度较慢。在“放大”界面中选择。Apache 2.0  ·  ByteDance Seed
+The model did not load	模型未能加载
+Chip %s. It may not be supported.\n\n%s	芯片 %s。可能不受支持。\n\n%s

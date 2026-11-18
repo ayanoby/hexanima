@@ -215,7 +215,7 @@ static int vtcm_get(void) {
   compute_res_attr_t attr; HAP_compute_res_attr_init(&attr);
   HAP_compute_res_attr_set_vtcm_param(&attr, 8u << 20, 1); HAP_compute_res_attr_set_hmx_param(&attr, 1);
   g_ctx = HAP_compute_res_acquire(&attr, 5000000); if (!g_ctx) return -1;
-  g_vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr);
+  g_vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr); hmx_bias_setup(g_vt + (8u << 20) - 4096);
   g_et = (u16 *)(g_vt + VT_TAB); g_t2 = g_et + 32768; g_scr = (HVX_Vector *)(g_vt + VT_TAB + 262144);
   memcpy(g_et, g_et_h, 65536); memcpy(g_t2, g_t2_h, 65536);
   return 0;

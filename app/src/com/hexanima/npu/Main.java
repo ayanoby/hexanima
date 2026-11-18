@@ -112,7 +112,7 @@ public class Main extends Base {
     File lastFile;
     boolean customOpen;
 
-    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + "MEGA_STREAM=1 " + animaLoraEnv(); }
+    String mp() { return "MID=" + model + " MDIR=m_" + model + " IDLE=" + Settings.idleMin(this) * 60 + " " + "MEGA_STREAM=1 HEXARCH=" + Compat.dspArch() + " " + animaLoraEnv(); }
     String animaLoraEnv() {
         StringBuilder l = new StringBuilder();
         if (customTurboAnima()) l.append(AnimaLora.turboSrc(getFilesDir()).getPath()).append('*').append(String.format(java.util.Locale.US, "%.2f", prefs().getFloat("aturbo_str", 1f)));
@@ -1510,13 +1510,24 @@ public class Main extends Base {
         } else setModelUi(false, false, "");
     }
 
+    /** the text anima.sh left when the model failed to load (null = no error); shown instead of waiting forever */
+    String loadError() {
+        File f = new File(D, "load_error");
+        if (!f.exists()) return null;
+        String t; try { t = new String(Models.readBytes(f)).trim(); } catch (Exception e) { t = "?"; }
+        f.delete();
+        final String m = t;
+        ui.post(() -> new AlertDialog.Builder(this).setTitle(L.s("Модель не загрузилась", "The model did not load")).setMessage(L.f("Чип %s. Возможно, он не поддерживается.\n\n%s", "Chip %s. It may not be supported.\n\n%s", Compat.soc(), m)).setPositiveButton("OK", null).show());
+        return t;
+    }
+
     void toggleModel() {
         if (isMoss() || isQwen() || isMage() || isH3() || isKlein() || isLtx() || isR2v()) return;   // nothing to preload
         final boolean want = !loaded;
         setModelUi(loaded, true, want ? L.s("Загружаю модель…", "Loading the model…") : L.s("Выгружаю модель…", "Unloading the model…"));
         ex.submit(() -> {
             su("rm -f " + D + "/cancel; " + mp() + "sh " + D + "/anima.sh " + (want ? "load" : "stop") + " < /dev/null >/dev/null 2>&1", false);
-            loaded = want;
+            loaded = want && loadError() == null;
             setModelUi(loaded, false, "");
         });
     }
@@ -1704,6 +1715,7 @@ public class Main extends Base {
             setProgressUi(0, !animaLoraEnv().isEmpty() ? L.s("Подготавливаю LoRA… (один раз для этого набора)", "Preparing the LoRA… (once for this set)") : loaded ? L.s("Загружаю LoRA…", "Loading the LoRA…") : L.s("Загружаю модель…", "Loading the model…"), t0);
             su("rm -f " + D + "/cancel; " + mp() + "sh " + D + "/anima.sh load < /dev/null >/dev/null 2>&1", false);
             if (cancelled) return null;
+            if (loadError() != null) return null;
             loaded = true; servedSig = sig;
         }
         final String f = D + "/last.png";

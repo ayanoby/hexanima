@@ -40,3 +40,4 @@ mage/magerun/out/
 
 # built research binaries (the app ships them as jnilibs, from tools/stage_jnilibs.sh)
 seedvr2/svsr_s
+hexagon/mega/out_hyb/

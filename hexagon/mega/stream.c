@@ -12,6 +12,7 @@
 
 void hmx_acc(uint8_t *, uint32_t, uint8_t *, uint32_t);
 void hmx_store(uint8_t *, uint32_t);
+void hmx_bias_setup(uint8_t *);
 #define KCH 32
 
 static void vcopy(void *dst, const void *src, size_t bytes) {
@@ -37,7 +38,7 @@ int mega_stream(remote_handle64 h, int M, int K, int N, int mode, int64_t *us, i
   compute_res_attr_t attr; HAP_compute_res_attr_init(&attr);
   HAP_compute_res_attr_set_vtcm_param(&attr, 8u << 20, 1); HAP_compute_res_attr_set_hmx_param(&attr, 1);
   uint32_t ctx = HAP_compute_res_acquire(&attr, 100000); if (!ctx) { *rcout = -1; return 0; }
-  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr);
+  uint8_t *vt = (uint8_t *)HAP_compute_res_attr_get_vtcm_ptr(&attr); hmx_bias_setup(vt + (8u << 20) - 4096);
   uint8_t *A = vt, *W0 = vt + (size_t)M * K * 2, *W1 = W0 + panel, *O = W1 + panel;
   size_t total = panel * (nb / 2);
   uint8_t *ddr = (uint8_t *)memalign(128, total); if (!ddr) { *rcout = -4; HAP_compute_res_release(ctx); return 0; }

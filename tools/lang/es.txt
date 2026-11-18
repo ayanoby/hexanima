@@ -625,3 +625,8 @@
 627	El modelo se distribuye bajo la MiniMax-H3 Community License Agreement (el texto de la licencia se descarga con los archivos). No se puede usar en Estados Unidos, la Unión Europea, el Reino Unido ni Corea del Sur, y sus resultados no se pueden usar para mejorar otros modelos de IA. Tamaño: %s GB. ¿Descargar?
 628	MiniMax-H3 Ref2VA (33B) crea un vídeo a partir de un prompt y, opcionalmente, una foto de referencia: la persona, el animal o el objeto de la foto aparece en el vídeo, mientras que el entorno y el movimiento vienen del prompt. 22–90 fotogramas, 4 pasos (LoRA turbo destilada, sin CFG), sin sonido. Se descarga en la pantalla «Modelos» después de MiniMax-H3-Image: comparten el codificador de texto. Licencia MiniMax H3 Community: no para EE. UU., la UE, el Reino Unido y Corea.
 629	Un ampliador por difusión: la mejor calidad, más lento. Elígelo en la pantalla «Ampliar». Apache 2.0  ·  ByteDance Seed
+540	El vídeo es mayor que 1920x1088: no compatible
+596	%d×%d: mayor que 1920x1088, no compatible
+617	En el menú → Ampliar → Vídeo la red RIFE v4.6 (hzwer, MIT) dibuja fotogramas nuevos entre cada par de fotogramas de tu clip: x2 o x4, y el movimiento es más fluido (12 → 24 o 48 fotogramas por segundo). Funciona en la NPU, el sonido se conserva y el resultado va a la galería. Funcionan vídeos de hasta 1920x1088; para cada tamaño se descarga una red pequeña (12–40 MB). Alrededor de un minuto y medio para 3 segundos de vídeo HD a x4, mucho más rápido en tamaños pequeños. Los cortes bruscos no se interpolan. El tamaño de la imagen no cambia: solo mejora la fluidez.
+630	El modelo no se cargó
+631	Chip %s. Puede que no sea compatible.\n\n%s

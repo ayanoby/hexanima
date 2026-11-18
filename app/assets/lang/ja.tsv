@@ -538,6 +538,7 @@ FLUX.3 Image Klein (Black Forest Labs, 5.6B) is a photorealistic model that foll
 Too large: at most %d patches together with the pictures	大きすぎます：画像と合わせて最大%dパッチです
 Mage-Flow-Edit-Turbo (Microsoft, 4B, MIT license) draws pictures and edits photos by a prompt in 4 steps, about 12 seconds a picture. The text encoder, the ViT, the transformer and the VAE all run on the NPU; the download is about 8.7 GB. To edit a photo, pick it in the Edit a photo block and describe what to change; you can add up to two more reference pictures and refer to them in the prompt ("picture 1", "picture 2").	Mage-Flow-Edit-Turbo（Microsoft、4B、MITライセンス）は、プロンプトで画像を描き、写真を編集します。4ステップで1枚あたり約12秒。テキストエンコーダー、ViT、トランスフォーマー、VAEはすべてNPUで動作し、ダウンロードは約8.7 GBです。写真を編集するには「写真を編集」ブロックで写真を選び、変更したい内容を書いてください。また、参照画像をあと2枚まで追加し、プロンプトで「画像1」「画像2」のように指定できます。
 Both sides are multiples of 16 and the patch count (width/16 × height/16) is divisible by 32. The model works in windows, so there is no hard limit on the size: a picture, or an edit together with its pictures (each picture takes as many patches as the result), may have up to 24576 patches in all, for example 2048×2048 (about 3.5 minutes) or 1024×768 with three pictures. The bigger the size, the longer: the time grows about with the square of the patch count.	両辺は16の倍数で、パッチ数（幅/16 × 高さ/16）は32で割り切れる必要があります。モデルはウィンドウ単位で計算するため、サイズに厳密な上限はありません：画像1枚、または写真付きの編集（各写真は結果と同じ数のパッチを使います）は、合計で最大24576パッチまで可能です。たとえば2048×2048（約3.5分）や、写真3枚付きの1024×768です。サイズが大きいほど時間がかかり、時間はおおよそパッチ数の2乗に比例して増えます。
+The video is larger than 1920x1088: not supported	動画が1920x1088より大きいため、対応していません
 Save to gallery	ギャラリーに保存
 Remove from favourites	お気に入りから外す
 Add to favourites	お気に入りに追加
@@ -593,6 +594,7 @@ Choose a video from the app gallery	アプリのギャラリーから動画を�
 Frame rate multiplier	フレームレート倍率
 Add frames	フレームを追加
 Cannot open the video: %s	動画を開けません：%s
+%d×%d: larger than 1920x1088, not supported	%d×%d: 1920x1088より大きいため非対応
 %d×%d, %d → %d fps, %d s of video · about %d min	%d×%d、%d → %d fps、動画%d秒 · 約%d分
 Choose a video first	先に動画を選んでください
 The video is too large	動画が大きすぎます
@@ -613,6 +615,7 @@ Encoding %s/%s	エンコード中 %s/%s
 Restoring (DiT)…	復元中（DiT）…
 Decoding %s/%s	デコード中 %s/%s
 More frames in a video (Upscale → Video)	動画のフレームを増やす（拡大 → 動画）
+In the menu → Upscale → Video the RIFE v4.6 network (hzwer, MIT) draws new frames between every pair of frames of your clip: x2 or x4, so motion gets smoother (12 → 24 or 48 frames per second). It runs on the NPU, the sound is kept and the result goes to the gallery. Videos up to 1920x1088 work; a small network (12-40 MB) is downloaded for each size. About a minute and a half for 3 seconds of HD video at x4, several times faster for small sizes. Hard cuts are not interpolated. The picture size does not change: only the smoothness improves.	メニュー → 拡大 → 動画で、RIFE v4.6ネットワーク（hzwer、MIT）がクリップの各フレームの間に新しいフレームを描き、x2またはx4で動きが滑らかになります（毎秒12 → 24または48フレーム）。NPUで動作し、音声は保持され、結果はギャラリーに入ります。1920x1088までの動画に対応し、サイズごとに小さなネットワーク（12〜40 MB）をダウンロードします。x4でHD動画3秒におよそ1分半、小さいサイズならずっと速くなります。急なカットは補間されません。画像サイズは変わらず、滑らかさだけが向上します。
 Tags from a picture (photo button)	画像からタグ（写真ボタン）
 The picture button above the prompt field picks a photo and finds its Danbooru tags with the WD EVA02 Tagger v3 model (SmilingWolf, Apache-2.0): they replace the prompt or are added to it (for Anima). The model runs on the NPU, about 3 seconds, and is downloaded once (674 MB). Thresholds: normal tags from 0.35, characters from 0.85. Ratings are not included.	プロンプト欄の上の画像ボタンで写真を選び、WD EVA02 Tagger v3モデル（SmilingWolf、Apache-2.0）でDanbooruタグを見つけます：プロンプトを置き換えるか、追加されます（Anima用）。モデルはNPUで動作し、約3秒で、ダウンロードは一度だけです（674 MB）。しきい値：通常タグは0.35以上、キャラクターは0.85以上。年齢レーティングは含まれません。
 The video is larger than 1280x768 (720p): not supported	動画が1280x768（720p）を超えています：非対応
@@ -625,3 +628,5 @@ Install MiniMax-H3-Image first: the video model uses its text encoder.	先にMin
 The model is distributed under the MiniMax-H3 Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?	このモデルはMiniMax-H3 Community License Agreementの下で配布されています（ライセンス本文はファイルと一緒にダウンロードされます）。米国、欧州連合、英国、韓国では使用できず、出力を他のAIモデルの改良に使うことはできません。サイズ：%s GB。ダウンロードしますか？
 MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference photo: the person, animal or object in the photo appears in the video while the setting and the motion come from the prompt. 22–90 frames, 4 steps (distilled turbo LoRA, no CFG), no sound. It is downloaded from the Models screen after MiniMax-H3-Image: they share the text encoder. MiniMax H3 Community licence: not for the US, EU, UK and Korea.	MiniMax-H3 Ref2VA（33B）は、プロンプトと、任意で参照写真から動画を作ります：写真の人物・動物・物体が動画に登場し、背景や動きはプロンプトから決まります。22〜90フレーム、4ステップ（蒸留したturbo LoRA、CFGなし）、音声なし。「モデル」画面でMiniMax-H3-Imageの後にダウンロードされます：テキストエンコーダーを共有します。MiniMax H3 Communityライセンス：米国、EU、英国、韓国では使用不可。
 A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed	拡散モデルによる拡大：最高画質、やや低速。「拡大」画面で選びます。Apache 2.0  ·  ByteDance Seed
+The model did not load	モデルを読み込めませんでした
+Chip %s. It may not be supported.\n\n%s	チップ %s。対応していない可能性があります。\n\n%s

@@ -8,11 +8,14 @@ import java.util.List;
 
 /** Can this phone run the models? only Hexagon V69 (Snapdragon 8 Gen 1 / 8+ Gen 1) is supported. */
 final class Compat {
+    /** Snapdragon 8 Elite (V79): the Anima kernels work, but big pictures come out with noise; switched off until that is fixed (the hybrid DSP skel is hexagon/mega/build_hyb.sh) */
+    static final boolean V79_ENABLED = false;
     static String soc() { return Build.VERSION.SDK_INT >= 31 ? Build.SOC_MODEL : Build.HARDWARE; }
     /** Hexagon generation of the NPU by SoC model ("" = unknown): the QNN contexts (text encoder, VAE) are compiled per generation */
     static String dspArch() {
         String s = soc();
         if (s.equals("SM8475") || s.equals("SM8450")) return "v69";
+        if (V79_ENABLED && s.equals("SM8750")) return "v79";   // Snapdragon 8 Elite (Galaxy S25): experimental, the DSP skel with the v73+ HMX drain and the V79 QNN contexts
         return "";
     }
     static boolean chipOk() { return !dspArch().isEmpty(); }

@@ -54,7 +54,7 @@ public class Viewer extends Base {
         if (on && vv != null && vv.isPlaying()) vH.postDelayed(vHide, 1000);
     }
     void vToggle() { if (vv == null) return; if (vv.isPlaying()) vv.pause(); else vv.start(); setBtnIcon(vPlay, vv.isPlaying() ? "ic_pause" : "ic_play"); showControls(true); }
-    /** plays the clip of a video entry in this screen: big play / pause button in the middle, time and a seek bar at the bottom, tap shows / hides them (they hide by themselves while playing); loops; the cross or Back closes it */
+    /** plays the clip of a video entry in this screen (a swipe down closes the viewer, like for a picture): big play / pause button in the middle, time and a seek bar at the bottom, tap shows / hides them (they hide by themselves while playing); loops; the cross or Back closes it */
     void playVideo(File png) {
         final File vid = Gallery.videoOf(png); if (vid == null || videoBox != null) return; if (vBig != null) vBig.setVisibility(View.GONE);
         videoBox = new FrameLayout(this); videoBox.setBackgroundColor(Color.BLACK); videoBox.setClickable(true);
@@ -73,7 +73,24 @@ public class Viewer extends Base {
         FrameLayout.LayoutParams bp = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM); bp.setMargins(dp(12), 0, dp(12), dp(36)); videoBox.addView(bar, bp);
         TextView x = text("✕", 22, Color.WHITE, false); x.setGravity(Gravity.CENTER); x.setBackground(bg(0x66000000, 24)); x.setOnClickListener(v -> closeVideo()); vClose = x;
         FrameLayout.LayoutParams xp = new FrameLayout.LayoutParams(dp(48), dp(48), Gravity.TOP | Gravity.END); xp.setMargins(0, dp(40), dp(12), 0); videoBox.addView(x, xp);
-        videoBox.setOnClickListener(v -> showControls(!vCtl));
+        final float[] st = new float[3];   // down y, down x, 1 = a swipe down is under way
+        final float slop = android.view.ViewConfiguration.get(this).getScaledTouchSlop();
+        videoBox.setOnTouchListener((v, e) -> {   // tap shows / hides the controls, a swipe down closes the video
+            float dy = e.getRawY() - st[0], dx = e.getRawX() - st[1], H = Math.max(1, videoBox.getHeight());
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN: st[0] = e.getRawY(); st[1] = e.getRawX(); st[2] = 0; return true;
+                case MotionEvent.ACTION_MOVE:
+                    if (st[2] == 0 && dy > slop && dy > Math.abs(dx) * 1.3f) st[2] = 1;
+                    if (st[2] == 1) { videoBox.setTranslationY(Math.max(0, dy)); float a = 1 - Math.min(1f, dy / (H / 3f)); for (View c : new View[]{vPlay, vBar, vClose}) c.setAlpha(Math.min(c.getAlpha(), a)); }
+                    return true;
+                case MotionEvent.ACTION_UP: case MotionEvent.ACTION_CANCEL:
+                    if (st[2] == 1) {
+                        if (dy > H / 6f && e.getActionMasked() == MotionEvent.ACTION_UP) videoBox.animate().translationY(H).setDuration(160).withEndAction(() -> { closeVideo(); finish(); }).start();   // like a picture: the whole viewer closes, back to the list
+                        else { videoBox.animate().translationY(0).setDuration(140).start(); showControls(vCtl); }
+                    } else if (e.getActionMasked() == MotionEvent.ACTION_UP && Math.abs(dy) < slop && Math.abs(dx) < slop) showControls(!vCtl);
+                    return true;
+            }
+            return true; });
         vv.setOnPreparedListener(mp -> { mp.setLooping(true); vSeek.setMax(vv.getDuration()); vTot.setText(clock(vv.getDuration())); vv.start(); setBtnIcon(vPlay, "ic_pause"); showControls(true); vH.post(vTick); });
         vv.setOnErrorListener((mp, w, e) -> { Toast.makeText(this, L.s("Не удалось воспроизвести видео", "Cannot play the video"), Toast.LENGTH_SHORT).show(); closeVideo(); return true; });
         rootFl.addView(videoBox, new FrameLayout.LayoutParams(-1, -1)); vCtl = true;
@@ -100,6 +117,8 @@ public class Viewer extends Base {
         FrameLayout root = rootFl = new FrameLayout(this); root.setBackgroundColor(Color.BLACK);
         pager = new Pager(this); root.addView(pager, new FrameLayout.LayoutParams(-1, -1));
         pager.onTap = this::toggleBars; pager.onPage = i -> { idx = i; refresh(); };
+        pager.onDismiss = this::finish;   // swipe down closes the picture
+        pager.onDim = pr -> { float a = 1 - pr; top.setAlpha(a); bottom.setAlpha(a); moreB.setAlpha(a); vBig.setAlpha(a); };
 
         top = new LinearLayout(this); top.setGravity(Gravity.CENTER_VERTICAL); top.setBackgroundColor(0x99000000); top.setPadding(dp(8), dp(6), dp(16), dp(6));
         Button close = button("✕", 0x00000000, Color.WHITE); close.setTextSize(20); close.setOnClickListener(v -> finish());
@@ -191,7 +210,9 @@ public class Viewer extends Base {
         int cur;
         float dragX, scale = 1, tx, ty;
         boolean flung, anim;
-        Runnable onTap; Page onPage;
+        Runnable onTap, onDismiss; Page onPage; java.util.function.Consumer<Float> onDim;
+        int lock; float accX, accY, dismissY;   // lock: 0 = not decided yet, 1 = horizontal (pages), 2 = vertical (swipe down to close)
+        final float slop;
         final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
         final LruCache<String, Bitmap> cache = new LruCache<>(5);
         final java.util.HashSet<String> loading = new java.util.HashSet<>();
@@ -202,6 +223,7 @@ public class Viewer extends Base {
 
         Pager(Context c) {
             super(c);
+            slop = android.view.ViewConfiguration.get(c).getScaledTouchSlop();
             sg = new ScaleGestureDetector(c, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 @Override public boolean onScale(ScaleGestureDetector d) {
                     float ns = Math.max(1f, Math.min(6f, scale * d.getScaleFactor()));
@@ -214,7 +236,7 @@ public class Viewer extends Base {
                 @Override public boolean onSingleTapConfirmed(MotionEvent e) { if (onTap != null) onTap.run(); return true; }
                 @Override public boolean onDoubleTap(MotionEvent e) { zoomTo(scale > 1.05f ? 1f : 2.5f, e.getX(), e.getY()); return true; }
                 @Override public boolean onScroll(MotionEvent a, MotionEvent b, float dx, float dy) { if (!sg.isInProgress()) drag(dx, dy); return true; }
-                @Override public boolean onFling(MotionEvent a, MotionEvent b, float vx, float vy) { flung = true; settle(vx); return true; }
+                @Override public boolean onFling(MotionEvent a, MotionEvent b, float vx, float vy) { flung = true; if (lock == 2) endDismiss(vy); else settle(vx); return true; }
             });
         }
 
@@ -242,7 +264,27 @@ public class Viewer extends Base {
             tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty));
         }
 
+        void dim() { if (onDim != null) onDim.accept(Math.min(1f, dismissY / (getHeight() / 3f))); }
+
+        /** finger lifted after a swipe down: close when it went far enough or fast, otherwise slide back */
+        void endDismiss(float vy) {
+            final boolean go = dismissY > getHeight() / 6f || vy > 1500; anim = true;
+            ValueAnimator a = ValueAnimator.ofFloat(dismissY, go ? getHeight() : 0); a.setDuration(go ? 170 : 140);
+            a.addUpdateListener(v -> { dismissY = (float) v.getAnimatedValue(); dim(); invalidate(); });
+            a.addListener(new android.animation.AnimatorListenerAdapter() { @Override public void onAnimationEnd(android.animation.Animator x) {
+                anim = false; lock = 0;
+                if (go && onDismiss != null) onDismiss.run(); else { dismissY = 0; dim(); invalidate(); } } });
+            a.start();
+        }
+
         void drag(float dx, float dy) {
+            if (lock == 2) { dismissY = Math.max(0, dismissY - dy); dim(); invalidate(); return; }
+            if (lock == 0 && scale <= 1.01f && dragX == 0) {   // a picture that is not zoomed: a mostly vertical drag downwards closes it, anything else turns the pages
+                accX += dx; accY += dy;
+                if (Math.max(Math.abs(accX), Math.abs(accY)) < slop) return;
+                if (accY < 0 && -accY > Math.abs(accX) * 1.3f) { lock = 2; dismissY = -accY; dim(); invalidate(); return; }
+                lock = 1; dx = accX; dy = accY;   // replay what was held back while deciding
+            }
             if (scale > 1.01f && dragX == 0) {
                 Bitmap b = cache.get(files.get(cur).getPath()); float mx = 0;
                 if (b != null) mx = Math.max(0, (b.getWidth() * fit(b) * scale - getWidth()) / 2);
@@ -284,9 +326,10 @@ public class Viewer extends Base {
         @Override public boolean onTouchEvent(MotionEvent e) {
             if (anim) return true;
             int act = e.getActionMasked();
-            if (act == MotionEvent.ACTION_DOWN) flung = false;
+            if (act == MotionEvent.ACTION_DOWN) { flung = false; lock = 0; accX = accY = 0; }
             sg.onTouchEvent(e);
             if (!sg.isInProgress()) gd.onTouchEvent(e);
+            if ((act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL) && !flung && lock == 2) { endDismiss(0); return true; }
             if ((act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL) && !flung) {
                 if (scale < 1f) { scale = 1; }
                 if (dragX != 0) settle(0);
@@ -299,7 +342,7 @@ public class Viewer extends Base {
             for (int i = Math.max(0, cur - 1); i <= Math.min(files.size() - 1, cur + 1); i++) {
                 Bitmap b = get(i); if (b == null) continue;
                 float s = fit(b) * (i == cur ? scale : 1f);
-                float x = (W - b.getWidth() * s) / 2 + (i == cur ? tx : 0) + (i - cur) * (W + gap) + dragX, y = (H - b.getHeight() * s) / 2 + (i == cur ? ty : 0);
+                float x = (W - b.getWidth() * s) / 2 + (i == cur ? tx : 0) + (i - cur) * (W + gap) + dragX, y = (H - b.getHeight() * s) / 2 + (i == cur ? ty + dismissY : 0);
                 c.save(); c.translate(x, y); c.scale(s, s); c.drawBitmap(b, 0, 0, paint); c.restore();
             }
         }

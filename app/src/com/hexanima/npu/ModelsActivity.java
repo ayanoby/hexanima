@@ -221,7 +221,7 @@ public class ModelsActivity extends Base {
 
     void addEntry(final Entry e, final String base, final boolean needCommonAnima) {
         boolean anyHave = false, allHave = true, busyThis = false; long minSize = Long.MAX_VALUE;
-        for (Models.Item it : e.v) { boolean h = store.modelInstalled(it.id); anyHave |= h; allHave &= h; busyThis |= downloading && it.id.equals(dlId); minSize = Math.min(minSize, it.size); }
+        for (Models.Item it : e.v) { boolean h = store.modelInstalled(it.id); anyHave |= h; allHave &= h; busyThis |= downloading && it.id.equals(dlId); minSize = Math.min(minSize, dlSize(it)); }
         final boolean open = openE.contains(e.key) || busyThis;
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.VERTICAL); c.setBackground(bg(CARD, 14)); c.setPadding(dp(16), dp(12), dp(16), dp(12));
         Models.Item f = e.v.get(0);
@@ -238,13 +238,13 @@ public class ModelsActivity extends Base {
                 final Models.Item it = e.v.get(k); final boolean have = store.modelInstalled(it.id), busy = downloading && it.id.equals(dlId);
                 final boolean needCommon = needCommonAnima && it.anima();
                 LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
-                vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(it.size)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+                vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(dlSize(it))), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
                 if (have && !busy) {
                     if (ModelIO.supported(it.id)) { TextView ex = text(L.s("Экспорт", "Export"), 14, ACC, false); ex.setPadding(dp(12), dp(4), dp(12), dp(4)); ex.setOnClickListener(v -> { if (downloading) return; pendingExport = it; startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_EXPORT); }); vr.addView(ex); }
                     TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4));
                     del.setOnClickListener(v -> { if (downloading) return; confirmDelete(it.name, () -> { store.delete(it.id); deleted = it.id; render(); }); }); vr.addView(del);
                 } else if (!busy) {
-                    Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", gb(it.size + (needCommon ? store.commonSize : 0))), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+                    Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", gb(dlSize(it) + (needCommon ? store.commonSize : 0))), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
                     bt.setOnClickListener(v -> start(base, it, needCommon)); vr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
                 }
                 c.addView(vr);
@@ -455,6 +455,9 @@ public class ModelsActivity extends Base {
         builder().setMessage(L.f("Удалить «%s»? Файлы придётся скачать заново.", "Delete “%s”? The files have to be downloaded again.", what))
             .setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton(L.s("Удалить", "Delete"), (d, w) -> doIt.run()).show();
     }
+
+    /** what a download of this model fetches: Ref2VA brings the MiniMax-H3 text encoder when MiniMax-H3-Image is not installed */
+    long dlSize(Models.Item it) { return it.size + (it.r2v && !R2v.teInstalled(getFilesDir()) ? Models.TE_BYTES : 0); }
 
     boolean hasAnima() { for (Models.Item it : items) if (it.anima()) return true; return false; }
 

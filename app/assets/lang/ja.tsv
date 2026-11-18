@@ -633,3 +633,8 @@ Chip %s. It may not be supported.\n\n%s	チップ %s。対応していない可�
 No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	インターネットに接続されていません。保存済みのカタログを表示しています。ダウンロードはできませんが、モデルは削除できます。
 The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	サイズにはMiniMax-H3のテキストエンコーダー（%s GB）が含まれ、動画モデルと一緒にダウンロードされます。MiniMax-H3-Image全体は不要です。
 The MiniMax-H3-Image catalog entry is not available	MiniMax-H3-Imageのカタログ項目を利用できません
+Stop the generation? The progress is lost and the model unloads.	生成を停止しますか？進行状況は失われ、モデルはアンロードされます。
+Keep going	続ける
+Tags from a picture (WD Tagger)	画像からタグ（WD Tagger）
+Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	NPUで画像からプロンプト用のDanbooruタグを見つけます。約3秒。ボタンはプロンプト欄の隣にあります。Apache 2.0  ·  SmilingWolf、WD EVA02-Large Tagger v3
+Delete “%s”? The files have to be downloaded again.	「%s」を削除しますか？ファイルは再ダウンロードが必要です。

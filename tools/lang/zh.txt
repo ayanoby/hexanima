@@ -633,3 +633,8 @@
 632	没有网络：显示已保存的目录。无法下载，但可以删除模型。
 633	大小包含 MiniMax-H3 文本编码器（%s GB），它会随视频模型一起下载：不需要整个 MiniMax-H3-Image。
 634	MiniMax-H3-Image 的目录条目不可用
+635	停止生成？进度将丢失，模型将卸载。
+636	继续
+637	从图片提取标签（WD Tagger）
+638	在 NPU 上根据图片找出用于提示词的 Danbooru 标签，约 3 秒。按钮在提示词输入框旁边。Apache 2.0  ·  SmilingWolf，WD EVA02-Large Tagger v3
+639	删除“%s”？文件需要重新下载。

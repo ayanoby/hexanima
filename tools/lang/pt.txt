@@ -633,3 +633,8 @@
 632	Sem conexão com a internet: o catálogo salvo é exibido. Não é possível baixar, mas é possível excluir modelos.
 633	O tamanho inclui o codificador de texto do MiniMax-H3 (%s GB), baixado com o modelo de vídeo: não é preciso todo o MiniMax-H3-Image.
 634	A entrada do catálogo do MiniMax-H3-Image não está disponível
+635	Parar a geração? O progresso será perdido e o modelo será descarregado.
+636	Continuar
+637	Tags a partir de uma imagem (WD Tagger)
+638	Encontra na NPU tags Danbooru para um prompt a partir de uma imagem, cerca de 3 segundos. O botão fica ao lado do campo do prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
+639	Excluir “%s”? Os arquivos terão de ser baixados de novo.

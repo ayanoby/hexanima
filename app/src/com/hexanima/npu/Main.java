@@ -443,7 +443,7 @@ public class Main extends Base {
         bottom.addView(status);
         genBtn = button("", ACC, ON_ACC);
         genBtn.setTextSize(16);
-        genBtn.setOnClickListener(v -> { if (busy) cancel(); else generate(false); });
+        genBtn.setOnClickListener(v -> { if (busy) confirmCancel(); else generate(false); });
         LinearLayout genRow = new LinearLayout(this);
         genRow.addView(genBtn, new LinearLayout.LayoutParams(0, dp(52), 1));
         // pictures per run: one icon next to Generate with the number on it; a tap opens − / + and a typed number
@@ -1581,6 +1581,13 @@ public class Main extends Base {
     static String q(String s) { return "'" + s.replace("'", "'\\''") + "'"; }
 
     // ---- generation ---------------------------------------------------------------------------
+    /** a tap on Stop during a long run is easy to make by accident: ask first */
+    void confirmCancel() {
+        if (!busy || cancelled) return;
+        new AlertDialog.Builder(this).setMessage(L.s("Остановить генерацию? Прогресс будет потерян, модель выгрузится.", "Stop the generation? The progress is lost and the model unloads."))
+            .setNegativeButton(L.s("Продолжить", "Keep going"), null).setPositiveButton(L.s("Остановить", "Stop"), (d, w) -> cancel()).show();
+    }
+
     /** Stop: the server is stopped (the model unloads; the next picture reloads it in ~5 s), anima.sh sees the cancel marker and leaves its waiting loops */
     void cancel() {
         if (!busy || cancelled) return;

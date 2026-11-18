@@ -633,3 +633,8 @@
 632	Tidak ada internet: katalog tersimpan ditampilkan. Unduhan tidak tersedia, model bisa dihapus.
 633	Ukuran sudah termasuk encoder teks MiniMax-H3 (%s GB) yang diunduh bersama model video: seluruh MiniMax-H3-Image tidak diperlukan.
 634	Entri katalog MiniMax-H3-Image tidak tersedia
+635	Hentikan pembuatan? Kemajuan hilang dan model dibongkar.
+636	Lanjutkan
+637	Tag dari gambar (WD Tagger)
+638	Menemukan tag Danbooru untuk prompt dari sebuah gambar di NPU, sekitar 3 detik. Tombolnya ada di samping kolom prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
+639	Hapus “%s”? File harus diunduh ulang.

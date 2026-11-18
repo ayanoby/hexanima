@@ -633,3 +633,8 @@ Chip %s. It may not be supported.\n\n%s	Chip %s. Có thể không được hỗ 
 No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	Không có internet: đang hiển thị danh mục đã lưu. Không thể tải xuống, nhưng có thể xóa mô hình.
 The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	Dung lượng đã gồm bộ mã hóa văn bản MiniMax-H3 (%s GB), được tải cùng mô hình video: không cần toàn bộ MiniMax-H3-Image.
 The MiniMax-H3-Image catalog entry is not available	Mục danh mục MiniMax-H3-Image không khả dụng
+Stop the generation? The progress is lost and the model unloads.	Dừng quá trình tạo? Tiến trình sẽ mất và mô hình bị gỡ khỏi bộ nhớ.
+Keep going	Tiếp tục
+Tags from a picture (WD Tagger)	Thẻ từ một ảnh (WD Tagger)
+Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	Tìm thẻ Danbooru cho prompt từ một ảnh trên NPU, khoảng 3 giây. Nút nằm cạnh ô prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
+Delete “%s”? The files have to be downloaded again.	Xóa “%s”? Các tệp sẽ phải tải lại.

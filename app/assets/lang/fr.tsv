@@ -633,3 +633,8 @@ Chip %s. It may not be supported.\n\n%s	Puce %s. Elle n'est peut-être pas prise
 No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	Pas de connexion internet : le catalogue enregistré est affiché. Les téléchargements sont impossibles, les modèles peuvent être supprimés.
 The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	La taille inclut l'encodeur de texte MiniMax-H3 (%s Go), téléchargé avec le modèle vidéo : tout MiniMax-H3-Image n'est pas nécessaire.
 The MiniMax-H3-Image catalog entry is not available	L'entrée du catalogue de MiniMax-H3-Image n'est pas disponible
+Stop the generation? The progress is lost and the model unloads.	Arrêter la génération ? La progression sera perdue et le modèle déchargé.
+Keep going	Continuer
+Tags from a picture (WD Tagger)	Tags à partir d'une image (WD Tagger)
+Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3	Trouve sur le NPU des tags Danbooru pour un prompt à partir d'une image, environ 3 secondes. Le bouton est à côté du champ du prompt. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
+Delete “%s”? The files have to be downloaded again.	Supprimer « %s » ? Les fichiers devront être retéléchargés.

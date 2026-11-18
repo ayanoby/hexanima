@@ -633,3 +633,8 @@
 632	İnternet bağlantısı yok: kayıtlı katalog gösteriliyor. İndirme yapılamaz, modeller silinebilir.
 633	Boyuta MiniMax-H3 metin kodlayıcısı (%s GB) dahildir ve video modeliyle birlikte indirilir: MiniMax-H3-Image'in tamamı gerekmez.
 634	MiniMax-H3-Image katalog girdisi kullanılamıyor
+635	Üretim durdurulsun mu? İlerleme kaybolur, model boşaltılır.
+636	Devam et
+637	Resimden etiketler (WD Tagger)
+638	NPU üzerinde bir resimden istem için Danbooru etiketlerini bulur, yaklaşık 3 saniye. Düğme istem alanının yanındadır. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3
+639	“%s” silinsin mi? Dosyaların yeniden indirilmesi gerekir.

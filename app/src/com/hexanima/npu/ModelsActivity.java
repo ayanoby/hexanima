@@ -172,6 +172,7 @@ public class ModelsActivity extends Base {
             }
         }
         if (q.isEmpty() || "upscaler real-esrgan апскейлер".contains(q)) { addUpscale(); any = true; }
+        if (q.isEmpty() || "tagger wd теги tags картинка в теги".contains(q)) { addTagger(); any = true; }
         if (items.isEmpty()) list.addView(text(L.s("Каталог пуст", "The catalog is empty"), 13, DIM, false));
         else if (!any) list.addView(text(L.s("Ничего не найдено", "Nothing found"), 14, DIM, false));
         else if (!store.commonInstalled() && hasAnima()) { TextView n = text(L.f("К первой модели Anima добавятся общие файлы (%s ГБ): текстовый энкодер и VAE. Они качаются один раз.", "The first Anima model also fetches the shared files (%s GB): text encoder and VAE, once.", gb(store.commonSize)), 12, DIM, false); n.setPadding(dp(2), dp(12), 0, 0); list.addView(n); }
@@ -199,7 +200,7 @@ public class ModelsActivity extends Base {
                 vr.addView(text((e.lbl.get(k).isEmpty() ? L.s("Модель", "Model") : e.lbl.get(k)) + "   " + L.f("%s ГБ", "%s GB", gb(it.size)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
                 if (have && !busy) {
                     TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4));
-                    del.setOnClickListener(v -> { if (downloading) return; store.delete(it.id); deleted = it.id; render(); }); vr.addView(del);
+                    del.setOnClickListener(v -> { if (downloading) return; confirmDelete(it.name, () -> { store.delete(it.id); deleted = it.id; render(); }); }); vr.addView(del);
                 } else if (!busy) {
                     Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", gb(it.size + (needCommon ? store.commonSize : 0))), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
                     bt.setOnClickListener(v -> start(base, it, needCommon)); vr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
@@ -291,7 +292,7 @@ public class ModelsActivity extends Base {
             final String id = anime ? "up-anime" : "up-photo"; final boolean have = Upscale.has(getFilesDir(), anime), busy = downloading && id.equals(dlId);
             LinearLayout vr = new LinearLayout(this); vr.setGravity(android.view.Gravity.CENTER_VERTICAL); vr.setPadding(0, dp(10), 0, 0);
             vr.addView(text((anime ? L.s("Аниме", "Anime") : L.s("Фото", "Photo")) + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", Upscale.size(anime) / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
-            if (have && !busy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; Upscale.delete(getFilesDir(), anime); render(); }); vr.addView(del); }
+            if (have && !busy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; confirmDelete(anime ? "Real-ESRGAN (anime)" : "Real-ESRGAN (photo)", () -> { Upscale.delete(getFilesDir(), anime); render(); }); }); vr.addView(del); }
             else if (!busy) {
                 Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", String.format("%.2f", Upscale.size(anime) / 1e9)), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
                 bt.setOnClickListener(v -> startUp(anime)); vr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
@@ -313,7 +314,7 @@ public class ModelsActivity extends Base {
         final boolean shave = SeedVr.has(getFilesDir()), sbusy = downloading && "up-seedvr".equals(dlId);
         LinearLayout sr = new LinearLayout(this); sr.setGravity(android.view.Gravity.CENTER_VERTICAL); sr.setPadding(0, dp(10), 0, 0);
         sr.addView(text(L.s("Модель", "Model") + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", SeedVr.SIZE / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
-        if (shave && !sbusy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; Models.deleteTree(SeedVr.dir(getFilesDir())); render(); }); sr.addView(del); }
+        if (shave && !sbusy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; confirmDelete("SeedVR2", () -> { Models.deleteTree(SeedVr.dir(getFilesDir())); render(); }); }); sr.addView(del); }
         else if (!sbusy) {
             Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", String.format("%.2f", SeedVr.SIZE / 1e9)), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
             bt.setOnClickListener(v -> startSeed()); sr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
@@ -327,6 +328,48 @@ public class ModelsActivity extends Base {
             TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); sc.addView(x);
         }
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(-1, -2); sl.bottomMargin = dp(8); list.addView(sc, sl);
+    }
+
+    /** WD EVA02 Tagger (picture -> tags): one file, also offered by the tag button of the main screen the first time it is used */
+    void addTagger() {
+        LinearLayout tc = new LinearLayout(this); tc.setOrientation(LinearLayout.VERTICAL); tc.setBackground(bg(CARD, 14)); tc.setPadding(dp(16), dp(12), dp(16), dp(12));
+        tc.addView(text(L.s("Теги по картинке (WD Tagger)", "Tags from a picture (WD Tagger)"), 16, TXT, true));
+        TextView tm = text(L.s("Определяет по картинке теги Danbooru для промпта на NPU, около 3 секунд. Кнопка рядом с полем промпта. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3", "Finds Danbooru tags for a prompt from a picture on the NPU, about 3 seconds. The button is next to the prompt field. Apache 2.0  ·  SmilingWolf, WD EVA02-Large Tagger v3"), 13, DIM, false); tm.setPadding(0, dp(3), 0, dp(2)); tc.addView(tm);
+        final boolean thave = Tagger.has(getFilesDir()), tbusy = downloading && "tagger".equals(dlId);
+        LinearLayout tr = new LinearLayout(this); tr.setGravity(android.view.Gravity.CENTER_VERTICAL); tr.setPadding(0, dp(10), 0, 0);
+        tr.addView(text(L.s("Модель", "Model") + "   " + L.f("%s ГБ", "%s GB", String.format("%.2f", Tagger.SIZE / 1e9)), 14, TXT, false), new LinearLayout.LayoutParams(0, -2, 1));
+        if (thave && !tbusy) { TextView del = text(L.s("Удалить", "Delete"), 14, BAD, false); del.setPadding(dp(12), dp(4), 0, dp(4)); del.setOnClickListener(v -> { if (downloading) return; confirmDelete("WD Tagger", () -> { Tagger.delete(getFilesDir()); render(); }); }); tr.addView(del); }
+        else if (!tbusy) {
+            Button bt = button(L.f("Скачать  %s ГБ", "Download  %s GB", String.format("%.2f", Tagger.SIZE / 1e9)), ACC, ON_ACC); bt.setTextSize(13); bt.setPadding(dp(14), 0, dp(14), 0); bt.setEnabled(!downloading); bt.setAlpha(downloading ? .5f : 1f);
+            bt.setOnClickListener(v -> startTagger()); tr.addView(bt, new LinearLayout.LayoutParams(-2, dp(36)));
+        }
+        tc.addView(tr);
+        if (tbusy) {
+            ProgressBar pb = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); pb.setMax(1000);
+            pb.setProgressTintList(android.content.res.ColorStateList.valueOf(ACC)); pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(LINE));
+            LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(-1, dp(3)); pl.topMargin = dp(10); tc.addView(pb, pl); bars.put("tagger", pb);
+            TextView tv = text(dlMsg, 12, DIM, false); tv.setPadding(0, dp(6), 0, 0); tc.addView(tv); msgs.put("tagger", tv);
+            TextView x = text(L.s("Отменить", "Cancel"), 14, BAD, false); x.setPadding(0, dp(8), 0, dp(2)); x.setOnClickListener(v -> cancel.set(true)); tc.addView(x);
+        }
+        LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(-1, -2); tl.bottomMargin = dp(8); list.addView(tc, tl);
+    }
+
+    void startTagger() {
+        if (downloading) return;
+        long need = Tagger.SIZE; if (getFilesDir().getUsableSpace() < need + 100_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(need)), Toast.LENGTH_LONG).show(); return; }
+        downloading = true; dlId = "tagger"; dlDone = 0; dlTotal = need; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);
+        final android.content.Context app = getApplicationContext();
+        app.startForegroundService(new Intent(app, DownloadService.class));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        render();
+        new Thread(() -> {
+            String err = null;
+            try { Tagger.download(app, n -> { dlDone = n; dlMsg = L.f("%s / %s ГБ", "%s / %s GB", String.format("%.2f", n / 1e9), String.format("%.2f", Tagger.SIZE / 1e9)); }, cancel); }
+            catch (java.io.InterruptedIOException e) { err = L.s("Загрузка отменена: можно продолжить", "Cancelled: you can resume"); }
+            catch (Exception e) { err = L.f("Ошибка: %s", "Error: %s", e.getMessage()); }
+            final String msg = err; downloading = false; DownloadService.stop(app);
+            ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); render(); });
+        }).start();
     }
 
     void startSeed() {
@@ -363,6 +406,12 @@ public class ModelsActivity extends Base {
             final String msg = err; downloading = false; DownloadService.stop(app);
             ui.post(() -> { if (msg != null) Toast.makeText(app, msg, Toast.LENGTH_LONG).show(); render(); });
         }).start();
+    }
+
+    /** deleting tens of GB is a download away from undone: ask first */
+    void confirmDelete(String what, Runnable doIt) {
+        builder().setMessage(L.f("Удалить «%s»? Файлы придётся скачать заново.", "Delete “%s”? The files have to be downloaded again.", what))
+            .setNegativeButton(L.s("Отмена", "Cancel"), null).setPositiveButton(L.s("Удалить", "Delete"), (d, w) -> doIt.run()).show();
     }
 
     boolean hasAnima() { for (Models.Item it : items) if (it.anima()) return true; return false; }

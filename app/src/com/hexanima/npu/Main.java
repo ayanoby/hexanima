@@ -1409,9 +1409,12 @@ public class Main extends Base {
         final double tk = (resW / 16) * (resH / 16), quad = isAnima() ? (model.contains("29") ? 40 : 28) * Math.max(1.0, steps() - (base() ? 0 : 2) + (base() ? 0 : 2) / 16.0) * 4.6e-9 * Math.max(0, tk * tk - 1536.0 * 1536.0) : 0;
         return Math.max(3, Math.round(store.speed(model) * (steps() / (base() ? 20.0 : customTurboAnima() ? 40.0 : stepsDef())) * tk / 1536.0 * (isQwen() && editBm != null ? 1.3 + 0.25 * extraBm.size() : 1) + quad));
     }
+    /** the settings that decide the time of a run: size, steps, frames of a video, pictures to edit */
+    String timeSig() { return resW + "x" + resH + "s" + (isH3() ? h3Steps() : steps()) + ((isLtx() || isR2v()) ? "f" + ltxLf() : "") + (editBm != null ? "e" + (1 + extraBm.size()) : ""); }
+    int timeTokens() { return (resW / 16) * (resH / 16); }
     String genLabel() {
         if (model.isEmpty()) return L.s("Скачать модель", "Get a model");
-        final long one = Math.max(1, Math.round(estOne() * Timings.ratio(this, model)));   // the formula, scaled by what this phone really took
+        final long one = Math.max(1, Math.round(Timings.estimate(this, model, timeSig(), timeTokens(), estOne())));   // the formula, corrected by what this phone really took
         if (isR2v() || isLtx()) return L.f("Создать видео  ·  ~%d с", "Create video  ·  ~%d s", one);
         return count > 1 ? L.f("Генерировать ×%d  ·  ~%d с", "Generate ×%d  ·  ~%d s", count, one * count) : L.f("Генерировать  ·  ~%d с", "Generate  ·  ~%d s", one);
     }
@@ -1672,12 +1675,12 @@ public class Main extends Base {
                 curIdx = i;
                 final String seedS = String.valueOf(randomSeed ? new Random().nextInt(1 << 30) : baseSeed + i);
                 File fr = null;
-                final long tPic = System.currentTimeMillis(); final long predicted = estOne(); final String tKey = model;   // what the formula says now, kept for the comparison below
+                final long tPic = System.currentTimeMillis(); final long predicted = estOne(); final String tKey = model, tSig = timeSig(); final int tTok = timeTokens();   // what the formula says now, kept for the comparison below
                 try { fr = runOne(pr, seedS, w, h, t0); } catch (OutOfMemoryError e) { oomAbort = true; }
                 final File f = fr;
                 if (f == null) break;
                 made++;
-                Timings.record(this, tKey, (System.currentTimeMillis() - tPic) / 1000.0, predicted);
+                Timings.record(this, tKey, tSig, tTok, (System.currentTimeMillis() - tPic) / 1000.0, predicted);
                 final Bitmap bm = BitmapFactory.decodeFile(f.getPath());
                 lastBm = bm;
                 ui.post(() -> {

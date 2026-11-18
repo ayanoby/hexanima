@@ -630,3 +630,6 @@
 617	Dans le menu → Agrandir → Vidéo, le réseau RIFE v4.6 (hzwer, MIT) dessine de nouvelles images entre chaque paire d'images de votre clip : x2 ou x4, le mouvement devient plus fluide (12 → 24 ou 48 images par seconde). Il tourne sur le NPU, le son est conservé et le résultat va dans la galerie. Les vidéos jusqu'à 1920x1088 fonctionnent ; un petit réseau (12–40 Mo) est téléchargé pour chaque taille. Environ une minute et demie pour 3 secondes de vidéo HD en x4, bien plus vite pour les petites tailles. Les coupes franches ne sont pas interpolées. La taille de l'image ne change pas : seule la fluidité s'améliore.
 630	Le modèle ne s'est pas chargé
 631	Puce %s. Elle n'est peut-être pas prise en charge.\n\n%s
+632	Pas de connexion internet : le catalogue enregistré est affiché. Les téléchargements sont impossibles, les modèles peuvent être supprimés.
+633	La taille inclut l'encodeur de texte MiniMax-H3 (%s Go), téléchargé avec le modèle vidéo : tout MiniMax-H3-Image n'est pas nécessaire.
+634	L'entrée du catalogue de MiniMax-H3-Image n'est pas disponible

@@ -39,7 +39,17 @@ final class Models {
     }
 
     long commonSize;
+    /** the catalog from the network; offline, the copy saved by the last successful run, so installed models can still be managed */
     List<Item> catalog(String base) throws Exception {
+        offline = false;
+        try { return catalogNet(base); }
+        catch (Exception e) {
+            File c = new File(home, "catalog.cache");
+            if (c.exists()) try { List<Item> r = catalog5parse(read(c), base); offline = true; return r; } catch (Exception ignored) { }
+            throw e;
+        }
+    }
+    List<Item> catalogNet(String base) throws Exception {
         String txt;   // catalog3.json adds Mage-Flow (1.4.1+); catalog2.json lists the Anima models, MOSS-Image and Qwen-Image (1.3+); catalog.json stays as is for older apps, which would misread such entries
         try { return catalog5(get(base + "catalog10.json"), base); } catch (Exception e10) { }   // catalog10.json = catalog9 + MiniMax-H3 Ref2VA Video (1.8.2+; older apps would not know the family)
         try { return catalog5(get(base + "catalog9.json"), base); } catch (Exception e9) { }   // catalog9.json = catalog8 + FLUX.3 Image Klein and LTX-2.5 Video (1.7.0+; older apps would not know the families)
@@ -62,8 +72,17 @@ final class Models {
     }
 
     /** catalog5: {"packs": {id: {url | path, manifest, size, needs, arch}}, "models": [{family, line, name, desc, modes: [{id, label, name, pack, steps, speed}]}]} */
+    /** bytes of the MiniMax-H3 text encoder files (te/, tokenizer, licence) inside the MiniMax-H3-Image pack */
+    static final long TE_BYTES = 25_956_041_294L;
+    String h3Manifest;   // manifest URL of the MiniMax-H3-Image pack (from the catalog)
     String commonUrl;   // directory URL of the shared Anima pack for this phone's DSP arch (null: base + commonDir())
+    boolean offline;   // the list comes from the copy saved by the last online run
     List<Item> catalog5(String txt, String base) throws Exception {
+        List<Item> r = catalog5parse(txt, base);
+        try (FileWriter w = new FileWriter(new File(home, "catalog.cache"))) { w.write(txt); } catch (Exception ignored) { }
+        return r;
+    }
+    List<Item> catalog5parse(String txt, String base) throws Exception {
         JSONObject j = new JSONObject(txt), packs = j.getJSONObject("packs");
         String arch = Compat.dspArch().isEmpty() ? "v69" : Compat.dspArch();
         JSONObject cp = packs.optJSONObject("anima-common@" + arch); if (cp != null) commonUrl = packUrl(cp, base);
@@ -78,6 +97,7 @@ final class Models {
                 it.desc = m.optString("desc", ""); it.descEn = m.optString("desc_en", it.desc); it.params = m.optString("params", ""); it.author = m.optString("author", "");
                 it.speed = md.optInt("speed", 0); String f = m.optString("family", "Anima");
                 it.moss = f.equals("MOSS-Image"); it.qwen = f.equals("Qwen-Image"); it.mage = f.equals("Mage-Flow"); it.h3 = f.equals("MiniMax-H3"); it.klein = f.equals("FLUX.3-Klein"); it.ltx = f.equals("LTX-2.5"); it.r2v = f.equals("MiniMax-H3-Video");
+                if (it.h3) h3Manifest = it.manifest;
                 out.add(it);
             }
         }
@@ -227,7 +247,14 @@ final class Models {
             if (!Moss.installed(home)) throw new IOException(L.s("Сначала установите MOSS-Image", "Install MOSS-Image first"));
             fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); return;
         }
-        if (R2v.is(it.id) && !R2v.teInstalled(home)) throw new IOException(L.s("Сначала установите MiniMax-H3-Image: видео-модель использует её текстовый энкодер.", "Install MiniMax-H3-Image first: the video model uses its text encoder."));
+        if (R2v.is(it.id) && !R2v.teInstalled(home)) {   // the video model needs the text encoder of MiniMax-H3-Image: only its files (te/, tokenizer, licence) are fetched from that pack, not the whole 48 GB
+            if (h3Manifest == null) throw new IOException(L.s("Каталог MiniMax-H3-Image недоступен", "The MiniMax-H3-Image catalog entry is not available"));
+            JSONArray all = new JSONObject(get(h3Manifest)).getJSONArray("files"), te = new JSONArray();
+            for (int i = 0; i < all.length(); i++) { String p = all.getJSONObject(i).getString("path"); if (p.startsWith("te/") || p.startsWith("tok_") || p.equals("LICENSE") || p.equals("NOTICE")) te.put(all.getJSONObject(i)); }
+            long tot = total(te) + total(files); File hd = H3.dir(home); hd.mkdirs();
+            fetchAll(h3Manifest.substring(0, h3Manifest.lastIndexOf('/') + 1), te, hd, tot, done, pg, cancel);
+            doneMark(dir).delete(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, tot, done, pg, cancel); doneMark(dir).createNewFile(); return;
+        }
         if (H3.is(it.id) || Klein.is(it.id) || Ltx.is(it.id) || R2v.is(it.id)) {   // MiniMax-H3-Image, FLUX.3 Klein, LTX-2.5, MiniMax-H3 Ref2VA: raw files (with the licence texts) into the model folder; the marker is set once every file is verified
             doneMark(dir).delete(); fetchAll(murl.substring(0, murl.lastIndexOf('/') + 1), files, dir, total(files), done, pg, cancel); doneMark(dir).createNewFile(); return;
         }
@@ -256,7 +283,8 @@ final class Models {
         if (Qwen.is8(id)) { deleteTree(new File(dir, "dit8")); new File(dir, "glue8.bin").delete(); deleteTree(new File(dir, "v8")); deleteTree(new File(dir, "cache8")); return; }   // only the extra pack; the default Qwen stays
         if (Moss.isRs(id)) { deleteTree(new File(dir, Moss.sub(id))); deleteTree(new File(dir, "v" + Moss.sub(id))); return; }
         if (Moss.is8(id)) { deleteTree(new File(dir, "lora8")); new File(dir, "glue8.bin").delete(); return; }
-        if (Moss.is(id) || Qwen.is(id) || Mage.is(id) || H3.is(id) || Klein.is(id) || Ltx.is(id) || R2v.is(id)) { deleteTree(dir); return; }
+        if (R2v.is(id)) { deleteTree(dir); if (!H3.installed(home)) { File hd = H3.dir(home); deleteTree(new File(hd, "te")); File[] fs = hd.listFiles(); if (fs != null) for (File f : fs) if (f.isFile() && (f.getName().startsWith("tok_") || f.getName().equals("LICENSE") || f.getName().equals("NOTICE"))) f.delete(); } return; }   // the text encoder came with it, unless MiniMax-H3-Image owns it
+        if (Moss.is(id) || Qwen.is(id) || Mage.is(id) || H3.is(id) || Klein.is(id) || Ltx.is(id)) { deleteTree(dir); return; }
         File[] fs = dir.listFiles(); if (fs != null) for (File f : fs) f.delete();
         dir.delete(); new File(sd, id + ".safetensors").delete();
     }

@@ -630,3 +630,6 @@
 617	Menü → Büyüt → Video bölümünde RIFE v4.6 ağı (hzwer, MIT) klibinizdeki her kare çiftinin arasına yeni kareler çizer: x2 veya x4, hareket daha akıcı olur (saniyede 12 → 24 veya 48 kare). NPU üzerinde çalışır, ses korunur ve sonuç galeriye gider. 1920x1088'e kadar videolar çalışır; her boyut için küçük bir ağ (12–40 MB) indirilir. x4'te 3 saniyelik HD video için yaklaşık bir buçuk dakika, küçük boyutlarda çok daha hızlı. Sert kesmeler ara kare almaz. Görüntü boyutu değişmez: yalnızca akıcılık artar.
 630	Model yüklenmedi
 631	Çip %s. Desteklenmiyor olabilir.\n\n%s
+632	İnternet bağlantısı yok: kayıtlı katalog gösteriliyor. İndirme yapılamaz, modeller silinebilir.
+633	Boyuta MiniMax-H3 metin kodlayıcısı (%s GB) dahildir ve video modeliyle birlikte indirilir: MiniMax-H3-Image'in tamamı gerekmez.
+634	MiniMax-H3-Image katalog girdisi kullanılamıyor

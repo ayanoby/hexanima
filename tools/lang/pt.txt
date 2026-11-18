@@ -630,3 +630,6 @@
 617	No menu → Ampliar → Vídeo, a rede RIFE v4.6 (hzwer, MIT) desenha quadros novos entre cada par de quadros do seu clipe: x2 ou x4, e o movimento fica mais suave (12 → 24 ou 48 quadros por segundo). Roda na NPU, o som é mantido e o resultado vai para a galeria. Vídeos de até 1920x1088 funcionam; uma rede pequena (12–40 MB) é baixada para cada tamanho. Cerca de um minuto e meio para 3 segundos de vídeo HD em x4, bem mais rápido em tamanhos pequenos. Cortes secos não são interpolados. O tamanho da imagem não muda: só a suavidade melhora.
 630	O modelo não carregou
 631	Chip %s. Pode não ser suportado.\n\n%s
+632	Sem conexão com a internet: o catálogo salvo é exibido. Não é possível baixar, mas é possível excluir modelos.
+633	O tamanho inclui o codificador de texto do MiniMax-H3 (%s GB), baixado com o modelo de vídeo: não é preciso todo o MiniMax-H3-Image.
+634	A entrada do catálogo do MiniMax-H3-Image não está disponível

@@ -630,3 +630,6 @@
 617	Di menu → Perbesar → Video, jaringan RIFE v4.6 (hzwer, MIT) menggambar bingkai baru di antara setiap pasang bingkai klipmu: x2 atau x4, gerakan jadi lebih mulus (12 → 24 atau 48 bingkai per detik). Berjalan di NPU, suara dipertahankan dan hasilnya masuk ke galeri. Video hingga 1920x1088 bisa diproses; jaringan kecil (12–40 MB) diunduh untuk tiap ukuran. Sekitar satu setengah menit untuk 3 detik video HD pada x4, jauh lebih cepat untuk ukuran kecil. Pemotongan tajam tidak diinterpolasi. Ukuran gambar tidak berubah: hanya kemulusan yang meningkat.
 630	Model gagal dimuat
 631	Chip %s. Mungkin tidak didukung.\n\n%s
+632	Tidak ada internet: katalog tersimpan ditampilkan. Unduhan tidak tersedia, model bisa dihapus.
+633	Ukuran sudah termasuk encoder teks MiniMax-H3 (%s GB) yang diunduh bersama model video: seluruh MiniMax-H3-Image tidak diperlukan.
+634	Entri katalog MiniMax-H3-Image tidak tersedia

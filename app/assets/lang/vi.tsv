@@ -630,3 +630,6 @@ MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference
 A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed	Bộ phóng to dùng khuếch tán: chất lượng tốt nhất, chậm hơn. Chọn ở màn hình Phóng to. Apache 2.0  ·  ByteDance Seed
 The model did not load	Không tải được mô hình
 Chip %s. It may not be supported.\n\n%s	Chip %s. Có thể không được hỗ trợ.\n\n%s
+No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	Không có internet: đang hiển thị danh mục đã lưu. Không thể tải xuống, nhưng có thể xóa mô hình.
+The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	Dung lượng đã gồm bộ mã hóa văn bản MiniMax-H3 (%s GB), được tải cùng mô hình video: không cần toàn bộ MiniMax-H3-Image.
+The MiniMax-H3-Image catalog entry is not available	Mục danh mục MiniMax-H3-Image không khả dụng

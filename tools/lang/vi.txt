@@ -630,3 +630,6 @@
 617	Trong menu → Phóng to → Video, mạng RIFE v4.6 (hzwer, MIT) vẽ thêm khung hình mới giữa mỗi cặp khung hình của clip: x2 hoặc x4, chuyển động mượt hơn (12 → 24 hoặc 48 khung hình mỗi giây). Chạy trên NPU, âm thanh được giữ nguyên và kết quả vào thư viện. Hỗ trợ video đến 1920x1088; mỗi kích thước tải một mạng nhỏ (12–40 MB). Khoảng một phút rưỡi cho 3 giây video HD ở x4, nhanh hơn nhiều với kích thước nhỏ. Cảnh cắt đột ngột không được nội suy. Kích thước ảnh không đổi: chỉ độ mượt được cải thiện.
 630	Không tải được mô hình
 631	Chip %s. Có thể không được hỗ trợ.\n\n%s
+632	Không có internet: đang hiển thị danh mục đã lưu. Không thể tải xuống, nhưng có thể xóa mô hình.
+633	Dung lượng đã gồm bộ mã hóa văn bản MiniMax-H3 (%s GB), được tải cùng mô hình video: không cần toàn bộ MiniMax-H3-Image.
+634	Mục danh mục MiniMax-H3-Image không khả dụng

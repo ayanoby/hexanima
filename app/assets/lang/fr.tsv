@@ -630,3 +630,6 @@ MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference
 A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed	Un agrandisseur par diffusion : la meilleure qualité, plus lent. À choisir dans l'écran « Agrandir ». Apache 2.0  ·  ByteDance Seed
 The model did not load	Le modèle ne s'est pas chargé
 Chip %s. It may not be supported.\n\n%s	Puce %s. Elle n'est peut-être pas prise en charge.\n\n%s
+No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	Pas de connexion internet : le catalogue enregistré est affiché. Les téléchargements sont impossibles, les modèles peuvent être supprimés.
+The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	La taille inclut l'encodeur de texte MiniMax-H3 (%s Go), téléchargé avec le modèle vidéo : tout MiniMax-H3-Image n'est pas nécessaire.
+The MiniMax-H3-Image catalog entry is not available	L'entrée du catalogue de MiniMax-H3-Image n'est pas disponible

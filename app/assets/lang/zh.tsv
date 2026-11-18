@@ -630,3 +630,6 @@ MiniMax-H3 Ref2VA (33B) makes a video from a prompt and, optionally, a reference
 A diffusion upscaler: the best quality, slower. Pick it on the Upscale screen. Apache 2.0  ·  ByteDance Seed	扩散式放大器：画质最佳，速度较慢。在“放大”界面中选择。Apache 2.0  ·  ByteDance Seed
 The model did not load	模型未能加载
 Chip %s. It may not be supported.\n\n%s	芯片 %s。可能不受支持。\n\n%s
+No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted.	没有网络：显示已保存的目录。无法下载，但可以删除模型。
+The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.	大小包含 MiniMax-H3 文本编码器（%s GB），它会随视频模型一起下载：不需要整个 MiniMax-H3-Image。
+The MiniMax-H3-Image catalog entry is not available	MiniMax-H3-Image 的目录条目不可用

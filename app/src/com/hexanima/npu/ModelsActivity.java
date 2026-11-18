@@ -98,7 +98,7 @@ public class ModelsActivity extends Base {
         final String base = url.getText().toString().trim().replaceAll("/*$", "") + "/";
         getSharedPreferences("anima", 0).edit().putString("base", base).apply();
         io.submit(() -> {
-            try { final List<Models.Item> cat = store.catalog(base); for (Models.Item it : cat) store.refreshMeta(it); ui.post(() -> { items = cat; render(); });
+            try { final List<Models.Item> cat = store.catalog(base); for (Models.Item it : cat) store.refreshMeta(it); final boolean off = store.offline; ui.post(() -> { items = cat; render(); if (off) Toast.makeText(this, L.s("Нет связи с интернетом: показан сохранённый каталог. Скачать модели нельзя, удалить можно.", "No internet: the saved catalog is shown. Downloads are unavailable, models can be deleted."), Toast.LENGTH_LONG).show(); });
                 if (store.commonInstalled() && !downloading) try { JSONObject m = store.commonManifest(base); List<Object[]> st = store.commonStale(m); ui.post(() -> { staleM = st.isEmpty() ? null : m; staleN = Models.staleBytes(st); render(); }); } catch (Exception ignored) { } }
             catch (Exception e) { ui.post(() -> { list.removeAllViews(); list.addView(text(L.f("Каталог недоступен: %s", "Catalog unavailable: %s", e.getMessage()), 13, BAD, false)); }); }
         });
@@ -379,8 +379,8 @@ public class ModelsActivity extends Base {
             return;
         }
         if (it.r2v) {   // the video model needs the text encoder of MiniMax-H3-Image; the same licence has to be seen
-            if (!R2v.teInstalled(getFilesDir())) { builder().setTitle("MiniMax-H3 Ref2VA").setMessage(L.s("Сначала установите MiniMax-H3-Image: видео-модель использует её текстовый энкодер.", "Install MiniMax-H3-Image first: the video model uses its text encoder.")).setPositiveButton("OK", null).show(); return; }
-            builder().setTitle("MiniMax-H3 Ref2VA").setMessage(L.f("Модель распространяется по MiniMax-H3 Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3 Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size)))
+            final long te = R2v.teInstalled(getFilesDir()) ? 0 : Models.TE_BYTES;   // the text encoder is fetched with the video model when MiniMax-H3-Image is not installed
+            builder().setTitle("MiniMax-H3 Ref2VA").setMessage(L.f("Модель распространяется по MiniMax-H3 Community License Agreement (текст лицензии скачается вместе с файлами). Нельзя использовать в США, Европейском союзе, Великобритании и Южной Корее; результаты нельзя использовать для улучшения других ИИ-моделей. Размер: %s ГБ. Скачать?", "The model is distributed under the MiniMax-H3 Community License Agreement (the licence text downloads with the files). It must not be used in the United States, the European Union, the United Kingdom or South Korea, and its outputs must not be used to improve other AI models. Size: %s GB. Download?", gb(it.size + te)) + (te > 0 ? "\n\n" + L.f("В размер входит текстовый энкодер MiniMax-H3 (%s ГБ): он скачивается вместе с видео-моделью, вся MiniMax-H3-Image не нужна.", "The size includes the MiniMax-H3 text encoder (%s GB), which is downloaded with the video model: the whole MiniMax-H3-Image is not needed.", gb(te)) : ""))
                 .setPositiveButton(L.s("Принимаю, скачать", "Accept and download"), (d, w) -> begin(base, it, needCommon)).setNegativeButton(L.s("Отмена", "Cancel"), null).show();
             return;
         }
@@ -403,7 +403,7 @@ public class ModelsActivity extends Base {
     }
 
     void begin(String base, Models.Item it, boolean needCommon) {
-        long need = it.size + (needCommon ? store.commonSize : 0);
+        long need = it.size + (needCommon ? store.commonSize : 0) + (it.r2v && !R2v.teInstalled(getFilesDir()) ? Models.TE_BYTES : 0);
         if (getFilesDir().getUsableSpace() < need + 300_000_000L) { Toast.makeText(this, L.f("Не хватает места: нужно %s ГБ", "Not enough space: need %s GB", gb(need)), Toast.LENGTH_LONG).show(); return; }
         if (downloading) return;
         downloading = true; dlId = it.id; dlDone = 0; dlTotal = need; dlMsg = L.s("Подключаюсь…", "Connecting…"); cancel.set(false);

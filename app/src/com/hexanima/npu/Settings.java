@@ -47,6 +47,8 @@ public class Settings extends Base {
     static String folderLabel(android.net.Uri u) {
         try { String id = android.provider.DocumentsContract.getTreeDocumentId(u); int i = id.indexOf(':'); String r = i >= 0 ? id.substring(i + 1) : id; return r.isEmpty() ? L.s("Внутренняя память", "Internal storage") : r; } catch (Exception e) { return u.getLastPathSegment(); }
     }
+    /** copy every finished picture / video to the save location (the phone gallery or the chosen folder) without tapping Download */
+    static boolean autoSave(Context c) { return prefs(c).getBoolean("autosave", false); }
     static boolean keepOn(Context c) { return prefs(c).getBoolean("keepon", true); }
     static String rawPrefix(Context c) { return prefs(c).getString("prefix", DEFAULT_PREFIX); }
     /** what goes before the prompt: trimmed, ending with a comma and a space; a single space when the user cleared it (anima.sh treats an empty PREFIX as "use the default") */
@@ -131,6 +133,7 @@ public class Settings extends Base {
                 if (i == 0) { p.edit().remove("pic_dir").apply(); recreate(); }
                 else startActivityForResult(new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | android.content.Intent.FLAG_GRANT_PREFIX_URI_PERMISSION), 33);
             }).show()));
+        c3.addView(toggle(L.s("Сохранять сразу после генерации", "Save right after generating"), L.s("Каждая готовая картинка и видео сами копируются в выбранное выше место, без нажатия «Скачать». В галерее приложения они остаются в любом случае.", "Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way."), autoSave(this), on -> p.edit().putBoolean("autosave", on).apply()));
         c3.addView(choice(L.s("Куда сохранять архивы", "Where to save archives"), archiveDirLabel(this), v -> builder().setTitle(L.s("Куда сохранять архивы", "Where to save archives"))
             .setSingleChoiceItems(new String[]{L.s("Загрузки", "Downloads"), L.s("Выбрать папку…", "Choose a folder…")}, archiveDir(this) == null ? 0 : -1, (d, i) -> {
                 d.dismiss();

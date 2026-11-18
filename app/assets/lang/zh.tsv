@@ -661,3 +661,5 @@ Download all	全部下载
 Phone gallery (Pictures/Anima)	手机相册（Pictures/Anima）
 Where to save pictures	图片保存位置
 Saved: %s	已保存：%s
+Save right after generating	生成后立即保存
+Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	每张完成的图片和视频都会自动复制到上面选择的位置，无需点击“下载”。无论如何它们都会保留在应用图库中。

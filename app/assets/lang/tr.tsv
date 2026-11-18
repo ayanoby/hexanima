@@ -661,3 +661,5 @@ Download all	Hepsini indir
 Phone gallery (Pictures/Anima)	Telefon galerisi (Pictures/Anima)
 Where to save pictures	Resimler nereye kaydedilsin
 Saved: %s	Kaydedildi: %s
+Save right after generating	Üretimden hemen sonra kaydet
+Every finished picture and video is copied to the place chosen above by itself, without tapping Download. They stay in the app gallery either way.	Biten her resim ve video, «İndir»e dokunmadan yukarıda seçilen yere kendiliğinden kopyalanır. Uygulama galerisinde her durumda kalırlar.

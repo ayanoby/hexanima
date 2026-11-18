@@ -661,3 +661,5 @@
 660	Galeri ponsel (Pictures/Anima)
 661	Tempat menyimpan gambar
 662	Tersimpan: %s
+663	Simpan langsung setelah selesai
+664	Setiap gambar dan video yang selesai disalin otomatis ke tempat yang dipilih di atas, tanpa menekan «Unduh». Keduanya tetap ada di galeri aplikasi.

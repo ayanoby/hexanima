@@ -661,3 +661,5 @@
 660	Galerie du téléphone (Pictures/Anima)
 661	Où enregistrer les images
 662	Enregistré : %s
+663	Enregistrer juste après la génération
+664	Chaque image et vidéo terminée est copiée d'elle-même à l'endroit choisi ci-dessus, sans appuyer sur « Télécharger ». Elles restent de toute façon dans la galerie de l'application.

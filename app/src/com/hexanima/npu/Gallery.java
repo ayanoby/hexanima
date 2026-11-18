@@ -28,6 +28,7 @@ final class Gallery {
         File f = new File(dir(c), base + ".png");
         try (FileOutputStream o = new FileOutputStream(f)) { o.write(png); }
         writeMeta(f, meta);
+        if (Settings.autoSave(c)) try { export(c, f); final String m = savedMsg(c); new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> android.widget.Toast.makeText(c.getApplicationContext(), m, android.widget.Toast.LENGTH_SHORT).show()); } catch (Exception ignored) { }   // a failed copy must not lose the picture: it is in the app gallery
         return f;
     }
 
